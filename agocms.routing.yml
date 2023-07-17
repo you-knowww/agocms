@@ -1,0 +1,7 @@
+agocms.welcome:
+  path: '/welcome/page'
+  defaults:
+    _controller: '\Drupal\agocms\Controller\AgocmsController::welcome'
+    _title: 'Welcome to My Module in Drupal 10'
+  requirements:
+    _permission: 'access content'
