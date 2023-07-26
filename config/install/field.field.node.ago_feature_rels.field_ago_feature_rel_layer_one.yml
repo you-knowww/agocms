@@ -1,0 +1,21 @@
+# field.field.node.ago_feature_rels.field_ago_feature_rel_layer_one.yml
+langcode: en
+status: true
+dependencies:
+    config:
+        - field.storage.node.body
+        - node.type.ago_feature_rels
+    module:
+        - text
+id: node.ago_feature_rels.body
+field_name: field_ago_feature_rel_layer_one
+entity_type: node
+bundle: ago_feature_rels
+label: Feature Layer 1
+description: 'Select the first feature layer in the relationship.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {}
+field_type: string

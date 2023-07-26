@@ -1,4 +1,4 @@
-# node.type.ago_esri_feature_rels.yml
+# node.type.ago_feature_rels.yml
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - agocms
 name: 'ESRI Feature Relationships'
-type: ago_esri_feature_rels
+type: ago_feature_rels
 description: 'Define flexible realtionships betewen <em>ESRI Feature Layers</em> using any fields on any data models.'
 help: ''
 new_revision: false

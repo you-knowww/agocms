@@ -1,4 +1,4 @@
-name: agocms
+name: ArcGIS Online CMS
 type: module
 description: 'CMS to extend ArcGIS features'
 package: Custom
