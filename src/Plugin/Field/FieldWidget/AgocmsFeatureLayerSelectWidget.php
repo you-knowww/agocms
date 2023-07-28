@@ -11,6 +11,7 @@ use Drupal\Core\Render\Element;
  *
  * @FieldWidget(
  *   id = "agocms_feature_layer_select_w",
+ *   module = "agocms",
  *   label = @Translation("AGO CMS: Feature Layer Select - Widget"),
  *   description = @Translation("Use AGO credentials to search and select feature layer. Also accepts text path as value."),
  *   field_types = { "string", },
@@ -27,6 +28,8 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#type' => 'search',
       '#title' => t('Feature Layer Search'),
       '#description' => t('Reactive search. If group or service is selected, results narrow to feature services and/or layers in the selection.'),
+      '#markup' => t('<b>TESTING 123</b>'),
+      '#autocomplete_route_name' => 'agocms.feature_layer.config.search'
     );
 
     $element['textfield'] = array(

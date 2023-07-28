@@ -1,7 +1,7 @@
-agocms.welcome:
-  path: '/welcome/page'
+agocms.feature_layer.config.search:
+  path: '/admin/agocms/feature_layer/config/search'
   defaults:
-    _controller: '\Drupal\agocms\Controller\AgocmsController::welcome'
-    _title: 'Welcome to My Module in Drupal 10'
+    _controller: '\Drupal\agocms\Controller\AgocmsFeatureLayerController::configSearch'
+    _format: json
   requirements:
     _permission: 'access content'
