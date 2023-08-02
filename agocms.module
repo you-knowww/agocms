@@ -1,0 +1,25 @@
+<?php
+/**
+ * Implements hook_page_attachments().
+ */
+/*
+function agocms_page_attachments(array &$page) {
+
+  // set to drupalSettings for frontend js access
+  $page['#attached']['drupalSettings']['ago_access_token'] = $access_token;
+}
+*/
+/**
+ * Implements hook_js_settings_alter().
+ * - adds "ago_access_token" to the drupalSettings
+ */
+function agocms_js_settings_alter(array &$settings,
+            \Drupal\Core\Asset\AttachedAssetsInterface $assets) {
+  // get current session to find access token
+  $request = \Drupal::request();
+  $session = $request->getSession();
+  $access_token = $session->get('ago_access_token');
+
+  // add frontend references
+  $settings['ago_access_token'] = $access_token;
+}

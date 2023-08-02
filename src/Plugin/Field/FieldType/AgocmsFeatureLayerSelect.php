@@ -1,7 +1,6 @@
 <?php
 // https://www.drupal.org/docs/creating-custom-modules/creating-custom-field-types-widgets-and-formatters/create-a-custom-field-type
 namespace Drupal\agocms\Plugin\Field\FieldType;
-
 /**
  * Provides a field type of AGO CMS Feature Layer Select.
  *

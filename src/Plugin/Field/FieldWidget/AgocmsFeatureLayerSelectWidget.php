@@ -4,7 +4,6 @@ namespace Drupal\agocms\Plugin\Field\FieldWidget;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
 
 /**
  * Plugin implementation of the 'agocms_feature_layer_select_w' widget.
@@ -24,26 +23,14 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    $element['search'] = array(
-      '#type' => 'search',
-      '#title' => t('Feature Layer Search'),
-      '#description' => t('Reactive search. If group or service is selected, results narrow to feature services and/or layers in the selection.'),
-      '#markup' => t('<b>TESTING 123</b>'),
-      '#autocomplete_route_name' => 'agocms.feature_layer.config.search'
-    );
-
-    $element['textfield'] = array(
+    $element['feature_layer_select'] = array(
       '#type' => 'textfield',
       '#title' => t('Path'),
-      '#description' => t('Paste or type direct path to feature service. Will verify after 2 second delay.'),
+      '#description' => t('Paste or type path to feature service. Will verify after 2 second delay.'),
+      '#attributes' => ['class' => [ 'agocms-featurelayer-select__input'] ],
+      '#attached' => ['library' => ['agocms/feature-layer-select']],
+      // '#default_value' => ''
     );
-
-    //setting default value to all fields from above
-    $children = Element::children($element);
-
-    foreach ($children as $child) {
-      $element[$child]['#default_value'] = isset($items[$delta]->{$child}) ? $items[$delta]->{$child} : NULL;
-    }
 
     return $element;
   }

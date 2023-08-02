@@ -1,0 +1,8 @@
+feature-layer-select:
+  version: 1.x
+  js:
+    js/feature-layer-select.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings
