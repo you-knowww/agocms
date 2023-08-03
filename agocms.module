@@ -1,15 +1,5 @@
 <?php
 /**
- * Implements hook_page_attachments().
- */
-/*
-function agocms_page_attachments(array &$page) {
-
-  // set to drupalSettings for frontend js access
-  $page['#attached']['drupalSettings']['ago_access_token'] = $access_token;
-}
-*/
-/**
  * Implements hook_js_settings_alter().
  * - adds "ago_access_token" to the drupalSettings
  */
@@ -22,4 +12,13 @@ function agocms_js_settings_alter(array &$settings,
 
   // add frontend references
   $settings['ago_access_token'] = $access_token;
+}
+
+/**
+ * Implements hook_page_attachments()
+ * - adds core ago and agocms JS to every page
+ */
+function agocms_page_attachments(array &$page) {
+  echo 'test';
+  $page['#attached']['library'][] = 'agocms/agocms';
 }

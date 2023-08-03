@@ -1,7 +1,4 @@
 (function ($, Drupal, drupalSettings){
-  console.log('big test yes');
-  console.log('test test test');
-  console.log(drupalSettings);
   Drupal.behaviors.feature_layer_select = {
     attach: (context, settings) => {
         console.log('test more');

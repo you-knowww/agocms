@@ -1,3 +1,12 @@
+agocms:
+  version: 1.x
+  js:
+    https://cdn.skypack.dev/@esri/arcgis-rest-request@4.2.0:
+      { type: external,
+        attributes: { type: module } }
+    https://cdn.skypack.dev/@esri/arcgis-rest-feature-service@4.0.4:
+      { type: external,
+        attributes: { type: module } }
 feature-layer-select:
   version: 1.x
   js:
