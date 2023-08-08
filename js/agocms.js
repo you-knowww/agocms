@@ -1,11 +1,16 @@
-(function ($, Drupal, drupalSettings){
-    // alert('hello');
-    import { request } from '@esri/arcgis-rest-request';
-
-    const url = "https://www.arcgis.com/sharing/rest/content/items/6e03e8c26aad4b9c92a87c1063ddb0e3/data";
-
-    request(url)
-        .then(response => {
-            console.log(response) // WebMap JSON
-        });
-  }})(jQuery, Drupal, drupalSettings);
+(function (Drupal, drupalSettings){
+  console.log('pretest');
+  arcgisRest
+    .getSelf(
+      { hideToken: true,
+        params: { token: drupalSettings.ago_access_token.access_token }})
+    .then(response => console.log(response));
+  const testQ = new arcgisRest.SearchQueryBuilder().match('private').in('access');
+  console.log(testQ)
+  arcgisRest
+    .searchGroups(
+      { q: testQ,
+        hideToken: true,
+        params: { token: drupalSettings.ago_access_token.access_token }})
+    .then(response => console.log(response));
+})(Drupal, drupalSettings);

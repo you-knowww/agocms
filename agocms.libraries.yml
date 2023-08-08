@@ -1,12 +1,25 @@
 agocms:
   version: 1.x
   js:
-    https://cdn.skypack.dev/@esri/arcgis-rest-request@4.2.0:
+    https://unpkg.com/@esri/arcgis-rest-request@4.2.0/dist/bundled/request.umd.min.js:
       { type: external,
-        attributes: { type: module } }
-    https://cdn.skypack.dev/@esri/arcgis-rest-feature-service@4.0.4:
+        attributes:
+          { type: application/javascript,
+            crossorigin: anonymous } }
+    https://unpkg.com/@esri/arcgis-rest-portal@4.3.0/dist/bundled/portal.umd.js:
       { type: external,
-        attributes: { type: module } }
+        attributes:
+          { type: application/javascript,
+            crossorigin: anonymous } }
+    https://unpkg.com/@esri/arcgis-rest-feature-service@4.0.4/dist/bundled/feature-server.umd.js:
+      { type: external,
+        attributes:
+          { type: application/javascript,
+            crossorigin: anonymous } }
+    js/agocms.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
 feature-layer-select:
   version: 1.x
   js:

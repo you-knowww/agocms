@@ -19,6 +19,5 @@ function agocms_js_settings_alter(array &$settings,
  * - adds core ago and agocms JS to every page
  */
 function agocms_page_attachments(array &$page) {
-  echo 'test';
   $page['#attached']['library'][] = 'agocms/agocms';
 }
