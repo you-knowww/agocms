@@ -5,6 +5,7 @@
         // console.log(Drupal);
         // console.log(settings);
         // alert('hello');
+        console.log('fl settings test');
       }
   };
 })(jQuery, Drupal, drupalSettings);
