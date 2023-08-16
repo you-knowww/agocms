@@ -6,6 +6,8 @@ class Agocms {
   #refresh;
   // ago username
   #user;
+  // base url for token refresh
+  #url;
   // manage events across context in origin. const
   #ch = new BroadcastChannel("agocms");
   // local event listener to dispatch after updating local creds. const
@@ -15,36 +17,41 @@ class Agocms {
     // context
     const agocms = this;
 
-    // set event listener for lock and unlock
-    this.#ch.onmessage = e => {
-          // ref
-          const data = message.data;
+    // validate access token from AGO Social Auth
+    if(drupalSettings.hasOwnProperty('ago_access_token')
+          && drupalSettings.ago_access_token.hasOwnProperty('token')){
+      // ref
+      const token = drupalSettings.ago_access_token.token;
+      // set event listener for lock and unlock
+      this.#ch.onmessage = e => {
+            // ref
+            const data = message.data;
 
-          switch(data.event){
-            case 'lock':
-              // lock down requests
-              agocms.#locked = true;
-              break;
-            case 'unlock':
-              // begin unlocking. first need to update refs
-              agocms.#updateTokenRefs(data.token_data);
-          } };
+            switch(data.event){
+              case 'lock':
+                // lock down requests
+                agocms.#locked = true;
+                break;
+              case 'unlock':
+                // begin unlocking. first need to update refs
+                agocms.#updateTokenRefs(data.token_data);
+            } };
 
-    // init shorthand variables
-    this.#access = {token: drupalSettings.hasOwnProperty('ago_access_token')
-                            ? drupalSettings.ago_access_token.access_token
-                            : undefined,
-                    expiration: drupalSettings.hasOwnProperty('ago_access_token')
-                                ? drupalSettings.ago_access_token.expires
-                                : undefined };
-    this.#refresh = { token: drupalSettings.hasOwnProperty('ago_access_token')
-                              ? drupalSettings.ago_access_token.refresh_token
-                              : undefined,
-                    expiration: drupalSettings.hasOwnProperty('ago_access_token')
-                                ? drupalSettings.ago_access_token.refresh_token_expires_in
-                                : undefined };
-    this.#user = drupalSettings.hasOwnProperty('ago_access_token')
-                  ? drupalSettings.ago_access_token.username : undefined;
+      // init shorthand variables
+      this.#access = {token: token.access_token,
+                      expiration: token.expires };
+      this.#refresh = { token: token.refresh_token,
+                        expiration: token.refresh_token_expires_in };
+      this.#user = token.username;
+      this.#url = drupalSettings.ago_access_token.url;
+    } else {
+      // warn user about getting AGO access
+      const msg = new Drupal.Message();
+      msg.add('agocms will not connect to AGO. Please log in using AGO Auth to connect.',
+              {type: 'warning'});
+
+      return false;
+    }
   }
 
   // async return access token as string
