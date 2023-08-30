@@ -5,3 +5,10 @@ agocms.feature_layer.config.search:
     _format: json
   requirements:
     _permission: 'access content'
+agocms.token.update:
+    path: '/agocms/token/update'
+    defaults:
+      _controller: '\Drupal\agocms\Controller\AgocmsTokenController::update'
+      _format: json
+    requirements:
+      _permission: 'access content'

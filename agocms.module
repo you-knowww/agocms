@@ -8,10 +8,9 @@ function agocms_js_settings_alter(array &$settings,
   // get current session to find access token
   $request = \Drupal::request();
   $session = $request->getSession();
-  $access_token = $session->get('ago_access_token');
 
   // add frontend references
-  $settings['ago_access_token'] = $access_token;
+  $settings['ago_access_token'] = $session->get('ago_access_token');
 }
 
 /**
