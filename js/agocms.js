@@ -48,9 +48,10 @@ class Agocms {
             } };
 
       // init shorthand variables
-      this.#access = { token: token.access_token, expiration: token.expires };
+      this.#access = {token: token.access_token,
+                      expiration: parseInt(token.expires)};
       this.#refresh = { token: token.refresh_token,
-                        expiration: token.refresh_token_expires_in };
+                        expiration: parseInt(token.refresh_token_expires_in) };
       this.#user = token.username;
       // add access token url to base
       this.#url = tokenSettings.url + '/sharing/rest/oauth2/token';
@@ -79,13 +80,13 @@ class Agocms {
             () => resolve(agocms.#access.token));
       } else {
         // check token expiration
-        //if(agocms.#isAccessTokenExpired()){
+        if(agocms.#isAccessTokenExpired()){
           // get new token
           agocms.#refreshToken().then(() => resolve(agocms.#access.token));
-        //} else {
+        } else {
           // get the token we have
-          //resolve(agocms.#access.token);
-        //}
+          resolve(agocms.#access.token);
+        }
       }
     });
   }
@@ -98,7 +99,7 @@ class Agocms {
     // https://stackoverflow.com/questions/3367415/get-epoch-for-a-specific-date-using-javascript
     const nowAgoFmt = new Date().getTime() / 1000;
     // allow 10 seconds between expiration and renewal
-    return nowAgoFmt + 10 >= agocms.#access.expiration;
+    return nowAgoFmt >= agocms.#access.expiration + 10;
   }
 
   #refreshToken() {
@@ -119,21 +120,25 @@ class Agocms {
               grant_type: 'exchange_refresh_token',
               redirect_uri: window.location,
               refresh_token: agocms.#refresh.token }})
-        .then(response => {
+        .then(newToken => {
           // validate response
-          if(response.hasOwnProperty('token')){
+          if(newToken.hasOwnProperty('token')){
+            // convert to seconds
+            newToken.expires = Math.floor(newToken.expires.getTime() / 1000);
+            newToken.refreshTokenExpires = Math.floor(
+                    newToken.refreshTokenExpires.getTime() / 1000);
+
             // update session token
-            jQuery.post('/agocms/token/update', response)
-              .then(newToken => {
-                // update local
-                agocms.#updateTokenRefs(newToken);
+            jQuery.post('/agocms/token/update', newToken).then(savedToken => {
+                // update local ref
+                agocms.#updateTokenRefs(savedToken);
 
                 // notify all other windows to unlock
-                agocms.#ch.postMessage({event: 'unlock', token_data: newToken});
+                agocms.#ch.postMessage({event: 'unlock', token_data: savedToken});
 
                 // return new token from settings
                 resolve(agocms.#access.token);
-              }, response => console.error(response));
+              }, err => console.error(err));
           } else {
             // warn user
             console.error('Token refresh failed.', agocms.#url);
@@ -142,16 +147,12 @@ class Agocms {
     });
   }
 
-  #updateTokenRefs(tokenData) {
-    console.log('token updating:', tokenData);
-
+  #updateTokenRefs(token) {
     // init shorthand variables
-    this.#access.token = tokenData.access_token;
-    this.#access.expiration = tokenData.expiration;
-    this.#refresh.token = tokenData.refresh_token;
-    this.#refresh.expiration = tokenData.refresh_token_expires_in;
-
-    console.log('token updated:', this);
+    this.#access.token = token.access_token;
+    this.#access.expiration = parseInt(token.expiration);
+    this.#refresh.token = token.refresh_token;
+    this.#refresh.expiration = parseInt(token.refresh_token_expires_in);
 
     // unlock
     this.#locked = false;
