@@ -16,7 +16,7 @@ agocms:
         attributes:
           { type: application/javascript,
             crossorigin: anonymous } }
-    js/agocms.js: {}
+    assets/custom/js/agocms.js: {}
   dependencies:
     - core/jquery
     - core/drupal
@@ -24,7 +24,11 @@ agocms:
 feature-layer-select:
   version: 1.x
   js:
-    js/feature-layer-select.js: {}
+    assets/contrib/jquery-flexdatalist/jquery-flexdatalist.min.js: {}
+    assets/custom/js/feature-layer-select.js: {}
+  css:
+    component:
+      assets/contrib/jquery-flexdatalist/jquery-flexdatalist.min.css: {}
   dependencies:
     - core/jquery
     - core/drupal

@@ -180,12 +180,6 @@ class Agocms {
       .then(response => console.log(response));
   */
 
-  console.log('test');
-  const agocms = new Agocms;
-  // console.log(drupalSettings);
-  // console.log(agocms);
-  agocms.getToken().then(result => {
-      console.log(result)
-    },
-    err => console.error(err));
+  // add global reference
+  agocms = {api: new Agocms};
 })(Drupal, drupalSettings);

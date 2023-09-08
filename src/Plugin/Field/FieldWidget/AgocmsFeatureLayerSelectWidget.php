@@ -23,14 +23,27 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    $element['feature_layer_select'] = array(
+    $element['feature_layer_select_input'] = array(
       '#type' => 'textfield',
       '#title' => t('Path'),
-      '#description' => t('Paste or type path to feature service. Will verify after 2 second delay.'),
+      '#description' => t('Paste Feature Layer url directly or use search below.'),
       '#attributes' => ['class' => [ 'agocms-featurelayer-select__input'] ],
-      '#attached' => ['library' => ['agocms/feature-layer-select']],
-      // '#default_value' => ''
-    );
+      '#attached' => ['library' => ['agocms/feature-layer-select']]);
+
+    $element['feature_layer_select_group_search'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Group'),
+      '#description' => t('Search or Browse AGO Groups to narrow Feature Service results.'),
+      '#attributes' => ['class' => [ 'agocms-featurelayer-select-group-search'],
+        'list' => 'agocms-featurelayer-select-group-search' ]);
+
+    $element['feature_layer_select_service_search'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Service'),
+      '#description' => t('Search Feature Services or select a Group to browse.<br/>
+      Select a Feature Service to list Feature Layers.'),
+      '#attributes' => ['class' => [ 'agocms-featurelayer-select-service-search'],
+        'list' => 'agocms-featurelayer-select-service-search' ]);
 
     return $element;
   }
