@@ -23,6 +23,10 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    // use field name and replace spaces with hyphens to keep datalists field specific
+    $parsed_field_name = str_replace(' ', '-', $element['#title']);
+
+    // input field for URL for DB
     $element['feature_layer_select_input'] = array(
       '#type' => 'textfield',
       '#title' => t('Path'),
@@ -30,20 +34,27 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#attributes' => ['class' => [ 'agocms-featurelayer-select__input'] ],
       '#attached' => ['library' => ['agocms/feature-layer-select']]);
 
+    // input field for group search
     $element['feature_layer_select_group_search'] = array(
       '#type' => 'textfield',
       '#title' => t('Group'),
       '#description' => t('Search or Browse AGO Groups to narrow Feature Service results.'),
       '#attributes' => ['class' => [ 'agocms-featurelayer-select-group-search'],
-        'list' => 'agocms-featurelayer-select-group-search' ]);
+        // reference this field so there can be multiple valid datalist field connections
+        'list' => 'agocms-featurelayer-select-group-search-'. $parsed_field_name],
+      '#suffix' => t('<datalist id="agocms-featurelayer-select-group-search-'
+                      . $parsed_field_name .'"></datalist>'));
 
+    // input field for feature service search
     $element['feature_layer_select_service_search'] = array(
       '#type' => 'textfield',
       '#title' => t('Service'),
       '#description' => t('Search Feature Services or select a Group to browse.<br/>
       Select a Feature Service to list Feature Layers.'),
       '#attributes' => ['class' => [ 'agocms-featurelayer-select-service-search'],
-        'list' => 'agocms-featurelayer-select-service-search' ]);
+        'list' => 'agocms-featurelayer-select-service-search-'. $parsed_field_name],
+      '#suffix' => t('<datalist id="agocms-featurelayer-select-service-search-'
+                      . $parsed_field_name .'"></datalist>'));
 
     return $element;
   }
