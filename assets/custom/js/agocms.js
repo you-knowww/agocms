@@ -75,9 +75,9 @@ class Agocms {
 
       // check lock
       if(agocms.#locked === true){
-        // set event listener on unlock
-        window.setEventListener('local_token_updated',
-            () => resolve(agocms.#access.token));
+        // set onetime event listener on unlock
+        window.addEventListener('local_token_updated',
+            () => resolve(agocms.#access.token), {once : true});
       } else {
         // check token expiration
         if(agocms.#isAccessTokenExpired()){
