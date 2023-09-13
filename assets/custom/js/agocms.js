@@ -91,6 +91,32 @@ class Agocms {
     });
   }
 
+  // run any function and attaches token to request. expects arcgisrest fn
+  ajx(agoApiFn, conf){
+    // context
+    const agocms = this;
+
+    // async
+    return new Promise((resolve, reject) => {
+      // get token and perform api call with token, or reject
+      agocms.getToken().then(token => {
+        // if params already set, update token, else set token as params
+        if(conf.hasOwnProperty('params')){
+          conf.params.token = token;
+        } else {
+          conf.params = {token};
+        }
+
+        // always set hide token and max url length. Worst case irrelevant and ignored
+        conf.hideToken = true;
+        conf.maxUrlLength = 2000;
+
+        // run fn with token and resolve/reject
+        agoApiFn(conf).then(d => resolve(d), d => reject(d));
+      }, d => reject(d))
+    })
+  }
+
   // return bool
   #isAccessTokenExpired(){
     // context
@@ -164,5 +190,5 @@ class Agocms {
 
 (function (Drupal, drupalSettings){
   // add global reference
-  agocms = {api: new Agocms};
+  agocms = new Agocms;
 })(Drupal, drupalSettings);

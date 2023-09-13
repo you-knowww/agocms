@@ -4,12 +4,12 @@
       // group and feature service ids for search filter
       let groupId, serviceId;
 
-      // Drupal once element load standard
+      // Drupal once element load standard. Group search field
       once('na', '.agocms-featurelayer-select-group-search', context)
         .forEach(el => {
             // datalist for populating search options for specific field using list attr
             const $el_datalist = $('#' + el.getAttribute('list'));
-                  // group ID -> title so user gets readable title but id is stored in-case dupe titles
+            // group ID -> title so user sees title but stores id
             let groupOptions = {};
 
             // search callback
@@ -22,49 +22,57 @@
                               .and().match(val).in('title');
 
               // validate token and search
-              agocms.api.getToken().then(token =>
-                arcgisRest.searchGroups({q, hideToken: true, params: { token },
-                      sortField: 'title', maxUrlLength: 2000})
-                  .then(response => {
-                    // clear options and add new ones
-                    $el_datalist.empty();
-                    groupOptions = {};
+              agocms.ajx(arcgisRest.searchGroups, {q, sortField: 'title'})
+                .then(response => {
+                  // clear options and add new ones
+                  $el_datalist.empty();
+                  groupOptions = {};
 
-                    // loop response options and populate datalist
-                    for(const group of response.results){
-                      // parse group from response and convert to option
-                      const el_groupOption = document.createElement('option');
+                  // loop response options and populate datalist
+                  for(const group of response.results){
+                    // parse group from response and convert to option
+                    const el_groupOption = document.createElement('option');
 
-                      // set display name as value and label but set
-                      el_groupOption.value = group.id;
-                      el_groupOption.innerHTML = group.title;
+                    // set display name as value and label but set
+                    el_groupOption.value = group.id;
+                    el_groupOption.innerHTML = group.title;
 
-                      // add to datalist
-                      $el_datalist.append(el_groupOption);
-                      groupOptions[group.id] = group.title;
-                    }
-                  }))
+                    // add to datalist
+                    $el_datalist.append(el_groupOption);
+                    groupOptions[group.id] = group.title;
+                  }
+                })
             };
 
-            // set up event listener for keyup
-            el.addEventListener('keyup', Drupal.debounce(groupSearch, 700));
-
             // set change event listener for datalist selection
-            el.addEventListener('change', e => {
-                // save contextual ref then update value to human readable
-                groupId = e.target.value;
-                console.log(groupId, groupOptions);
+            el.addEventListener('input', e => {
+                // ref
+                const val = e.target.value;
 
-                el.value = groupOptions[groupId];
+                // validate input against datalist values
+                if(groupOptions.hasOwnProperty(val)) {
+                  // set group id reference
+                  groupId = val;
+
+                  // replace text in field with group title
+                  el.value = groupOptions[groupId];
+                } else {
+                  // debounce to minimize requests
+                  Drupal.debounce(groupSearch, 700)();
+                }
               });
           });
 
+      // feature service search field
       once('na', '.agocms-featurelayer-select-service-search', context)
         .forEach(el => {
             // datalist for populating search options for specific field using list attr
-            const $el_datalist = $('#' + el.getAttribute('list'));
-
-            $el_datalist.bind('click', e => console.log('service: ', e));
+            const $el_datalist = $('#' + el.getAttribute('list')),
+                  // get corresponding layer select
+                  $el_layerSelect = $('#agocms-featurelayer-select-layer-select-'
+                                      + el.getAttribute('d-field-name'));
+            // service ID -> title so user sees title but stores id
+            let serviceOptions = {};
 
             // search callback
             const serviceSearch = () => {
@@ -75,39 +83,58 @@
                               .match('Feature Service').in('type')
                               .and().match(val).in('title');
 
-              // validate token and search
-              agocms.api.getToken().then(token => {
-                  // if no group set, search all available feature services
-                  const serviceSearch = typeof groupId == 'undefined'
+              // if no group set, search all available feature services
+              const serviceSearchFn = typeof groupId == 'undefined'
                                         ? arcgisRest.searchItems
                                         : arcgisRest.searchGroupContent;
 
-                  // run search. groupId is ignore if unused in call
-                  serviceSearch({q, groupId, sortField: 'title',
-                        hideToken: true, params: { token }, maxUrlLength: 2000})
-                    .then(response => {
-                      // clear options and add new ones
-                      $el_datalist.empty();
+              // run group search if groupId is set. If not, groupId ignored by api
+              agocms.ajx(serviceSearchFn, {q, groupId, sortField: 'title'})
+                .then(response => {
+                  // clear options and add new ones
+                  $el_datalist.empty();
+                  serviceOptions = {};
 
-                      // loop response options and populate datalist
-                      for(const group of response.results){
-                        // parse group from response and convert to option
-                        const el_groupOption = document.createElement('option');
+                  // loop response options and populate datalist
+                  for(const service of response.results){
+                    // parse group from response and convert to option
+                    const el_serviceOption = document.createElement('option');
 
-                        // set group id as value but display name
-                        el_groupOption.value = group.id;
-                        el_groupOption.innerHTML = group.title;
+                    // set group id as value but display name
+                    el_serviceOption.value = service.id;
+                    el_serviceOption.innerHTML = service.title;
 
-                        // add to datalist
-                        $el_datalist.append(el_groupOption);
-                      }
-                    });
-                })
+                    // add to datalist
+                    $el_datalist.append(el_serviceOption);
+                    serviceOptions[service.id] = service.title;
+                  }
+                });
             };
 
-            // set up event listener for keyup
-            el.addEventListener('keyup', Drupal.debounce(serviceSearch, 700));
+            // set change event listener for datalist selection
+            el.addEventListener('input', e => {
+                // ref
+                const val = e.target.value;
+
+                // validate input against datalist values
+                if(serviceOptions.hasOwnProperty(val)) {
+                  // set group id reference
+                  serviceId = val;
+
+                  // replace text in field with group title
+                  el.value = serviceOptions[serviceId];
+                } else {
+                  // debounce to minimize requests
+                  Drupal.debounce(serviceSearch, 700)();
+                }
+              });
           });
+
+      // layer select field
+      once('na', '.agocms-featurelayer-select-service-search', context)
+        .forEach(el => {
+            el.addEventListener('change', e => console.log('layer:', e.target.value));
+          })
     }
   };
 })(jQuery, Drupal, drupalSettings);

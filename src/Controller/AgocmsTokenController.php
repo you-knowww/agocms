@@ -38,8 +38,6 @@ class AgocmsTokenController extends ControllerBase {
         'url' => $old_token->url,
         'client_id' => $old_token->client_id);
 
-    \Drupal::logger('agocms')->notice(serialize($new_token));
-
     // add reference to auth url for frontend
     $session->set('ago_access_token', $new_token);
 

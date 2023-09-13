@@ -31,7 +31,7 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#type' => 'textfield',
       '#title' => t('Path'),
       '#description' => t('Paste Feature Layer url directly or use search below.'),
-      '#attributes' => ['class' => [ 'agocms-featurelayer-select__input'] ],
+      '#attributes' => ['class' => ['agocms-featurelayer-select__input']],
       '#attached' => ['library' => ['agocms/feature-layer-select']]);
 
     // input field for group search
@@ -39,7 +39,7 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#type' => 'textfield',
       '#title' => t('Group'),
       '#description' => t('Search or Browse AGO Groups to narrow Feature Service results.'),
-      '#attributes' => ['class' => [ 'agocms-featurelayer-select-group-search'],
+      '#attributes' => ['class' => ['agocms-featurelayer-select-group-search'],
         // reference this field so there can be multiple valid datalist field connections
         'list' => 'agocms-featurelayer-select-group-search-'. $parsed_field_name],
       '#suffix' => t('<datalist id="agocms-featurelayer-select-group-search-'
@@ -51,10 +51,19 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#title' => t('Service'),
       '#description' => t('Search Feature Services or select a Group to browse.<br/>
       Select a Feature Service to list Feature Layers.'),
-      '#attributes' => ['class' => [ 'agocms-featurelayer-select-service-search'],
-        'list' => 'agocms-featurelayer-select-service-search-'. $parsed_field_name],
+      '#attributes' => ['class' => ['agocms-featurelayer-select-service-search'],
+        'list' => 'agocms-featurelayer-select-service-search-'. $parsed_field_name,
+        'd-field-name' => $parsed_field_name],
       '#suffix' => t('<datalist id="agocms-featurelayer-select-service-search-'
                       . $parsed_field_name .'"></datalist>'));
+
+    // input field for feature service search
+    $element['feature_layer_select_layer_select'] = array(
+      '#type' => 'select',
+      '#title' => t('Layer'),
+      '#description' => t('Select Layer from Feature Service.'),
+      '#attributes' => ['class' => ['agocms-featurelayer-select-layer-select'],
+        'id' => 'agocms-featurelayer-select-layer-select-'. $parsed_field_name]);
 
     return $element;
   }
