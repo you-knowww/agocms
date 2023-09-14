@@ -11,7 +11,7 @@ agocms:
         attributes:
           { type: application/javascript,
             crossorigin: anonymous } }
-    https://unpkg.com/@esri/arcgis-rest-feature-service@4.0.4/dist/bundled/feature-server.umd.js:
+    https://unpkg.com/@esri/arcgis-rest-feature-service@4.0.5/dist/bundled/feature-service.umd.js:
       { type: external,
         attributes:
           { type: application/javascript,

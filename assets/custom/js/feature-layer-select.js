@@ -2,7 +2,7 @@
   Drupal.behaviors.feature_layer_select = {
     attach: (context, settings) => {
       // group and feature service ids for search filter
-      let groupId, serviceId;
+      let groupId;
 
       // Drupal once element load standard. Group search field
       once('na', '.agocms-featurelayer-select-group-search', context)
@@ -101,12 +101,12 @@
                     const el_serviceOption = document.createElement('option');
 
                     // set group id as value but display name
-                    el_serviceOption.value = service.id;
+                    el_serviceOption.value = service.url;
                     el_serviceOption.innerHTML = service.title;
 
                     // add to datalist
                     $el_datalist.append(el_serviceOption);
-                    serviceOptions[service.id] = service.title;
+                    serviceOptions[service.url] = service.title;
                   }
                 });
             };
@@ -116,13 +116,16 @@
                 // ref
                 const val = e.target.value;
 
+                console.log(val);
+
                 // validate input against datalist values
                 if(serviceOptions.hasOwnProperty(val)) {
-                  // set group id reference
-                  serviceId = val;
-
                   // replace text in field with group title
-                  el.value = serviceOptions[serviceId];
+                  el.value = serviceOptions[val];
+
+                  // get layers in feature service
+                  agocms.ajx(arcgisRest.getAllLayersAndTables, {url: val})
+                    .then(response => console.log(response));
                 } else {
                   // debounce to minimize requests
                   Drupal.debounce(serviceSearch, 700)();
