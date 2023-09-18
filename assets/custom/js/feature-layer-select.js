@@ -2,13 +2,17 @@
   Drupal.behaviors.feature_layer_select = {
     attach: (context, settings) => {
       // group and feature service ids for search filter
-      let groupId;
+      let groupId,
+          serviceUrl;
 
       // Drupal once element load standard. Group search field
       once('na', '.agocms-featurelayer-select-group-search', context)
         .forEach(el => {
             // datalist for populating search options for specific field using list attr
-            const $el_datalist = $('#' + el.getAttribute('list'));
+            const $el_datalist = $('#' + el.getAttribute('list')),
+                  // get corresponding layer select
+                  $el_layerSelect = $('#agocms-featurelayer-select-layer-select-'
+                                      + el.getAttribute('d-field-name'));
             // group ID -> title so user sees title but stores id
             let groupOptions = {};
 
@@ -54,6 +58,12 @@
                   // set group id reference
                   groupId = val;
 
+                  // clear selected service url ref
+                  serviceUrl = undefined;
+
+                  // reset layer select options
+                  $el_layerSelect.empty();
+
                   // replace text in field with group title
                   el.value = groupOptions[groupId];
                 } else {
@@ -70,7 +80,7 @@
             const $el_datalist = $('#' + el.getAttribute('list')),
                   // get corresponding layer select
                   $el_layerSelect = $('#agocms-featurelayer-select-layer-select-'
-                                      + el.getAttribute('d-field-name'));
+                                        + el.getAttribute('d-field-name'));
             // service ID -> title so user sees title but stores id
             let serviceOptions = {};
 
@@ -94,6 +104,8 @@
                   // clear options and add new ones
                   $el_datalist.empty();
                   serviceOptions = {};
+                  // clear selected service url ref
+                  serviceUrl = undefined;
 
                   // loop response options and populate datalist
                   for(const service of response.results){
@@ -116,16 +128,53 @@
                 // ref
                 const val = e.target.value;
 
-                console.log(val);
-
                 // validate input against datalist values
                 if(serviceOptions.hasOwnProperty(val)) {
                   // replace text in field with group title
                   el.value = serviceOptions[val];
+                  // update service url ref
+                  serviceUrl = val;
 
                   // get layers in feature service
                   agocms.ajx(arcgisRest.getAllLayersAndTables, {url: val})
-                    .then(response => console.log(response));
+                    .then(response => {
+                      // clear options and add new ones
+                      $el_layerSelect.empty();
+
+                      // validate
+                      if(response.hasOwnProperty('error')){
+                        console.error('FAILURE: service layers.')
+                      } else {
+                        // loop responses and add options
+                        for(const [groupName, group] of Object.entries(response)){
+                          // validate
+                          if(Array.isArray(group) && group.length > 0){
+                            // build option group for layers
+                            const el_layerGroup = document.createElement('optgroup');
+
+                            // set group label with capitol first letter
+                            el_layerGroup.setAttribute('label',
+                                groupName.charAt(0).toUpperCase() + groupName.slice(1) + ': ');
+
+                            // loop layers and populate select input
+                            for(const layer of group){
+                              // parse group from response and convert to option
+                              const el_layerOption = document.createElement('option');
+
+                              // set group id as value but display name
+                              el_layerOption.value = layer.id;
+                              el_layerOption.innerHTML = layer.name;
+
+                              // add to option group
+                              el_layerGroup.appendChild(el_layerOption);
+                            }
+
+                            // add layer option group to select
+                            $el_layerSelect.append(el_layerGroup);
+                          }
+                        }
+                      }
+                    });
                 } else {
                   // debounce to minimize requests
                   Drupal.debounce(serviceSearch, 700)();
@@ -134,9 +183,14 @@
           });
 
       // layer select field
-      once('na', '.agocms-featurelayer-select-service-search', context)
+      once('na', '.agocms-featurelayer-select-layer-select', context)
         .forEach(el => {
-            el.addEventListener('change', e => console.log('layer:', e.target.value));
+            el.addEventListener('change', e => {
+              const $el_urlInput = $('#agocms-featurelayer-select-input-'
+                                      + el.getAttribute('d-field-name'));
+              console.log(serviceUrl, e.target.value)
+              $el_urlInput.val(serviceUrl + '/' + e.target.value);
+            });
           })
     }
   };

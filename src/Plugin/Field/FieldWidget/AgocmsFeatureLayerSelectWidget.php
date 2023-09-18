@@ -31,7 +31,8 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#type' => 'textfield',
       '#title' => t('Path'),
       '#description' => t('Paste Feature Layer url directly or use search below.'),
-      '#attributes' => ['class' => ['agocms-featurelayer-select__input']],
+      '#attributes' => ['class' => ['agocms-featurelayer-select__input'],
+        'id' => 'agocms-featurelayer-select-input-'. $parsed_field_name],
       '#attached' => ['library' => ['agocms/feature-layer-select']]);
 
     // input field for group search
@@ -41,7 +42,8 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#description' => t('Search or Browse AGO Groups to narrow Feature Service results.'),
       '#attributes' => ['class' => ['agocms-featurelayer-select-group-search'],
         // reference this field so there can be multiple valid datalist field connections
-        'list' => 'agocms-featurelayer-select-group-search-'. $parsed_field_name],
+        'list' => 'agocms-featurelayer-select-group-search-'. $parsed_field_name,
+        'd-field-name' => $parsed_field_name],
       '#suffix' => t('<datalist id="agocms-featurelayer-select-group-search-'
                       . $parsed_field_name .'"></datalist>'));
 
@@ -63,7 +65,8 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#title' => t('Layer'),
       '#description' => t('Select Layer from Feature Service.'),
       '#attributes' => ['class' => ['agocms-featurelayer-select-layer-select'],
-        'id' => 'agocms-featurelayer-select-layer-select-'. $parsed_field_name]);
+        'id' => 'agocms-featurelayer-select-layer-select-'. $parsed_field_name,
+        'd-field-name' => $parsed_field_name]);
 
     return $element;
   }
