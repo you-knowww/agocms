@@ -26,6 +26,9 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
     // use field name and replace spaces with hyphens to keep datalists field specific
     $parsed_field_name = str_replace(' ', '-', $element['#title']);
 
+    // get html for feature layer search fields
+    $tpl_layer_search = ['#theme' => 'layer_search', '#field_name' => $parsed_field_name];
+
     // input field for URL for DB
     $element['feature_layer_select_input'] = array(
       '#type' => 'textfield',
@@ -33,8 +36,9 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#description' => t('Paste Feature Layer url directly or use search below.'),
       '#attributes' => ['class' => ['agocms-featurelayer-select__input'],
         'id' => 'agocms-featurelayer-select-input-'. $parsed_field_name],
-      '#attached' => ['library' => ['agocms/feature-layer-select']]);
-
+      '#attached' => ['library' => ['agocms/feature-layer-select']],
+      '#suffix' => \Drupal::service('renderer')->renderPlain($tpl_layer_search));
+    /*
     // input field for group search
     $element['feature_layer_select_group_search'] = array(
       '#type' => 'textfield',
@@ -67,6 +71,7 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#attributes' => ['class' => ['agocms-featurelayer-select-layer-select'],
         'id' => 'agocms-featurelayer-select-layer-select-'. $parsed_field_name,
         'd-field-name' => $parsed_field_name]);
+    */
 
     return $element;
   }

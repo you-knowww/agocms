@@ -1,0 +1,20 @@
+{# agcms/templates/layer-search.html.twig #}
+<div class='agocms-layer-search' d-field-name='{{field_name}}'>
+  <p>To Search:</p>
+  <ol>
+    <option>Search AGO Groups to narrow Feature Service results.</option>
+    <option>Search Feature Services within selected Group.</option>
+    <option>Select Layer in Feature Service.</option>
+  </ol>
+  <input class='agocms-featurelayer-select-group-search'
+      list='agocms-featurelayer-select-group-search-{{field_name}}'
+      d-field-name='{{field_name}}'>
+  <datalist id='agocms-featurelayer-select-group-search-{{field_name}}'></datalist>
+  <input class='agocms-featurelayer-select-service-search'
+      list='agocms-featurelayer-select-service-search-{{field_name}}'
+      d-field-name='{{field_name}}'>
+  <datalist id='agocms-featurelayer-select-service-search-{{field_name}}'></datalist>
+  <select class='agocms-featurelayer-select-layer-select'
+      id='agocms-featurelayer-select-layer-select-{{field_name}}'
+      d-field-name='{{field_name}}'></select>
+</div>

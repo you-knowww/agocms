@@ -20,3 +20,14 @@ function agocms_js_settings_alter(array &$settings,
 function agocms_page_attachments(array &$page) {
   $page['#attached']['library'][] = 'agocms/agocms';
 }
+
+/**
+ * Implements hook_theme().
+ */
+function agocms_theme($existing, $type, $theme, $path) {
+  return [
+    'layer_search' => [
+      'variables' => ['field_name' => ''],
+    ],
+  ];
+}
