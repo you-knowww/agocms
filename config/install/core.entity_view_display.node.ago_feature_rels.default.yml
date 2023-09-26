@@ -15,7 +15,7 @@ mode: default
 content:
     field_ago_feature_rel_layer_one:
         label: hidden
-        type: basic_string
+        type: agocms_feature_layer_select_f
         weight: 101
         settings:
           link_to_entity: false

@@ -8,7 +8,7 @@ dependencies:
 id: node.field_ago_feature_rel_layer_one
 field_name: field_ago_feature_rel_layer_one
 entity_type: node
-type: string
+type: agocms_feature_layer_select
 settings: {}
 module: text
 locked: false
