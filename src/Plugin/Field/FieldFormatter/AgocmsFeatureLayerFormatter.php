@@ -37,7 +37,8 @@ class AgocmsFeatureLayerFormatter extends FormatterBase {
         // See theme_html_tag().
         '#type' => 'html_tag',
         '#tag' => 'p',
-        '#value' => $this->t('Feature Layer URL: @code', ['@code' => $item->value]),
+        '#value' => $this->t('Layer URL: @layer field: @field',
+            ['@layer' => $item->layer, '@field' => $item->field]),
       ];
     }
 

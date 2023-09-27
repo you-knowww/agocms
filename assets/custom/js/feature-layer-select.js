@@ -185,10 +185,9 @@
       // layer select field
       once('na', '.agocms-featurelayer-select-layer-select', context)
         .forEach(el => {
-            el.addEventListener('change', e => {
+            el.addEventListener('input', e => {
               const $el_urlInput = $('#agocms-featurelayer-select-input-'
                                       + el.getAttribute('d-field-name'));
-              console.log(serviceUrl, e.target.value)
               $el_urlInput.val(serviceUrl + '/' + e.target.value);
             });
           })

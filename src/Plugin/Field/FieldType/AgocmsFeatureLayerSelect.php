@@ -25,7 +25,8 @@ class AgocmsFeatureLayerSelect extends FieldItemBase {
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     return [
       'columns' => [
-        'value' => ['type' => 'text', 'size' => 'normal', 'not null' => FALSE]
+        'layer' => ['type' => 'text', 'size' => 'normal', 'not null' => FALSE],
+        'field' => ['type' => 'text', 'size' => 'normal', 'not null' => FALSE]
       ]
     ];
   }
@@ -36,8 +37,12 @@ class AgocmsFeatureLayerSelect extends FieldItemBase {
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     $properties = [];
 
-    $properties['value'] = DataDefinition::create('string')
+    // default layer URL and field name
+    $properties['layer'] = DataDefinition::create('string')
       ->setLabel(t('https://arcgis.com/example/layer/11'));
+
+    $properties['field'] = DataDefinition::create('string')
+      ->setLabel(t('Example_Field_Name'));
 
     return $properties;
   }
@@ -46,7 +51,12 @@ class AgocmsFeatureLayerSelect extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    $value = $this->get('value')->getValue();
-    return $value === NULL || $value === '';
+    // check if layer and field are empty
+    $layerValue = $this->get('layer')->getValue();
+    $fieldValue = $this->get('field')->getValue();
+
+    // check if both are null or empty
+    return ($layerValue === NULL || $layerValue === '')
+        && ($fieldValue === NULL || $fieldValue === '');
   }
 }
