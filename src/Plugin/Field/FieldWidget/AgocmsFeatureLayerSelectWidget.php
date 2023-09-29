@@ -28,6 +28,7 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
 
     // get html for feature layer search fields
     $tpl_layer_search = ['#theme' => 'layer_search', '#field_name' => $parsed_field_name];
+    $tpl_layer_field_select = ['#theme' => 'layer_field_select', '#field_name' => $parsed_field_name];
 
     // input field for URL for DB
     $element['layer'] = array(
@@ -43,7 +44,10 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#type' => 'textfield',
       '#description' => t('Prepopulates with valid layer or type/paste directly.'),
       '#attributes' => ['class' => ['agocms-featurelayer-field-select__input'],
-        'id' => 'agocms-featurelayer-field-select-input-'. $parsed_field_name]);
+        'id' => 'agocms-featurelayer-field-select-input-'. $parsed_field_name,
+        'list' => 'agocms-featurelayer-field-datalist-'. $parsed_field_name],
+      '#attached' => ['library' => ['agocms/feature-layer-field-select']],
+      '#suffix' => \Drupal::service('renderer')->renderPlain($tpl_layer_field_select));
 
     return $element;
   }

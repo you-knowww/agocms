@@ -10,6 +10,9 @@
         .forEach(el => {
             // datalist for populating search options for specific field using list attr
             const $el_datalist = $('#' + el.getAttribute('list')),
+                  // get corresponding service select
+                  $el_serviceInput = $('#agocms-featurelayer-select-service-input-'
+                                        + el.getAttribute('d-field-name')),
                   // get corresponding layer select
                   $el_layerSelect = $('#agocms-featurelayer-select-layer-select-'
                                       + el.getAttribute('d-field-name'));
@@ -76,11 +79,13 @@
       // feature service search field
       once('na', '.agocms-featurelayer-select-service-search', context)
         .forEach(el => {
+            // jquery ref
+            const $el = $(el);
             // datalist for populating search options for specific field using list attr
-            const $el_datalist = $('#' + el.getAttribute('list')),
+            const $el_datalist = $('#' + $el.attr('list')),
                   // get corresponding layer select
                   $el_layerSelect = $('#agocms-featurelayer-select-layer-select-'
-                                        + el.getAttribute('d-field-name'));
+                                        + $el.attr('d-field-name'));
             // service ID -> title so user sees title but stores id
             let serviceOptions = {};
 
@@ -90,8 +95,12 @@
               const val = el.value;
               // keyword search on all items filtered to Feature Services
               const q = new arcgisRest.SearchQueryBuilder()
-                              .match('Feature Service').in('type')
-                              .and().match(val).in('title');
+                              .match('Feature Service').in('type');
+
+              // skip if group selected and search is empty
+              if(typeof groupId == 'undefined' || val !== ''){
+                q.and().match(val).in('title');
+              }
 
               // if no group set, search all available feature services
               const serviceSearchFn = typeof groupId == 'undefined'
@@ -124,14 +133,14 @@
             };
 
             // set change event listener for datalist selection
-            el.addEventListener('input', e => {
+            $el.bind('input', e => {
                 // ref
                 const val = e.target.value;
 
                 // validate input against datalist values
                 if(serviceOptions.hasOwnProperty(val)) {
                   // replace text in field with group title
-                  el.value = serviceOptions[val];
+                  $el.val(serviceOptions[val]);
                   // update service url ref
                   serviceUrl = val;
 
@@ -145,6 +154,14 @@
                       if(response.hasOwnProperty('error')){
                         console.error('FAILURE: service layers.')
                       } else {
+                        // add dummy select option
+                        const el_defaultOpt = document.createElement('option');
+                        el_defaultOpt.innerHTML = 'Select a layer';
+                        el_defaultOpt.setAttribute('selected', 'selected');
+                        el_defaultOpt.setAttribute('disabled', 'disabled');
+                        // add as first option
+                        $el_layerSelect.append(el_defaultOpt);
+
                         // loop responses and add options
                         for(const [groupName, group] of Object.entries(response)){
                           // validate
@@ -180,15 +197,21 @@
                   Drupal.debounce(serviceSearch, 700)();
                 }
               });
+
+            // run service search on click to open datalist instantly
+            $el.bind('focus', serviceSearch);
           });
 
       // layer select field
       once('na', '.agocms-featurelayer-select-layer-select', context)
         .forEach(el => {
-            el.addEventListener('input', e => {
+            // jquery ref
+            const $el = $(el);
+            // input event listener
+            $el.bind('input', e => {
               const $el_urlInput = $('#agocms-featurelayer-select-input-'
-                                      + el.getAttribute('d-field-name'));
-              $el_urlInput.val(serviceUrl + '/' + e.target.value);
+                                      + $el.attr('d-field-name'));
+              $el_urlInput.val(serviceUrl + '/' + $el.val());
             });
           })
     }

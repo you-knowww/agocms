@@ -32,3 +32,11 @@ feature-layer-select:
     - core/jquery
     - core/drupal
     - core/drupalSettings
+feature-layer-field-select:
+  version: 1.x
+  js:
+    assets/custom/js/feature-layer-field-select.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings

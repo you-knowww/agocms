@@ -27,7 +27,10 @@ function agocms_page_attachments(array &$page) {
 function agocms_theme($existing, $type, $theme, $path) {
   return [
     'layer_search' => [
-      'variables' => ['field_name' => ''],
+      'variables' => ['field_name' => '']
     ],
+    'layer_field_select' => [
+      'variables' => ['field_name' => '']
+    ]
   ];
 }
