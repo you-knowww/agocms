@@ -209,9 +209,13 @@
             const $el = $(el);
             // input event listener
             $el.bind('input', e => {
+              // get main input field and input layer URL
               const $el_urlInput = $('#agocms-featurelayer-select-input-'
                                       + $el.attr('d-field-name'));
               $el_urlInput.val(serviceUrl + '/' + $el.val());
+
+              // fire input event for listeners
+              $el_urlInput.trigger('input');
             });
           })
     }

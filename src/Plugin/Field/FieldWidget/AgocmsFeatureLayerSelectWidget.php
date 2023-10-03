@@ -45,6 +45,8 @@ class AgocmsFeatureLayerSelectWidget extends WidgetBase {
       '#description' => t('Prepopulates with valid layer or type/paste directly.'),
       '#attributes' => ['class' => ['agocms-featurelayer-field-select__input'],
         'id' => 'agocms-featurelayer-field-select-input-'. $parsed_field_name,
+        // don't apply browser history inputs
+        'autocomplete'=>'off',
         'list' => 'agocms-featurelayer-field-datalist-'. $parsed_field_name],
       '#attached' => ['library' => ['agocms/feature-layer-field-select']],
       '#suffix' => \Drupal::service('renderer')->renderPlain($tpl_layer_field_select));

@@ -1,7 +1,6 @@
 (function ($, Drupal, drupalSettings){
   Drupal.behaviors.feature_layer_field_select = {
     attach: (context, settings) => {
-      console.log('open');
       // layer select field
       once('na', '.agocms-featurelayer-field-datalist', context)
         .forEach(el => {
@@ -9,12 +8,19 @@
             const $el = $(el);
             // get form field name
             const formField = $el.attr('d-field-name');
+            // get input for datalist
+            const $el_listInput = $('input[list="' + $el.attr('id') + '"');
+            // layer url reference
+            let layerUrl = '';
 
             // add select event listener related feature layer select field
-            $('#agocms-featurelayer-select-input-' + formField).bind('input', e =>{
+            $('#agocms-featurelayer-select-input-' + formField).bind('input', e => {
               // get layer url
-              const layerUrl = e.target.value;
+              layerUrl = e.target.value;
+            });
 
+            // run search on focus to prompt immediate open
+            $el_listInput.bind('focus', () => {
               // clear datalist
               $(el).empty();
 
@@ -24,7 +30,7 @@
                   // validate fields in result
                   if(Array.isArray(response.fields)){
                     // loop fields to add datalist option for each
-                    for(const field of fields){
+                    for(const field of response.fields){
                       // create data list option and add value and text
                       const el_option = document.createElement('option');
                       el_option.value = field.name;
