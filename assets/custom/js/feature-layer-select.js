@@ -16,6 +16,7 @@
                   // get corresponding layer select
                   $el_layerSelect = $('#agocms-featurelayer-select-layer-select-'
                                       + el.getAttribute('d-field-name'));
+            console.log(el.getAttribute('d-field-name'), $el_layerSelect);
             // group ID -> title so user sees title but stores id
             let groupOptions = {};
 

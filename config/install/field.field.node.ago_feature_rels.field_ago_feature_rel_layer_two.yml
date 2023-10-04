@@ -1,4 +1,4 @@
-# field.field.node.ago_feature_rels.field_ago_feature_rel_layer_one.yml
+# field.field.node.ago_feature_rels.field_ago_feature_rel_layer_two.yml
 langcode: en
 status: true
 dependencies:
@@ -8,11 +8,11 @@ dependencies:
     module:
         - text
 id: node.ago_feature_rels.body
-field_name: field_ago_feature_rel_layer_one
+field_name: field_ago_feature_rel_layer_two
 entity_type: node
 bundle: ago_feature_rels
-label: Feature Layer 1
-description: 'Select the first feature layer and matching field in this relationship.'
+label: Feature Layer 2
+description: 'Select the other feature layer and matching field in this relationship.'
 required: false
 translatable: true
 default_value: {  }

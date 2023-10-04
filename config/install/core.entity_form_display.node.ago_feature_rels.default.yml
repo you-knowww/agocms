@@ -4,6 +4,7 @@ status: true
 dependencies:
     config:
         - field.field.node.ago_feature_rels.field_ago_feature_rel_layer_one
+        - field.field.node.ago_feature_rels.field_ago_feature_rel_layer_two
         - node.type.ago_feature_rels
     module:
         - text
@@ -14,6 +15,14 @@ bundle: ago_feature_rels
 mode: default
 content:
     field_ago_feature_rel_layer_one:
+        label: hidden
+        type: agocms_feature_layer_select_w
+        weight: 101
+        settings:
+          size: 120
+          placeholder: ''
+        third_party_settings: {  }
+    field_ago_feature_rel_layer_two:
         label: hidden
         type: agocms_feature_layer_select_w
         weight: 101
