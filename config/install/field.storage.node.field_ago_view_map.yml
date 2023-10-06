@@ -1,0 +1,19 @@
+# field.storage.node.field_ago_view_map.yml
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+    - text
+id: node.field_ago_view_map
+field_name: field_ago_view_map
+entity_type: node
+type: agocms_view_map
+settings: {}
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {}
+persist_with_no_fields: false
+custom_storage: false

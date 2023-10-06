@@ -1,0 +1,32 @@
+# core.entity_view_display.node.ago_view.teaser.yml
+langcode: en
+status: true
+dependencies:
+    config:
+        - core.entity_view_mode.node.teaser
+        - field.field.node.ago_view.field_ago_view_map
+        - field.field.node.ago_view.field_ago_view_tables
+        - node.type.ago_view
+    module:
+        - text
+        - user
+id: node.ago_view.teaser
+targetEntityType: node
+bundle: ago_view
+mode: teaser
+content:
+    field_ago_view_map:
+        label: hidden
+        type: agocms_view_map_teaser
+        weight: 101
+        settings: { }
+        third_party_settings: {  }
+    field_ago_view_tables:
+        label: hidden
+        type: agocms_view_tables_teaser
+        weight: 101
+        settings: { }
+        third_party_settings: {  }
+    links:
+        weight: 100
+hidden: {  }
