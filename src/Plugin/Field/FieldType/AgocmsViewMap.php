@@ -18,7 +18,7 @@ use Drupal\Core\TypedData\DataDefinition;
  * )
  */
 
-class AgocmsFeatureLayerSelect extends FieldItemBase {
+class AgocmsViewMap extends FieldItemBase {
   /**
     * {@inheritdoc}
     */
@@ -26,21 +26,83 @@ class AgocmsFeatureLayerSelect extends FieldItemBase {
     return [
       'columns' => [
         'view_map_layers' => [
-          'type' => 'mapping',
+          'type' => 'map',
           'mapping' => [
-            'layer' => ['type' => 'text', 'size' => 'normal', 'not null' => FALSE]
+            'layer' => ['type' => 'text', 'size' => 'normal'],
+            'allow_create' => ['type' => 'boolean'],
+            'allow_delete' => ['type' => 'boolean'],
+            'allow_attribute_edit' => ['type' => 'boolean'],
+            'allow_geometry_edit' => ['type' => 'boolean'],
             'fields' => [
-              'type' => 'mapping',
-              'allow_attribute_edit' => ['type' => 'boolean'],
-              'allow_geometry_edit' => ['type' => 'boolean'],
-              'allow_create' => ['type' => 'boolean'],
-              'allow_delete' => ['type' => 'boolean'],
+              'type' => 'map',
               'mapping' => [
-                'field' => ['type' => 'text', 'size' => 'normal', 'not null' => FALSE],
+                'field' => ['type' => 'text', 'size' => 'normal'],
                 'is_disabled' => ['type' => 'boolean'],
                 'is_hidden' => ['type' => 'boolean'],
-                'is_label' => ['type' => 'boolean'],
                 'is_group_id' => ['type' => 'boolean'],
+              ]
+            ],
+            'label_field' => ['type' => 'text', 'size' => 'normal'],
+            'label_style' => [
+              'type' => 'map',
+              'mapping' => [
+                'font_size' => ['type' => 'integer'],
+                'font_color' => ['type' => 'text', 'size' => 'tiny'],
+                'background_color' => ['type' => 'text', 'size' => 'tiny'],
+                'border_color' => ['type' => 'text', 'size' => 'tiny'],
+              ]
+            ],
+            'relationships' => [
+              'type' => 'map',
+              'mapping' => [
+                'layer' => ['type' => 'text', 'size' => 'normal'],
+                'attribute' => [
+                  'type' => 'map',
+                  'mapping' => [
+                    'field_1' => ['type' => 'text', 'size' => 'normal'],
+                    'field_2' => ['type' => 'text', 'size' => 'normal'],
+                    'operator' => [
+                      'type' => 'list_string',
+                      'sequence' => [
+                        '=' => '[Layer_1] [field_1] = [layer_2] [field_2]',
+                        '>' => '[Layer_1] [field_1] > [layer_2] [field_2]',
+                        '=>' => '[Layer_1] [field_1] => [layer_2] [field_2]',
+                        '<' => '[Layer_1] [field_1] < [layer_2] [field_2]',
+                        '<=' => '[Layer_1] [field_1] <= [layer_2] [field_2]',
+                        '!=' => '[Layer_1] [field_1] does NOT = [layer_2] [field_2]',
+                      ]
+                    ],
+                  ]
+                ],
+                'geometry' => [
+                  'type' => 'list_string',
+                  'sequence' => [
+                    'disabled' => 'disabled',
+                    'overlap' => 'overlap',
+                    '1_contains_2' => '[Layer_1] contains [layer_2]',
+                    '2_contains_1' => '[Layer_1] is contained by [layer_2]'
+                  ]
+                ],
+                'plot_layout' => [
+                  'is_disabled' => ['type' => 'boolean'],
+                  'default_layout_type' => [
+                    'type' => 'list_string',
+                    'sequence' => [
+                      'count' => 'Point Count',
+                      'points_per_acre' => 'Points/Acre',
+                      'acres_per_point' => 'Acres/Point'
+                    ]
+                  ],
+                  'default_layout_val' => ['type' => 'integer'],
+                  'buffer' => ['type' => 'integer'],
+                  'inhertied_fields' => [
+                  'type' => 'map',
+                  'mapping' => [
+                    'field_1' => ['type' => 'text', 'size' => 'normal'],
+                    'field_2' => ['type' => 'text', 'size' => 'normal'],
+                  ]
+                ],
+                'is_disabled' => ['type' => 'boolean']
               ]
             ]
           ]

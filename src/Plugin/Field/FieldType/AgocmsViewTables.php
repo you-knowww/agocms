@@ -10,23 +10,72 @@ use Drupal\Core\TypedData\DataDefinition;
  * Provides a field type of AGO CMS Feature Layer Select.
  *
  * @FieldType(
- *   id = "agocms_feature_layer_select",
- *   label = @Translation("AGO CMS Feature Layer Select"),
+ *   id = "agocms_view_tables",
+ *   label = @Translation("View ESRI data in table."),
  *   module = "agocms",
- *   default_widget = "agocms_feature_layer_select_w",
- *   default_formatter = "agocms_feature_layer_select_f"
+ *   default_widget = "agocms_view_table_config_w",
+ *   default_formatter = "agocms_view_table"
  * )
  */
 
-class AgocmsFeatureLayerSelect extends FieldItemBase {
+class AgocmsViewTables extends FieldItemBase {
   /**
     * {@inheritdoc}
     */
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     return [
       'columns' => [
-        'layer' => ['type' => 'text', 'size' => 'normal', 'not null' => FALSE],
-        'field' => ['type' => 'text', 'size' => 'normal', 'not null' => FALSE]
+        'view_map_layers' => [
+          'type' => 'map',
+          'mapping' => [
+            'layer' => ['type' => 'text', 'size' => 'normal'],
+            'allow_create' => ['type' => 'boolean'],
+            'allow_delete' => ['type' => 'boolean'],
+            'fields' => [
+              'type' => 'map',
+              'mapping' => [
+                'field' => ['type' => 'text', 'size' => 'normal'],
+                'is_disabled' => ['type' => 'boolean'],
+                'is_hidden' => ['type' => 'boolean'],
+                'is_group_id' => ['type' => 'boolean'],
+              ]
+            ],
+            'relationships' => [
+              'type' => 'map',
+              'mapping' => [
+                'layer' => ['type' => 'text', 'size' => 'normal'],
+                'attribute' => [
+                  'type' => 'map',
+                  'mapping' => [
+                    'field_1' => ['type' => 'text', 'size' => 'normal'],
+                    'field_2' => ['type' => 'text', 'size' => 'normal'],
+                    'operator' => [
+                      'type' => 'list_string',
+                      'sequence' => [
+                        '=' => '[Layer_1] [field_1] = [layer_2] [field_2]',
+                        '>' => '[Layer_1] [field_1] > [layer_2] [field_2]',
+                        '=>' => '[Layer_1] [field_1] => [layer_2] [field_2]',
+                        '<' => '[Layer_1] [field_1] < [layer_2] [field_2]',
+                        '<=' => '[Layer_1] [field_1] <= [layer_2] [field_2]',
+                        '!=' => '[Layer_1] [field_1] does NOT = [layer_2] [field_2]',
+                      ]
+                    ],
+                  ]
+                ],
+                'geometry' => [
+                  'type' => 'list_string',
+                  'sequence' => [
+                    'disabled' => 'disabled',
+                    'overlap' => 'overlap',
+                    '1_contains_2' => '[Layer_1] contains [layer_2]',
+                    '2_contains_1' => '[Layer_1] is contained by [layer_2]'
+                  ]
+                ],
+                'is_disabled' => ['type' => 'boolean']
+              ]
+            ]
+          ]
+        ]
       ]
     ];
   }
