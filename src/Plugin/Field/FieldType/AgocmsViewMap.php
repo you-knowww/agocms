@@ -38,8 +38,7 @@ class AgocmsViewMap extends FieldItemBase {
               'mapping' => [
                 'field' => ['type' => 'text', 'size' => 'normal'],
                 'is_disabled' => ['type' => 'boolean'],
-                'is_hidden' => ['type' => 'boolean'],
-                'is_group_id' => ['type' => 'boolean'],
+                'is_hidden' => ['type' => 'boolean']
               ]
             ],
             'label_field' => ['type' => 'text', 'size' => 'normal'],
@@ -83,6 +82,19 @@ class AgocmsViewMap extends FieldItemBase {
                     '2_contains_1' => '[Layer_1] is contained by [layer_2]'
                   ]
                 ],
+                'inhertied_attributes' => [
+                  'type' => 'map',
+                  'mapping' => [
+                    'field_1' => ['type' => 'text', 'size' => 'normal'],
+                    'field_2' => ['type' => 'text', 'size' => 'normal'],
+                  ]
+                ],
+                'group_ids' => [
+                  'type' => 'map',
+                  'mapping' => [
+                    'field' => ['type' => 'text', 'size' => 'normal']
+                  ]
+                ],
                 'plot_layout' => [
                   'is_disabled' => ['type' => 'boolean'],
                   'default_layout_type' => [
@@ -94,13 +106,7 @@ class AgocmsViewMap extends FieldItemBase {
                     ]
                   ],
                   'default_layout_val' => ['type' => 'integer'],
-                  'buffer' => ['type' => 'integer'],
-                  'inhertied_fields' => [
-                  'type' => 'map',
-                  'mapping' => [
-                    'field_1' => ['type' => 'text', 'size' => 'normal'],
-                    'field_2' => ['type' => 'text', 'size' => 'normal'],
-                  ]
+                  'buffer' => ['type' => 'integer']
                 ],
                 'is_disabled' => ['type' => 'boolean']
               ]
@@ -115,15 +121,16 @@ class AgocmsViewMap extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-    $properties = [];
-
+    // empty array init
+    $properties = ['view_map_layers' => []];
+    /*
     // default layer URL and field name
     $properties['layer'] = DataDefinition::create('string')
       ->setLabel(t('https://arcgis.com/example/layer/11'));
 
     $properties['field'] = DataDefinition::create('string')
       ->setLabel(t('Example_Field_Name'));
-
+    */
     return $properties;
   }
 
@@ -131,12 +138,12 @@ class AgocmsViewMap extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    // check if layer and field are empty
-    $layerValue = $this->get('layer')->getValue();
-    $fieldValue = $this->get('field')->getValue();
+    // check if there are any definined layers
+    $layers = $this->get('view_map_layers');
+    //$layerValue = $this->get('layer')->getValue();
+    //$fieldValue = $this->get('field')->getValue();
 
     // check if both are null or empty
-    return ($layerValue === NULL || $layerValue === '')
-        && ($fieldValue === NULL || $fieldValue === '');
+    return $layers === NULL || $layers === [];
   }
 }

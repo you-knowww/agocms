@@ -25,7 +25,7 @@ class AgocmsViewTables extends FieldItemBase {
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
     return [
       'columns' => [
-        'view_map_layers' => [
+        'view_table_layers' => [
           'type' => 'map',
           'mapping' => [
             'layer' => ['type' => 'text', 'size' => 'normal'],
@@ -36,8 +36,7 @@ class AgocmsViewTables extends FieldItemBase {
               'mapping' => [
                 'field' => ['type' => 'text', 'size' => 'normal'],
                 'is_disabled' => ['type' => 'boolean'],
-                'is_hidden' => ['type' => 'boolean'],
-                'is_group_id' => ['type' => 'boolean'],
+                'is_hidden' => ['type' => 'boolean']
               ]
             ],
             'relationships' => [
@@ -71,6 +70,19 @@ class AgocmsViewTables extends FieldItemBase {
                     '2_contains_1' => '[Layer_1] is contained by [layer_2]'
                   ]
                 ],
+                'inhertied_attributes' => [
+                  'type' => 'map',
+                  'mapping' => [
+                    'field_1' => ['type' => 'text', 'size' => 'normal'],
+                    'field_2' => ['type' => 'text', 'size' => 'normal'],
+                  ]
+                ],
+                'group_ids' => [
+                  'type' => 'map',
+                  'mapping' => [
+                    'field' => ['type' => 'text', 'size' => 'normal']
+                  ]
+                ],
                 'is_disabled' => ['type' => 'boolean']
               ]
             ]
@@ -84,15 +96,16 @@ class AgocmsViewTables extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-    $properties = [];
-
+    // empty array init
+    $properties = ['view_table_layers' => []];
+    /*
     // default layer URL and field name
     $properties['layer'] = DataDefinition::create('string')
       ->setLabel(t('https://arcgis.com/example/layer/11'));
 
     $properties['field'] = DataDefinition::create('string')
       ->setLabel(t('Example_Field_Name'));
-
+    */
     return $properties;
   }
 
@@ -100,12 +113,12 @@ class AgocmsViewTables extends FieldItemBase {
    * {@inheritdoc}
    */
   public function isEmpty() {
-    // check if layer and field are empty
-    $layerValue = $this->get('layer')->getValue();
-    $fieldValue = $this->get('field')->getValue();
+    // check if there are any definined layers
+    $layers = $this->get('view_table_layers');
+    //$layerValue = $this->get('layer')->getValue();
+    //$fieldValue = $this->get('field')->getValue();
 
     // check if both are null or empty
-    return ($layerValue === NULL || $layerValue === '')
-        && ($fieldValue === NULL || $fieldValue === '');
+    return $layers === NULL || $layers === [];
   }
 }
