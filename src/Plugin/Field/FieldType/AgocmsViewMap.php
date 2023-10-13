@@ -87,6 +87,8 @@ class AgocmsViewMap extends FieldItemBase {
                   'mapping' => [
                     'field_1' => ['type' => 'text', 'size' => 'normal'],
                     'field_2' => ['type' => 'text', 'size' => 'normal'],
+                    'allow_overwrite' => ['type' => 'boolean'],
+                    'allow_cascade_update' => ['type' => 'boolean']
                   ]
                 ],
                 'group_ids' => [

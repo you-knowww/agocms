@@ -44,15 +44,12 @@ class AgocmsViewMapWidget extends WidgetBase {
     $element['allow_create'] = array(
       '#type' => 'checkbox',
       '#description' => t('Allow users to create features.'));
-    // input field for layer field name
     $element['allow_delete'] = array(
       '#type' => 'checkbox',
       '#description' => t('Allow users delete features.'));
-    // input field for layer field name
     $element['allow_attribute_edit'] = array(
       '#type' => 'checkbox',
       '#description' => t('Allow users to edit feature attributes.'));
-    // input field for layer field name
     $element['allow_geometry_edit'] = array(
       '#type' => 'checkbox',
       '#description' => t('Allow users to edit feature geometry.'));
@@ -64,10 +61,56 @@ class AgocmsViewMapWidget extends WidgetBase {
     $element['is_disabled'] = array(
       '#type' => 'checkbox',
       '#description' => t('Disabled'));
-
     $element['is_hidden'] = array(
       '#type' => 'checkbox',
       '#description' => t('Hidden'));
+
+    $element['label_field'] = array(
+      '#type' => 'textfield',
+      '#description' => t('Label field name.'));
+
+    $element['font_size'] = array(
+      '#type' => 'number',
+      '#description' => t('Font size.'));
+    $element['font_color'] = array(
+      '#type' => 'color',
+      '#description' => t('Font color.'));
+    $element['background_color'] = array(
+      '#type' => 'color',
+      '#description' => t('Background color.'));
+    $element['border_color'] = array(
+      '#type' => 'color',
+      '#description' => t('Border color.'));
+
+    $element['field_1'] = array(
+      '#type' => 'textfield',
+      '#description' => t('Layer 1 field.'));
+    $element['field_2'] = array(
+      '#type' => 'textfield',
+      '#description' => t('Layer 2 field.'));
+    $element['operator'] = array(
+      '#type' => 'select',
+      '#description' => t('How layer 1 field and layer 2 field are related.'));
+
+    $element['geometry'] = array(
+      '#type' => 'select',
+      '#description' => t('How layer 1 and layer 2 are spatially related.'));
+
+    $element['allow_overwrite'] = array(
+      '#type' => 'checkbox',
+      '#description' => t('When matching on attribute or geometry, overwrite matched records on these fields.'));
+
+    $element['default_layout_type'] = array(
+      '#type' => 'select',
+      '#description' => t('Layout pattern of points in a polygon.'));
+
+    $element['default_layout_val'] = array(
+      '#type' => 'number',
+      '#description' => t('Value for variable of pattern for points in polygon.'));
+
+    $element['buffer'] = array(
+      '#type' => 'number',
+      '#description' => t('Plot layout buffer around polygon edge.'));
     return $element;
   }
 }
