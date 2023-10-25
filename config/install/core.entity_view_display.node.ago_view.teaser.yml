@@ -17,13 +17,13 @@ mode: teaser
 content:
     field_ago_view_map:
         label: hidden
-        type: agocms_view_map_teaser
+        type: agocms_view_map
         weight: 101
         settings: { }
         third_party_settings: {  }
     field_ago_view_tables:
         label: hidden
-        type: agocms_view_tables_teaser
+        type: agocms_view_tables
         weight: 101
         settings: { }
         third_party_settings: {  }

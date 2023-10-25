@@ -1,4 +1,4 @@
-# node.type.ago_view.yml
+# node.type.ago_feature_rels.yml
 langcode: en
 status: true
 dependencies:
@@ -6,7 +6,7 @@ dependencies:
     module:
       - agocms
 name: 'ESRI View'
-type: ago_view
+type: ago_feature_rels
 description: 'View feature layers and their connections in maps and tables.'
 help: ''
 new_revision: false

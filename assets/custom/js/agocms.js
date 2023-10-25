@@ -22,8 +22,8 @@ class Agocms {
 
     // validate access token from AGO Social Auth
     if(drupalSettings.hasOwnProperty('ago_access_token')
-          && drupalSettings.ago_access_token != null
-          && drupalSettings.ago_access_token.hasOwnProperty('token')){
+        && drupalSettings.ago_access_token != null
+        && drupalSettings.ago_access_token.hasOwnProperty('token')){
       // ref
       const tokenSettings = drupalSettings.ago_access_token;
       const token = tokenSettings.token;
@@ -59,7 +59,7 @@ class Agocms {
     } else {
       // invalidate the entire thing and throw error
       this.#valid = false;
-      console.error('invalid ON messag');
+      console.error('AGO token is nonexistent or entirely invalid and unrenewable.');
     }
   }
 

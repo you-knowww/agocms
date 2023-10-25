@@ -17,40 +17,28 @@ use Drupal\Core\Form\FormStateInterface;
  *   multiple_values = FALSE,
  * )
  */
-
-class AgocmsFeatureLayerSelectWidget extends WidgetBase {
+// https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7.x
+class AgocmsViewTablesWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    // use field name and replace spaces with hyphens to keep datalists field specific
-    $parsed_field_name = str_replace(' ', '-', $element['#title']);
+    /*
+      single config input hidden and disable from view. form
+      builds config in JSON and updates hidden field.
+    */
+    $tpl_form = ['#theme' => 'view_tables_conf_form'];
 
-    // get html for feature layer search fields
-    // $tpl_layer_search = ['#theme' => 'layer_search', '#field_name' => $parsed_field_name];
-    // $tpl_layer_field_select = ['#theme' => 'layer_field_select', '#field_name' => $parsed_field_name];
-
-    // input field for URL for DB
-    $element['layer'] = array(
+    $element['conf'] = array(
       '#type' => 'textfield',
-      '#description' => t('Or paste Feature Layer URL directly.'),
-      '#attributes' => ['class' => ['agocms-featurelayer-select__input'],
-        'id' => 'agocms-featurelayer-select-input-'. $parsed_field_name],
-      '#attached' => ['library' => ['agocms/feature-layer-select']],
-      '#prefix' => \Drupal::service('renderer')->renderPlain($tpl_layer_search));
-
-    // input field for layer field name
-    $element['field'] = array(
-      '#type' => 'textfield',
-      '#description' => t('Prepopulates with valid layer or type/paste directly.'),
-      '#attributes' => ['class' => ['agocms-featurelayer-field-select__input'],
-        'id' => 'agocms-featurelayer-field-select-input-'. $parsed_field_name,
-        // don't apply browser history inputs
-        'autocomplete'=>'off',
-        'list' => 'agocms-featurelayer-field-datalist-'. $parsed_field_name],
-      '#attached' => ['library' => ['agocms/feature-layer-field-select']],
-      '#suffix' => \Drupal::service('renderer')->renderPlain($tpl_layer_field_select));
+      '#title' => $this->t('Tables View Config'),
+      '#attributes' => ['style' => 'display: none;', 'disabled' => 'disabled',
+          'id' => 'agocms-view-tables-conf', 'class' => ['agocms-view-conf__input']],
+      '#attached' => ['library' => ['agocms/view-conf']],
+      '#suffix' => \Drupal::service('renderer')->renderPlain($tpl_form)
+    );
 
     return $element;
+    // $parsed_field_name = str_replace(' ', '-', $element['#title']);
   }
 }

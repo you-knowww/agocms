@@ -23,100 +23,7 @@ class AgocmsViewMap extends FieldItemBase {
     * {@inheritdoc}
     */
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
-    return [
-      'columns' => [
-        'view_map_layers' => [
-          'type' => 'map',
-          'mapping' => [
-            'layer' => ['type' => 'text', 'size' => 'normal'],
-            'allow_create' => ['type' => 'boolean'],
-            'allow_delete' => ['type' => 'boolean'],
-            'allow_attribute_edit' => ['type' => 'boolean'],
-            'allow_geometry_edit' => ['type' => 'boolean'],
-            'fields' => [
-              'type' => 'map',
-              'mapping' => [
-                'field' => ['type' => 'text', 'size' => 'normal'],
-                'is_disabled' => ['type' => 'boolean'],
-                'is_hidden' => ['type' => 'boolean']
-              ]
-            ],
-            'label_field' => ['type' => 'text', 'size' => 'normal'],
-            'label_style' => [
-              'type' => 'map',
-              'mapping' => [
-                'font_size' => ['type' => 'integer'],
-                'font_color' => ['type' => 'text', 'size' => 'tiny'],
-                'background_color' => ['type' => 'text', 'size' => 'tiny'],
-                'border_color' => ['type' => 'text', 'size' => 'tiny'],
-              ]
-            ],
-            'relationships' => [
-              'type' => 'map',
-              'mapping' => [
-                'layer' => ['type' => 'text', 'size' => 'normal'],
-                'attribute' => [
-                  'type' => 'map',
-                  'mapping' => [
-                    'field_1' => ['type' => 'text', 'size' => 'normal'],
-                    'field_2' => ['type' => 'text', 'size' => 'normal'],
-                    'operator' => [
-                      'type' => 'list_string',
-                      'sequence' => [
-                        '=' => '[Layer_1] [field_1] = [layer_2] [field_2]',
-                        '>' => '[Layer_1] [field_1] > [layer_2] [field_2]',
-                        '=>' => '[Layer_1] [field_1] => [layer_2] [field_2]',
-                        '<' => '[Layer_1] [field_1] < [layer_2] [field_2]',
-                        '<=' => '[Layer_1] [field_1] <= [layer_2] [field_2]',
-                        '!=' => '[Layer_1] [field_1] does NOT = [layer_2] [field_2]',
-                      ]
-                    ],
-                  ]
-                ],
-                'geometry' => [
-                  'type' => 'list_string',
-                  'sequence' => [
-                    'disabled' => 'disabled',
-                    'overlap' => 'overlap',
-                    '1_contains_2' => '[Layer_1] contains [layer_2]',
-                    '2_contains_1' => '[Layer_1] is contained by [layer_2]'
-                  ]
-                ],
-                'inhertied_attributes' => [
-                  'type' => 'map',
-                  'mapping' => [
-                    'field_1' => ['type' => 'text', 'size' => 'normal'],
-                    'field_2' => ['type' => 'text', 'size' => 'normal'],
-                    'allow_overwrite' => ['type' => 'boolean'],
-                    'allow_cascade_update' => ['type' => 'boolean']
-                  ]
-                ],
-                'group_ids' => [
-                  'type' => 'map',
-                  'mapping' => [
-                    'field' => ['type' => 'text', 'size' => 'normal']
-                  ]
-                ],
-                'plot_layout' => [
-                  'is_disabled' => ['type' => 'boolean'],
-                  'default_layout_type' => [
-                    'type' => 'list_string',
-                    'sequence' => [
-                      'count' => 'Point Count',
-                      'points_per_acre' => 'Points/Acre',
-                      'acres_per_point' => 'Acres/Point'
-                    ]
-                  ],
-                  'default_layout_val' => ['type' => 'integer'],
-                  'buffer' => ['type' => 'integer']
-                ],
-                'is_disabled' => ['type' => 'boolean']
-              ]
-            ]
-          ]
-        ]
-      ]
-    ];
+    return ['columns' => ['conf' => ['type' => 'text', 'size' => 'big', 'not null' => FALSE]]];
   }
 
   /**
@@ -124,15 +31,8 @@ class AgocmsViewMap extends FieldItemBase {
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     // empty array init
-    $properties = ['view_map_layers' => []];
-    /*
-    // default layer URL and field name
-    $properties['layer'] = DataDefinition::create('string')
-      ->setLabel(t('https://arcgis.com/example/layer/11'));
-
-    $properties['field'] = DataDefinition::create('string')
-      ->setLabel(t('Example_Field_Name'));
-    */
+    $properties = ['conf' => DataDefinition::create('string')
+      ->setLabel(t('{layers: [{url: "https://example.layer.dot.com/12345"}]}'))];
     return $properties;
   }
 
@@ -141,11 +41,9 @@ class AgocmsViewMap extends FieldItemBase {
    */
   public function isEmpty() {
     // check if there are any definined layers
-    $layers = $this->get('view_map_layers');
-    //$layerValue = $this->get('layer')->getValue();
-    //$fieldValue = $this->get('field')->getValue();
+    $conf = $this->get('conf');
 
     // check if both are null or empty
-    return $layers === NULL || $layers === [];
+    return $conf === NULL || $conf === '';
   }
 }

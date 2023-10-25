@@ -1,7 +1,7 @@
 <?php
 /**
  * Implements hook_js_settings_alter().
- * - adds "ago_access_token" to the drupalSettings
+ * - add "ago_access_token" to the drupalSettings
  */
 function agocms_js_settings_alter(array &$settings,
             \Drupal\Core\Asset\AttachedAssetsInterface $assets) {
@@ -15,7 +15,7 @@ function agocms_js_settings_alter(array &$settings,
 
 /**
  * Implements hook_page_attachments()
- * - adds core ago and agocms JS to every page
+ * - add core ago and agocms JS to every page
  */
 function agocms_page_attachments(array &$page) {
   $page['#attached']['library'][] = 'agocms/agocms';
@@ -26,7 +26,7 @@ function agocms_page_attachments(array &$page) {
  */
 function agocms_theme($existing, $type, $theme, $path) {
   return [
-    'layer_search' => ['variables' => ['field_name' => '']],
-    'layer_field_select' => ['variables' => ['field_name' => '']]
+    'view_map_conf_form' => [],
+    'view_tables_conf_form' => []
   ];
 }

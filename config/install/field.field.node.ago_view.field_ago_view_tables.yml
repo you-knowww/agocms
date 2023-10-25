@@ -7,7 +7,7 @@ dependencies:
         - node.type.ago_view
     module:
         - text
-id: node.ago_view.body
+id: node.ago_view.field_ago_view_tables
 field_name: field_ago_view_tables
 entity_type: node
 bundle: ago_view
@@ -18,4 +18,4 @@ translatable: true
 default_value: {  }
 default_value_callback: ''
 settings: {}
-field_type: agocms_tables
+field_type: agocms_view_tables

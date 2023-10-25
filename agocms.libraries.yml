@@ -3,19 +3,14 @@ agocms:
   js:
     https://unpkg.com/@esri/arcgis-rest-request@4.2.0/dist/bundled/request.umd.min.js:
       { type: external,
-        attributes:
-          { type: application/javascript,
-            crossorigin: anonymous } }
+        attributes: { type: application/javascript, crossorigin: anonymous } }
     https://unpkg.com/@esri/arcgis-rest-portal@4.3.0/dist/bundled/portal.umd.js:
       { type: external,
         attributes:
-          { type: application/javascript,
-            crossorigin: anonymous } }
+          { type: application/javascript, crossorigin: anonymous } }
     https://unpkg.com/@esri/arcgis-rest-feature-service@4.0.5/dist/bundled/feature-service.umd.js:
       { type: external,
-        attributes:
-          { type: application/javascript,
-            crossorigin: anonymous } }
+        attributes: { type: application/javascript, crossorigin: anonymous } }
     assets/custom/js/agocms.js: {}
   css:
     component:
@@ -24,19 +19,10 @@ agocms:
     - core/jquery
     - core/drupal
     - core/drupalSettings
-feature-layer-select:
+view-conf:
   version: 1.x
   js:
-    assets/custom/js/feature-layer-select.js: {}
-  dependencies:
-    - core/jquery
-    - core/drupal
-    - core/drupalSettings
-feature-layer-field-select:
-  version: 1.x
-  js:
-    assets/custom/js/feature-layer-field-select.js: {}
-  dependencies:
-    - core/jquery
-    - core/drupal
-    - core/drupalSettings
+    https://unpkg.com/hyperscript.org@0.9.12:
+      { type: external,
+        attributes: { type: application/javascript, crossorigin: anonymous } }
+    assets/custom/js/view-conf.js: {}

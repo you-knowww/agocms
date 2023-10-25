@@ -1,0 +1,76 @@
+{# agcms/templates/view-map-conf-form.html.twig #}
+<div class='agocms-view-map-conf'>
+  <p>Layers:<p>
+  <div>
+    <div>
+      <p>Layer:<p>
+      <ol>
+        <li>
+          <span>Search AGO Groups to narrow Feature Service results.</span><br/>
+          <input class='agocms-featurelayer-select-group-search'
+              id='agocms-featurelayer-select-input-search-0'
+              list='agocms-featurelayer-select-group-search-0'
+              d-field-name='0'
+              autocomplete='off'
+              _="on input(key) debounced at 700ms
+                  -- require some search text
+                  if my value != ''
+                    -- if selecting datalist value then bail
+                    set el_datalistOps to <option/> in next <datalist/>
+                    for el_datalistOp in el_datalistOps
+                      if my value == el_datalistOp's value
+                        exit
+                      end
+                    end
+                    -- begin loading bar on 1 second timer
+                    send showFakeProgress to next <progress/>
+                    -- request ago group named like search term
+                    call agocmsViewConfigFormGroupSearch(my value) then
+                      set groups to the result
+                      get next <datalist/>
+                      set its innerHTML to ''
+                      for group in groups
+                        make an <option/>
+                        put group's title into its innerHTML
+                        put group's title into its value
+                        put group's id into its @data-id
+                        put it at end of next <datalist/>
+                      end
+                  end">
+          <datalist id='agocms-featurelayer-select-group-search-0'></datalist>
+          <div style="display: none;">
+            <label for="agocms-featurelayer-select-group-progress-0">Searching groups:</label>
+            <progress id="agocms-featurelayer-select-group-progress-0"
+                value="0"
+                max="100"
+                _="on showFakeProgress debounced at 700ms
+                    set my value to 0
+                    show the closest parent <div/>
+                    repeat while my value < 100
+                      set my value to my value + 10
+                      wait 0.1s
+                    end
+                    wait 0.4s
+                    hide the closest parent <div/>">0%</progress>
+          </div>
+        </li>
+        <li>
+          <span>Search Feature Services within selected Group.</span><br/>
+          <input class='agocms-featurelayer-select-service-search'
+              id='agocms-featurelayer-select-service-input-0'
+              list='agocms-featurelayer-select-service-search-0'
+              d-field-name='0'
+              autocomplete='off'>
+          <datalist id='agocms-featurelayer-select-service-search-0'></datalist>
+        </li>
+        <li>
+          <span>Select Layer in Feature Service.</span><br/>
+          <select class='agocms-featurelayer-select-layer-select'
+              id='agocms-featurelayer-select-layer-select-0'
+              d-field-name='0'></select>
+        </li>
+      </ol>
+    </div>
+  </div>
+  <button>Add layer</button>
+</div>
