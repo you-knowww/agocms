@@ -20,9 +20,7 @@
                     for el_datalistOp in el_datalistOps
                       if my value == el_datalistOp's value
                         -- provide id reference to service search and exit
-                        -- set groupId to el_datalistOp's @data-id
-                        set groupId to el_datalistOp's @data-id
-                        send selectedGroup(groupId: groupId) to next <input/>
+                        send selectedGroup(groupId: el_datalistOp's @d-id) to next <input/>
                         exit
                       end
                     end
@@ -35,24 +33,62 @@
                         make an <option/>
                         put group's title into its innerHTML
                         put group's title into its value
-                        put group's id into its @data-id
+                        put group's id into its @d-id
                         put it at end of next <datalist/>
                       end
                   end">
           <datalist id='agocms-featurelayer-select-group-search-0'></datalist>
         </li>
-        <li style="display: none;">
-          <span>Search Feature Services within selected Group.</span><br/>
+        <li>
+          <span>Search Feature Services within selected Group.<br/>
+            *Use group search in <b>step 1</b> to narrow Feature Service results</span><br/>
           <input class='agocms-featurelayer-select-service-search'
               id='agocms-featurelayer-select-service-input-0'
               list='agocms-featurelayer-select-service-search-0'
               d-field-name='0'
+              d-group=''
               autocomplete='off'
               _="on selectedGroup(groupId)
-                  log groupId
-                  show the closest parent <li/>
+                  set my @d-group to groupId
+                  call agocmsViewConfigFormServiceSearch(my value, groupId) then
+                    set services to the result
+                    get next <datalist/>
+                    set its innerHTML to ''
+                    for service in services
+                      make an <option/>
+                      put service's title into its innerHTML
+                      put service's title into its value
+                      put service's url into its @d-id
+                      put it at end of next <datalist/>
+                    end
                 end
-                on focus log 'test'">
+                on input(isFromFocus) debounced at 700ms
+                  -- validate and dont run an extra query if this is from focus
+                  if isFromFocus !== true and (my @d-group != '' or my value != '')
+                    -- if selecting datalist value then bail
+                    set el_datalistOps to <option/> in next <datalist/>
+                    for el_datalistOp in el_datalistOps
+                      if my value == el_datalistOp's value
+                        -- provide id reference to service search and exit
+                        -- send selectedGroup(groupId: el_datalistOp's @d-id) to next <input/>
+                        exit
+                      end
+                    end
+                    call agocmsViewConfigFormServiceSearch(my value, my @d-group) then
+                    set services to the result
+                    get next <datalist/>
+                    set its innerHTML to ''
+                    for service in services
+                      make an <option/>
+                      put service's title into its innerHTML
+                      put service's title into its value
+                      put service's url into its @d-id
+                      put it at end of next <datalist/>
+                    end
+                  end
+                end
+                -- auto open datalist on click
+                on focus send input(isFromFocus: true) to me">
           <datalist id='agocms-featurelayer-select-service-search-0'></datalist>
         </li>
         <li style="display: none;">
