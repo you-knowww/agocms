@@ -1,104 +1,153 @@
 {# agcms/templates/view-map-conf-form.html.twig #}
 <div class='agocms-view-map-conf'>
   <p>Layers:<p>
+  <div id='agocmsViewMapConfLayers'></div>
+  <button onclick='agocmsViewConfigFormAddLayer()'>Add layer</button>
+</div>
+<template id='agocmsFeatureLayerSelect'>
   <div>
-    <div>
-      <p>Layer:<p>
-      <ol>
-        <li>
-          <span>Search AGO Groups to narrow Feature Service results.</span><br/>
-          <input class='agocms-featurelayer-select-group-search'
-              id='agocms-featurelayer-select-input-search-0'
-              list='agocms-featurelayer-select-group-search-0'
-              d-field-name='0'
-              autocomplete='off'
-              _="on input debounced at 700ms
-                  -- require some search text
-                  if my value != ''
-                    -- if selecting datalist value then bail
-                    set el_datalistOps to <option/> in next <datalist/>
-                    for el_datalistOp in el_datalistOps
-                      if my value == el_datalistOp's value
-                        -- provide id reference to service search and exit
-                        send selectedGroup(groupId: el_datalistOp's @d-id) to next <input/>
-                        exit
-                      end
-                    end
-                    -- request ago group named like search term
-                    call agocmsViewConfigFormGroupSearch(my value) then
-                      set groups to the result
-                      get next <datalist/>
-                      set its innerHTML to ''
-                      for group in groups
-                        make an <option/>
-                        put group's title into its innerHTML
-                        put group's title into its value
-                        put group's id into its @d-id
-                        put it at end of next <datalist/>
-                      end
-                  end">
-          <datalist id='agocms-featurelayer-select-group-search-0'></datalist>
-        </li>
-        <li>
-          <span>Search Feature Services within selected Group.<br/>
-            *Use group search in <b>step 1</b> to narrow Feature Service results</span><br/>
-          <input class='agocms-featurelayer-select-service-search'
-              id='agocms-featurelayer-select-service-input-0'
-              list='agocms-featurelayer-select-service-search-0'
-              d-field-name='0'
-              d-group=''
-              autocomplete='off'
-              _="on selectedGroup(groupId)
-                  set my @d-group to groupId
-                  call agocmsViewConfigFormServiceSearch(my value, groupId) then
-                    set services to the result
-                    get next <datalist/>
-                    set its innerHTML to ''
-                    for service in services
-                      make an <option/>
-                      put service's title into its innerHTML
-                      put service's title into its value
-                      put service's url into its @d-id
-                      put it at end of next <datalist/>
-                    end
-                end
-                on input(isFromFocus) debounced at 700ms
-                  -- validate and dont run an extra query if this is from focus
-                  if isFromFocus !== true and (my @d-group != '' or my value != '')
-                    -- if selecting datalist value then bail
-                    set el_datalistOps to <option/> in next <datalist/>
-                    for el_datalistOp in el_datalistOps
-                      if my value == el_datalistOp's value
-                        -- provide id reference to service search and exit
-                        -- send selectedGroup(groupId: el_datalistOp's @d-id) to next <input/>
-                        exit
-                      end
-                    end
-                    call agocmsViewConfigFormServiceSearch(my value, my @d-group) then
-                    set services to the result
-                    get next <datalist/>
-                    set its innerHTML to ''
-                    for service in services
-                      make an <option/>
-                      put service's title into its innerHTML
-                      put service's title into its value
-                      put service's url into its @d-id
-                      put it at end of next <datalist/>
+    <p>Layer:<p>
+    <ol>
+      <li>
+        <span>Search AGO Groups to narrow Feature Service results.</span><br/>
+        <input class='agocms-featurelayer-select-group__input'
+            list='agocmsFeatureLayerSelectGroupSearch-'
+            d-field-name='0'
+            autocomplete='off'
+            _="on input debounced at 700ms
+                -- require some search text
+                if my value != ''
+                  -- if selecting datalist value then bail
+                  set el_datalistOps to <option/> in next <datalist/>
+                  for el_datalistOp in el_datalistOps
+                    if my value == el_datalistOp's value
+                      -- provide id reference to service search and exit
+                      send selectedGroup(groupId: el_datalistOp's @d-id) to next <input/>
+                      exit
                     end
                   end
+                  -- request ago group named like search term
+                  call agocmsViewConfigFormGroupSearch(my value) then
+                    set groups to the result
+                    get next <datalist/>
+                    set its innerHTML to ''
+                    for group in groups
+                      make an <option/>
+                      put group's title into its innerHTML
+                      put group's title into its value
+                      put group's id into its @d-id
+                      put it at end of next <datalist/>
+                    end
+                end">
+        <datalist id='agocmsFeatureLayerSelectGroupSearch-'></datalist>
+      </li>
+      <li>
+        <span>Search Feature Services within selected Group.<br/>
+          *Use group search in <b>step 1</b> to narrow Feature Service results</span><br/>
+        <input class='agocms-featurelayer-select-service__input'
+            list='agocmsFeatureLayerSelectServiceSearch-'
+            d-field-name='0'
+            d-group=''
+            autocomplete='off'
+            _="on selectedGroup(groupId)
+                set my @d-group to groupId
+                call agocmsViewConfigFormServiceSearch(my value, groupId) then
+                  set services to the result
+                  get next <datalist/>
+                  set its innerHTML to ''
+                  for service in services
+                    make an <option/>
+                    put service's title into its innerHTML
+                    put service's title into its value
+                    put service's url into its @d-id
+                    put it at end of next <datalist/>
+                  end
+              end
+              on input(isFromFocus) debounced at 700ms
+                -- validate and dont run an extra query if this is from focus
+                if isFromFocus !== true and (my @d-group != '' or my value != '')
+                  -- if selecting datalist value then bail
+                  set el_datalistOps to <option/> in next <datalist/>
+                  for el_datalistOp in el_datalistOps
+                    if my value == el_datalistOp's value
+                      -- provide id reference to service search and exit
+                      send selectedService(serviceUrl: el_datalistOp's @d-id) to next <select/>
+                      exit
+                    end
+                  end
+                  call agocmsViewConfigFormServiceSearch(my value, my @d-group) then
+                  set services to the result
+                  get next <datalist/>
+                  set its innerHTML to ''
+                  for service in services
+                    make an <option/>
+                    put service's title into its innerHTML
+                    put service's title into its value
+                    put service's url into its @d-id
+                    put it at end of next <datalist/>
+                  end
                 end
-                -- auto open datalist on click
-                on focus send input(isFromFocus: true) to me">
-          <datalist id='agocms-featurelayer-select-service-search-0'></datalist>
-        </li>
-        <li style="display: none;">
-          <span>Select Layer in Feature Service.</span><br/>
-          <select class='agocms-featurelayer-select-layer-select'
-              id='agocms-featurelayer-select-layer-select-0'
-              d-field-name='0'></select>
-        </li>
-      </ol>
+              end
+              -- auto open datalist on click
+              on focus send input(isFromFocus: true) to me">
+        <datalist id='agocmsFeatureLayerSelectServiceSearch-'></datalist>
+      </li>
+      <li style="display: none;">
+        <span>Select Layer in Feature Service.</span><br/>
+        <select class='agocms-featurelayer-select-layer__select'
+            d-field-name='0'
+            _="on selectedService(serviceUrl)
+                call agocmsViewConfigFormLayerSearch(serviceUrl) then
+                  set layerGroups to the result
+                  remove <optgroup/> from me
+                  show the closest <li/>
+                  for group in layerGroups
+                    make an <optgroup/>
+                    set optGroup to it
+                    set optGroup's @label to group's name
+                    for layer in group's layers
+                      make an <option/>
+                      put layer's name into its innerHTML
+                      put layer's id into its value
+                      put it at end of optGroup
+                    end
+                    put optGroup at end of me
+                  end">
+          <option disabled='disabled' selected='selected'>Select a layer</option>
+        </select>
+      </li>
+      <li>
+        <span>Configure fields</span>
+        <div class='agocms-featurelayer-select-fields'></div>
+      </li>
+    </ol>
+  </div>
+</template>
+<template id='agocmsFeatureLayerSelectField'>
+  <div>
+    <div>
+      <label>Field Name (alias)</label>
+      <p class='agocms-featurelayer-select-field-name'>
+      <p class='agocms-featurelayer-select-field-alias'>
+    </div>
+    <div>
+      <label>Field Type</label>
+      <p class='agocms-featurelayer-select-field-type'>
+    </div>
+    <div  class='agocms-featurelayer-select-field-codes' style='display: none;'>
+      <label>Coded Values</label>
+      <ul></ul>
+    </div>
+    <div class='agocms-featurelayer-select-field-range' style='display: none;'>
+      <label>Coded Values</label>
+      <p>Min: <span class='agocms-featurelayer-select-field-range'></span></p>
+      <p>Max: <span class='agocms-featurelayer-select-field-range'></span></p>
     </div>
   </div>
-  <button>Add layer</button>
-</div>
+</template>
+<template id='agocmsFeatureLayerSelectFieldCodedValues'>
+  <li>
+    <span class='agocms-featurelayer-select-field-codes-code'></span>
+    <span class='agocms-featurelayer-select-field-codes-value'></span>
+  </li>
+</template>
