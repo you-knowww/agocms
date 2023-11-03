@@ -9,10 +9,18 @@
     <p>Layer:<p>
     <ol>
       <li>
-        <span>Search AGO Groups to narrow Feature Service results.</span><br/>
+        <span>Search AGO Groups to narrow Feature Service results.</span>
+        <br/>
+        <label>Include public groups:</label>
+        <input type='checkbox'
+            _="on input
+                get next <input/>
+                set its @d-public to my checked">
+        <br/>
         <input class='agocms-featurelayer-select-group__input'
             list='agocmsFeatureLayerSelectGroupSearch-'
             d-field-name='0'
+            d-public='false'
             autocomplete='off'
             _="on input debounced at 700ms
                 -- require some search text
@@ -20,6 +28,10 @@
                   -- if selecting datalist value then bail
                   set el_datalistOps to <option/> in next <datalist/>
                   for el_datalistOp in el_datalistOps
+                    log '-----------------------------------------'
+                    log my value
+                    log el_datalistOp's value
+                    log my value == el_datalistOp's value
                     if my value == el_datalistOp's value
                       -- provide id reference to service search and exit
                       send selectedGroup(groupId: el_datalistOp's @d-id) to next <input/>
@@ -27,7 +39,7 @@
                     end
                   end
                   -- request ago group named like search term
-                  call agocmsViewConfigFormGroupSearch(my value) then
+                  call agocmsViewConfigFormGroupSearch(my value, my @d-public == 'true') then
                     set groups to the result
                     get next <datalist/>
                     set its innerHTML to ''
@@ -127,12 +139,12 @@
   <div>
     <div>
       <label>Field Name (alias)</label>
-      <p class='agocms-featurelayer-select-field-name'>
-      <p class='agocms-featurelayer-select-field-alias'>
+      <p class='agocms-featurelayer-select-field-name'></p>
+      <p class='agocms-featurelayer-select-field-alias'></p>
     </div>
     <div>
       <label>Field Type</label>
-      <p class='agocms-featurelayer-select-field-type'>
+      <p class='agocms-featurelayer-select-field-type'></p>
     </div>
     <div  class='agocms-featurelayer-select-field-codes' style='display: none;'>
       <label>Coded Values</label>
@@ -140,8 +152,8 @@
     </div>
     <div class='agocms-featurelayer-select-field-range' style='display: none;'>
       <label>Coded Values</label>
-      <p>Min: <span class='agocms-featurelayer-select-field-range'></span></p>
-      <p>Max: <span class='agocms-featurelayer-select-field-range'></span></p>
+      <p>Min: <span class='agocms-featurelayer-select-field-range-min'></span></p>
+      <p>Max: <span class='agocms-featurelayer-select-field-range-max'></span></p>
     </div>
   </div>
 </template>

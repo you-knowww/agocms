@@ -27,14 +27,16 @@ function agocmsViewConfigFormAddLayer() {
   els_hypserscripters.forEach(el => _hyperscript.processNode(el));
 }
 
-function agocmsViewConfigFormGroupSearch(searchText = ''){
+function agocmsViewConfigFormGroupSearch(searchText = '', usePublic = false){
   return new Promise((resolve, reject) => {
     // validate search text
     if(searchText == '') resolve([]);
 
     const q = new arcgisRest.SearchQueryBuilder()
-                .match('private').in('access')
-                .and().match(searchText).in('title');
+                .match(searchText).in('title');
+
+    // only search private groups
+    if(!usePublic) q.and().match('private').in('access');
 
     // validate token and search. return array. Empty on failure
     agocms.ajx(arcgisRest.searchGroups, {q, sortField: 'title'})
