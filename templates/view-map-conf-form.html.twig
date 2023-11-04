@@ -19,7 +19,6 @@
         <br/>
         <input class='agocms-featurelayer-select-group__input'
             list='agocmsFeatureLayerSelectGroupSearch-'
-            d-field-name='0'
             d-public='false'
             autocomplete='off'
             _="on input debounced at 700ms
@@ -28,10 +27,6 @@
                   -- if selecting datalist value then bail
                   set el_datalistOps to <option/> in next <datalist/>
                   for el_datalistOp in el_datalistOps
-                    log '-----------------------------------------'
-                    log my value
-                    log el_datalistOp's value
-                    log my value == el_datalistOp's value
                     if my value == el_datalistOp's value
                       -- provide id reference to service search and exit
                       send selectedGroup(groupId: el_datalistOp's @d-id) to next <input/>
@@ -58,7 +53,6 @@
           *Use group search in <b>step 1</b> to narrow Feature Service results</span><br/>
         <input class='agocms-featurelayer-select-service__input'
             list='agocmsFeatureLayerSelectServiceSearch-'
-            d-field-name='0'
             d-group=''
             autocomplete='off'
             _="on selectedGroup(groupId)
@@ -107,8 +101,9 @@
       <li style="display: none;">
         <span>Select Layer in Feature Service.</span><br/>
         <select class='agocms-featurelayer-select-layer__select'
-            d-field-name='0'
+            d-url=''
             _="on selectedService(serviceUrl)
+                set my @d-url to serviceUrl
                 call agocmsViewConfigFormLayerSearch(serviceUrl) then
                   set layerGroups to the result
                   remove <optgroup/> from me
@@ -124,7 +119,9 @@
                       put it at end of optGroup
                     end
                     put optGroup at end of me
-                  end">
+                  end
+                end
+                on change call agocmsViewConfigFormLayerFields(my @d-url, my value)">
           <option disabled='disabled' selected='selected'>Select a layer</option>
         </select>
       </li>

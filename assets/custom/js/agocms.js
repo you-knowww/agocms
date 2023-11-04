@@ -16,6 +16,9 @@ class Agocms {
   // local event listener to dispatch after updating local creds. const
   #ev_updatedToken = new Event('local_token_updated');
 
+  // provide public references. Good for quick access to data model info
+  refs = { data_models: {} };
+
   constructor(){
     // context
     const agocms = this;
@@ -115,6 +118,30 @@ class Agocms {
         agoApiFn(conf).then(d => resolve(d), d => reject(d));
       }, d => reject(d))
     })
+  }
+
+  // validate against existing data model refs and add new given service and layer def
+  addDataModelRef(url, layer){
+    // ref
+    const dms = this.refs.data_models;
+
+    // build with service url and layer id. check service url for trailing /
+    url += url.substr(-1) == '/' ? layer.id : '/' + layer.id;
+
+    // validate not already referenced and add ref
+    if(!dms.hasOwnProperty(url)) dms[url] = layer;
+  }
+
+  // if layer id included expects url to be service url.
+  // if no layer id expects url to be full layer url.
+  getDataModelRef(url, id = null){
+    // if layer id included expects url to be service url.
+    if(id !== null){
+      // build with service url and layer id. check service url for trailing /
+      url += url.substr(-1) == '/' ? id : '/' + id;
+    }
+
+    return this.refs.data_models[url];
   }
 
   // return bool

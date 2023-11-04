@@ -85,8 +85,21 @@ function agocmsViewConfigFormLayerSearch(url) {
           resolve([]);
         } else {
           // convert array with name property to add to select label
-          resolve(Object.entries(response).map(([key, group]) => { return {name: key, layers: group}; }));
+          resolve(
+            Object.entries(response).map(
+              ([key, group]) => {
+                // loop group items and add global ref if not set
+                for(const layer of group){
+                  agocms.addDataModelRef(url, layer);
+                }
+
+                return {name: key, layers: group};
+              }));
         }
       });
   });
+}
+
+function agocmsViewConfigFormLayerFields(url, id){
+  return agocms.getDataModelRef(url, id);
 }
