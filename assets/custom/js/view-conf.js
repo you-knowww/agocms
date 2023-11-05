@@ -1,3 +1,17 @@
+// define web component for fields
+customElements.define(
+  "agocms-config-field",
+  class extends HTMLElement {
+    constructor() {
+      super();
+      const template = document.getElementById("agocmsFeatureLayerSelectField");
+
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.appendChild(template.content.cloneNode(true));
+    }
+  },
+);
+
 function agocmsViewConfigFormAddLayer() {
   // get template and container
   const tpl_layerForm = document.getElementById('agocmsFeatureLayerSelect'),
@@ -89,9 +103,7 @@ function agocmsViewConfigFormLayerSearch(url) {
             Object.entries(response).map(
               ([key, group]) => {
                 // loop group items and add global ref if not set
-                for(const layer of group){
-                  agocms.addDataModelRef(url, layer);
-                }
+                for(const layer of group) agocms.addDataModelRef(url, layer);
 
                 return {name: key, layers: group};
               }));
@@ -100,6 +112,22 @@ function agocmsViewConfigFormLayerSearch(url) {
   });
 }
 
+// returns dm ref
 function agocmsViewConfigFormLayerFields(url, id){
-  return agocms.getDataModelRef(url, id);
+  return  agocms.getDataModelRef(url, id);
+}
+
+// takes template, loops slots and builds text to replace slots from field attributes
+function agocmsPopulateFieldConfigSlots(el_field, field){
+  // loop all slots in shadow dom. Slot name matches data model to rely on template
+  el_field.shadowRoot.querySelectorAll('slot').forEach(el_slot => {
+    // make text element and set inner to field value
+    const el_text = document.createElement('text');
+    el_text.innerHTML = field[el_slot.name];
+    // assign text to slot
+    el_text.slot = el_slot.name;
+
+    // update field
+    el_field.append(el_text);
+  })
 }

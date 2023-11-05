@@ -109,25 +109,38 @@
                   remove <optgroup/> from me
                   show the closest <li/>
                   for group in layerGroups
-                    make an <optgroup/>
-                    set optGroup to it
-                    set optGroup's @label to group's name
-                    for layer in group's layers
-                      make an <option/>
-                      put layer's name into its innerHTML
-                      put layer's id into its value
-                      put it at end of optGroup
+                    -- only allow feature layers on map
+                    if group's name == 'layers'
+                      make an <optgroup/>
+                      set optGroup to it
+                      set optGroup's @label to group's name
+                      for layer in group's layers
+                        make an <option/>
+                        put layer's name into its innerHTML
+                        put layer's id into its value
+                        put it at end of optGroup
+                      end
+                      put optGroup at end of me
                     end
-                    put optGroup at end of me
                   end
                 end
-                on change call agocmsViewConfigFormLayerFields(my @d-url, my value)">
+                on change call agocmsViewConfigFormLayerFields(my @d-url, my value) then
+                  set dm to the result
+                  send populateFieldConfig(dm: dm) to next <div/>">
           <option disabled='disabled' selected='selected'>Select a layer</option>
         </select>
       </li>
-      <li>
+      <li style="display: none;">
         <span>Configure fields</span>
-        <div class='agocms-featurelayer-select-fields'></div>
+        <div class='agocms-featurelayer-select-fields'
+            _="on populateFieldConfig(dm)
+                show the closest <li/>
+                set my innerHTML to ''
+                for field in dm's fields
+                  make an <agocms-config-field/>
+                  set el_field to it
+                  call agocmsPopulateFieldConfigSlots(el_field, field)
+                  put el_field at the end of me"></div>
       </li>
     </ol>
   </div>
@@ -135,26 +148,37 @@
 <template id='agocmsFeatureLayerSelectField'>
   <div>
     <div>
-      <label>Field Name (alias)</label>
-      <p class='agocms-featurelayer-select-field-name'></p>
-      <p class='agocms-featurelayer-select-field-alias'></p>
+      <label>Field Name (alias):&nbsp;</label>
+      <p style='display: inline-block;'>
+        <slot name="name"><em>Undefined</em></slot>
+        &nbsp;
+        (<slot name="alias"><em>NA</em></slot>)
+      </p>
     </div>
     <div>
-      <label>Field Type</label>
-      <p class='agocms-featurelayer-select-field-type'></p>
+      <label>Field Type:&nbsp;</label>
+      <p style='display: inline-block;'>
+        <slot name="type">*<em>Unknown</em>*</slot>
+      </p>
     </div>
-    <div  class='agocms-featurelayer-select-field-codes' style='display: none;'>
+    <div>
+      <label>Optional value:</label>
+      <p style='display: inline-block;'>
+        <slot name="nullable">false</slot>
+      </p>
+    </div>
+    <div style='display: none;'>
       <label>Coded Values</label>
       <ul></ul>
     </div>
-    <div class='agocms-featurelayer-select-field-range' style='display: none;'>
+    <div style='display: none;'>
       <label>Coded Values</label>
-      <p>Min: <span class='agocms-featurelayer-select-field-range-min'></span></p>
-      <p>Max: <span class='agocms-featurelayer-select-field-range-max'></span></p>
+      <p>Min: <span></span></p>
+      <p>Max: <span></span></p>
     </div>
   </div>
 </template>
-<template id='agocmsFeatureLayerSelectFieldCodedValues'>
+<template id='agocmsFeatureLayerSelectCodedValues'>
   <li>
     <span class='agocms-featurelayer-select-field-codes-code'></span>
     <span class='agocms-featurelayer-select-field-codes-value'></span>
