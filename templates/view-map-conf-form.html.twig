@@ -140,7 +140,81 @@
                   make an <agocms-config-field/>
                   set el_field to it
                   call agocmsPopulateFieldConfigSlots(el_field, field)
-                  put el_field at the end of me"></div>
+                  put el_field at the end of me
+                end
+                send setLayerCrud(dm: dm) to next <ul/>"></div>
+        <div>
+          <label>Layer options:</label>
+          <ul _="on setLayerCrud(dm)
+                  if call dm.capabilities.indexOf('Create') !== -1
+                    show first <li/> in me
+                  else hide first <li/> in me
+                  end
+                  if call dm.capabilities.indexOf('Delete') !== -1
+                    show second <li/> in me
+                  else hide second <li/> in me
+                  end
+                  if call dm.capabilities.indexOf('Update') !== -1
+                    show third <li/> in me
+                    if call dm.allowGeometryUpdates === true
+                      show fourth <li/> in me
+                    end
+                  else
+                    hide third <li/> in me
+                    hide fourth <li/> in me">
+            <li style='display: none;'>
+              <label>Allow Create</label>
+              <checkbox/>
+            </li>
+            <li style='display: none;'>
+              <label>Allow Delete</label>
+              <checkbox/>
+            </li>
+            <li style='display: none;'>
+              <label>Allow Attribute Edit</label>
+              <checkbox/>
+            </li>
+            <li style='display: none;'>
+              <label>Allow Geometry Edit</label>
+              <checkbox/>
+            </li>
+          </ul>
+          <div>
+            <label>Label Field</label>
+            <select
+                _="on setLabelFieldOptions(dm)
+                    set my innerHTML to ''
+                    for field in dm's fields
+                      make an <option/>
+                      set el_option to it
+                      set its innerHTML to field's name
+                      set its value to field's name
+                      -- set default to dm value
+                      if dm.displayField == field's name
+                        set el_option's @selected to 'selected'
+                      end"></select>
+            <label>Label Font Size</label>
+            <select>
+              <option value='6'>6</option>
+              <option value='8'>8</option>
+              <option value='10'>10</option>
+              <option value='12'>12</option>
+              <option value='14'>14</option>
+              <option value='16'>16</option>
+              <option value='18'>18</option>
+              <option value='20'>20</option>
+            </select>
+            <label>Label Font Color</label>
+            <input type='color'/>
+            <label>Label Background Color</label>
+            <input type='color'/>
+            <label>Label Border Color</label>
+            <input type='color'/>
+          </div>
+        </div>
+      </li>
+      <li style="display: none;">
+        <label>Relationships</label>
       </li>
     </ol>
   </div>
@@ -167,15 +241,25 @@
         <slot name="nullable">false</slot>
       </p>
     </div>
-    <div style='display: none;'>
-      <label>Coded Values</label>
-      <ul></ul>
+    <div>
+      <label>Disabled</label>
+      <checkbox/>
     </div>
-    <div style='display: none;'>
-      <label>Coded Values</label>
-      <p>Min: <span></span></p>
-      <p>Max: <span></span></p>
+    <div>
+      <label>Hidden</label>
+      <checkbox/>
     </div>
+    <!--
+      <div style='display: none;'>
+        <label>Coded Values</label>
+        <ul></ul>
+      </div>
+      <div style='display: none;'>
+        <label>Coded Values</label>
+        <p>Min: <span></span></p>
+        <p>Max: <span></span></p>
+      </div>
+    -->
   </div>
 </template>
 <template id='agocmsFeatureLayerSelectCodedValues'>
