@@ -12,6 +12,13 @@ customElements.define(
   },
 );
 
+// wait for agocms to finish loading
+window.addEventListener('agocms_loaded', e => {
+  // layer add button click event listener
+  document.getElementById('agocmsViewMapConfAddBtn')
+    .addEventListener('click', agocmsViewConfigFormAddLayer);
+});
+
 function agocmsViewConfigFormAddLayer() {
   // get template and container
   const tpl_layerForm = document.getElementById('agocmsFeatureLayerSelect'),

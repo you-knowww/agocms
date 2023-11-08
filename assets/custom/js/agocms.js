@@ -3,11 +3,13 @@ class Agocms {
   #valid = true;
   // default locked to false but check lock on init
   #locked = false;
+  // instance of ArcGISIdentityManager to rely on ESRI's standard
+  #agoIdMgr
   // objects
   #access;
   #refresh;
   // ago username
-  #user;
+  #username;
   // base url and client id for token refresh
   #url;
   #clientId;
@@ -19,14 +21,17 @@ class Agocms {
   // provide public references. Good for quick access to data model info
   refs = { data_models: {} };
 
-  constructor(){
+  // requires build. if build doesnt provide agoIdMgr then set invalid
+  constructor(agoIdMgr = false){
     // context
     const agocms = this;
 
     // validate access token from AGO Social Auth
-    if(drupalSettings.hasOwnProperty('ago_access_token')
-        && drupalSettings.ago_access_token != null
-        && drupalSettings.ago_access_token.hasOwnProperty('token')){
+    if(agoIdMgr === false){
+      // invalidate the entire thing and throw error
+      this.#valid = false;
+      console.error('AGO token is nonexistent or entirely invalid and unrenewable.');
+    } else {
       // ref
       const tokenSettings = drupalSettings.ago_access_token;
       const token = tokenSettings.token;
@@ -55,15 +60,42 @@ class Agocms {
                       expiration: parseInt(token.expires)};
       this.#refresh = { token: token.refresh_token,
                         expiration: parseInt(token.refresh_token_expires_in) };
-      this.#user = token.username;
+      this.#username = token.username;
       // add access token url to base
       this.#url = tokenSettings.url + '/sharing/rest/oauth2/token';
       this.#clientId = tokenSettings.client_id;
-    } else {
-      // invalidate the entire thing and throw error
-      this.#valid = false;
-      console.error('AGO token is nonexistent or entirely invalid and unrenewable.');
     }
+  }
+
+  // call constructor from build pattern
+  static build(){
+    // async build
+    return new Promise((resolve, reject) => {
+      // validate access token from AGO Social Auth
+      if(drupalSettings.hasOwnProperty('ago_access_token')
+          && drupalSettings.ago_access_token != null
+          && drupalSettings.ago_access_token.hasOwnProperty('token')){
+        // build manager object for ago rest api
+        const agoIdMgr = arcgisRest.ArcGISIdentityManager,
+              tokenSettings = drupalSettings.ago_access_token;
+        const token = tokenSettings.token;
+
+        // build ago id manager from social auth token
+        agoIdMgr
+          .fromToken({clientId: tokenSettings.client_id,
+                      portal: tokenSettings.url + '/sharing/rest',
+                      token: token.access_token,
+                      tokenExpires: token.expires,
+                      username: token.username})
+            // pass new manager to constructor
+          .then(mgr => resolve(new Agocms(mgr)),
+            // pass no manager to constructo to make invalid api
+            reject(new Agocms()));
+      } else {
+        // construct and return invalid class
+        reject(new Agocms());
+      }
+    })
   }
 
   // async return access token as string
@@ -216,6 +248,13 @@ class Agocms {
 }
 
 (function (Drupal, drupalSettings){
-  // add global reference
-  agocms = new Agocms;
+  // build window event for setting up agocms
+  const ev_agocmsLoaded = new Event('agocms_loaded');
+
+  // try building and add global reference on fail or success
+  Agocms.build().finally(obj => {
+        agocms = obj;
+        // notify event listeners agocms is ready
+        window.dispatchEvent(ev_agocmsLoaded);
+      });
 })(Drupal, drupalSettings);
