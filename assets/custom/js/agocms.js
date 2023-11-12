@@ -5,14 +5,6 @@ class Agocms {
   #locked = false;
   // instance of ArcGISIdentityManager to rely on ESRI's standard
   #agoIdMgr
-  // objects
-  #access;
-  #refresh;
-  // ago username
-  #username;
-  // base url and client id for token refresh
-  #url;
-  #clientId;
   // manage events across context in origin. const
   #ch = new BroadcastChannel('agocms');
   // local event listener to dispatch after updating local creds. const
@@ -32,10 +24,6 @@ class Agocms {
       this.#valid = false;
       console.error('AGO token is nonexistent or entirely invalid and unrenewable.');
     } else {
-      // ref
-      const tokenSettings = drupalSettings.ago_access_token;
-      const token = tokenSettings.token;
-
       // set event listener for lock and unlock
       this.#ch.onmessage = message => {
             // ref
@@ -48,22 +36,15 @@ class Agocms {
                 break;
               case 'unlock':
                 // begin unlocking. first need to update refs
-                agocms.#updateTokenRefs(data.token_data);
+                agocms.#updateTokenRefs(data.token);
                 break;
               default:
                 // basic log
                 console.error('Invalid agocms broadcast channel event: ' + data.event);
             } };
 
-      // init shorthand variables
-      this.#access = {token: token.access_token,
-                      expiration: parseInt(token.expires)};
-      this.#refresh = { token: token.refresh_token,
-                        expiration: parseInt(token.refresh_token_expires_in) };
-      this.#username = token.username;
-      // add access token url to base
-      this.#url = tokenSettings.url + '/sharing/rest/oauth2/token';
-      this.#clientId = tokenSettings.client_id;
+      // add ago id manager ref
+      this.#agoIdMgr = agoIdMgr;
     }
   }
 
@@ -99,7 +80,7 @@ class Agocms {
   }
 
   // async return access token as string
-  getToken(){
+  reconcileToken(){
     // set context
     const agocms = this;
 
@@ -112,15 +93,15 @@ class Agocms {
       if(agocms.#locked === true){
         // set onetime event listener on unlock
         window.addEventListener('local_token_updated',
-            () => resolve(agocms.#access.token), {once : true});
+            () => resolve(agocms.#agoIdMgr), {once: true});
       } else {
         // check token expiration
         if(agocms.#isAccessTokenExpired()){
           // get new token
-          agocms.#refreshToken().then(() => resolve(agocms.#access.token));
+          agocms.#refreshToken().then(idMgr => resolve(idMgr));
         } else {
           // get the token we have
-          resolve(agocms.#access.token);
+          resolve(agocms.#agoIdMgr);
         }
       }
     });
@@ -134,15 +115,9 @@ class Agocms {
     // async
     return new Promise((resolve, reject) => {
       // get token and perform api call with token, or reject
-      agocms.getToken().then(token => {
-        // if params already set, update token, else set token as params
-        if(conf.hasOwnProperty('params')){
-          conf.params.token = token;
-        } else {
-          conf.params = {token};
-        }
-
-        // always set hide token and max url length. Worst case irrelevant and ignored
+      agocms.reconcileToken().then(() => {
+        // set auth, hide token in get, and limit url length of get to 2k
+        conf.authentication = agocms.agoIdMgr;
         conf.hideToken = true;
         conf.maxUrlLength = 2000;
 
@@ -176,20 +151,21 @@ class Agocms {
     return this.refs.data_models[url];
   }
 
+  testToken(){
+    console.log(this.#agoIdMgr.token())
+  }
+
   // return bool
   #isAccessTokenExpired(){
-    // context
-    const agocms = this;
-    // get current timestamp. Ago uses seconds
-    // https://stackoverflow.com/questions/3367415/get-epoch-for-a-specific-date-using-javascript
-    const nowAgoFmt = new Date().getTime() / 1000;
-    // allow 10 seconds between expiration and renewal
-    return nowAgoFmt >= agocms.#access.expiration + 10;
+    // compare expiration against 20 seconds before now
+    const now = new Date(Date.now() - 20000);
+    return now >= this.#agoApiFn.tokenExpires();
   }
 
   #refreshToken() {
     // context
-    const agocms = this;
+    const agocms = this,
+          idMgr = this.#agoIdMgr;
 
     // lock and broadcast lock to any other open tabs
     this.#locked = true;
@@ -197,47 +173,31 @@ class Agocms {
 
     // async
     return new Promise((resolve, reject) => {
-      // get new token from ago
-      arcgisRest.fetchToken(agocms.#url,
-          { httpMethod: 'POST',
-            params: {
-              client_id: agocms.#clientId,
-              grant_type: 'exchange_refresh_token',
-              redirect_uri: window.location,
-              refresh_token: agocms.#refresh.token }})
-        .then(newToken => {
-          // validate response
-          if(newToken.hasOwnProperty('token')){
-            // convert to seconds
-            newToken.expires = Math.floor(newToken.expires.getTime() / 1000);
-            newToken.refreshTokenExpires = Math.floor(
-                    newToken.refreshTokenExpires.getTime() / 1000);
+      // use ago rest api to refresh creds
+      agocms.refreshCredentials().then(newAgoIdMgr => {
+          // token ref
+          const token = newAgoIdMgr.token();
 
-            // update session token
-            jQuery.post('/agocms/token/update', newToken).then(savedToken => {
-                // update local ref
-                agocms.#updateTokenRefs(savedToken);
+          // update session token
+          jQuery.post('/agocms/token/update', token).then(() => {
+              // update local ref
+              agocms.#updateTokenRefs(token);
 
-                // notify all other windows to unlock
-                agocms.#ch.postMessage({event: 'unlock', token_data: savedToken});
+              // notify all other windows to unlock
+              agocms.#ch.postMessage({event: 'unlock', token});
 
-                // return new token from settings
-                resolve(agocms.#access.token);
-              }, err => console.error(err));
-          } else {
-            // warn user
-            console.error('Token refresh failed.', agocms.#url);
-          }
-        })
+              // return new token from settings
+              resolve(idMgr);
+            }, err => console.error(err));
+        },
+        // warn user
+        () => console.error('Creds refresh failed.', idMgr.portal));
     });
   }
 
   #updateTokenRefs(token) {
-    // init shorthand variables
-    this.#access.token = token.access_token;
-    this.#access.expiration = parseInt(token.expiration);
-    this.#refresh.token = token.refresh_token;
-    this.#refresh.expiration = parseInt(token.refresh_token_expires_in);
+    // update ago id manager ref
+    this.#agoIdMgr.updateToken(token.access_token, token.expiraiton);
 
     // unlock
     this.#locked = false;
@@ -253,8 +213,8 @@ class Agocms {
 
   // try building and add global reference on fail or success
   Agocms.build().finally(obj => {
-        agocms = obj;
-        // notify event listeners agocms is ready
-        window.dispatchEvent(ev_agocmsLoaded);
-      });
+      agocms = obj;
+      // notify event listeners agocms is ready
+      window.dispatchEvent(ev_agocmsLoaded);
+    });
 })(Drupal, drupalSettings);
