@@ -60,18 +60,28 @@ class Agocms {
         const agoIdMgr = arcgisRest.ArcGISIdentityManager,
               tokenSettings = drupalSettings.ago_access_token;
         const token = tokenSettings.token;
+        const test = {clientId: tokenSettings.client_id,
+                      portal: tokenSettings.url + '/sharing/rest',
+                      token: token.access_token,
+                      tokenExpires: new Date(token.expires * 1000),
+                      username: token.username,
+                      redirectUri: window.location.hostname};
+        //console.log(test, tokenSettings);
 
         // build ago id manager from social auth token
         agoIdMgr
-          .fromToken({clientId: tokenSettings.client_id,
-                      portal: tokenSettings.url + '/sharing/rest',
-                      token: token.access_token,
-                      tokenExpires: token.expires,
-                      username: token.username})
+          .fromToken(test)
             // pass new manager to constructor
-          .then(mgr => resolve(new Agocms(mgr)),
-            // pass no manager to constructo to make invalid api
-            reject(new Agocms()));
+          .then(mgr => {
+              console.log('ago id mgr', mgr);
+              console.log('expires', mgr.tokenExpires);
+              mgr._refreshToken = token.refresh_token;
+              mgr._refreshTokenExpires = new Date(Date.now() + token.refresh_token_expires_in * 1000);
+              console.log('can refresh', mgr.canRefresh);
+              resolve(new Agocms(mgr));
+            },
+            // pass no manager to constructor to make invalid api
+            e => {console.log(e); reject(new Agocms()); });
       } else {
         // construct and return invalid class
         reject(new Agocms());
@@ -152,14 +162,14 @@ class Agocms {
   }
 
   testToken(){
-    console.log(this.#agoIdMgr.token())
+    console.log(this.#agoIdMgr)
   }
 
   // return bool
   #isAccessTokenExpired(){
     // compare expiration against 20 seconds before now
     const now = new Date(Date.now() - 20000);
-    return now >= this.#agoApiFn.tokenExpires();
+    return now >= this.#agoIdMgr.tokenExpires();
   }
 
   #refreshToken() {
@@ -212,9 +222,9 @@ class Agocms {
   const ev_agocmsLoaded = new Event('agocms_loaded');
 
   // try building and add global reference on fail or success
-  Agocms.build().finally(obj => {
+  Agocms.build().then(obj => {
       agocms = obj;
       // notify event listeners agocms is ready
       window.dispatchEvent(ev_agocmsLoaded);
-    });
+    }, e => console.error('Auth failure', e));
 })(Drupal, drupalSettings);
