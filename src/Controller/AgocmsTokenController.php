@@ -25,16 +25,15 @@ class AgocmsTokenController extends ControllerBase {
     $request = \Drupal::request();
     $session = $request->getSession();
 
-    // add frontend references
+    // add frontend references. copy some permanent values
     $old_token = $session->get('ago_access_token');
-    $token = $old_token->token;
 
     $new_token = (object)array(
-        'token' => [
-          'access_token' => $request->request->get('token'),
-          'expires' => $request->request->get('expires'),
-          'refresh_token' => $request->request->get('refreshToken'),
-          'refresh_token_expires_in' => $request->request->get('refreshTokenExpires') ],
+        'token' => $request->request->get('token'),
+        'expires' => $request->request->get('expires'),
+        'refresh_token' => $request->request->get('refresh_token'),
+        'refresh_expires' => $request->request->get('refresh_expires'),
+        'username' => $old_token->username,
         'url' => $old_token->url,
         'client_id' => $old_token->client_id);
 

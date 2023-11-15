@@ -10,7 +10,7 @@ function agocms_js_settings_alter(array &$settings,
   $session = $request->getSession();
 
   // add frontend references
-  $settings['ago_access_token'] = $session->get('ago_access_token');
+  $settings['agocms_token'] = $session->get('ago_access_token');
 }
 
 /**

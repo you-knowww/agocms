@@ -36,7 +36,7 @@ class Agocms {
                 break;
               case 'unlock':
                 // begin unlocking. first need to update refs
-                agocms.#updateTokenRefs(data.token);
+                agocms.#updateTokenRefs(data.idMgr);
                 break;
               default:
                 // basic log
@@ -53,35 +53,34 @@ class Agocms {
     // async build
     return new Promise((resolve, reject) => {
       // validate access token from AGO Social Auth
-      if(drupalSettings.hasOwnProperty('ago_access_token')
-          && drupalSettings.ago_access_token != null
-          && drupalSettings.ago_access_token.hasOwnProperty('token')){
+      if(drupalSettings.hasOwnProperty('agocms_token')
+          && drupalSettings.agocms_token != null
+          && drupalSettings.agocms_token.hasOwnProperty('token')){
         // build manager object for ago rest api
         const agoIdMgr = arcgisRest.ArcGISIdentityManager,
-              tokenSettings = drupalSettings.ago_access_token;
-        const token = tokenSettings.token;
-        const test = {clientId: tokenSettings.client_id,
-                      portal: tokenSettings.url + '/sharing/rest',
-                      token: token.access_token,
-                      tokenExpires: new Date(token.expires * 1000),
-                      username: token.username,
-                      redirectUri: window.location.hostname};
-        //console.log(test, tokenSettings);
+              tokenData = drupalSettings.agocms_token;
 
         // build ago id manager from social auth token
         agoIdMgr
-          .fromToken(test)
-            // pass new manager to constructor
-          .then(mgr => {
-              console.log('ago id mgr', mgr);
-              console.log('expires', mgr.tokenExpires);
-              mgr._refreshToken = token.refresh_token;
-              mgr._refreshTokenExpires = new Date(Date.now() + token.refresh_token_expires_in * 1000);
-              console.log('can refresh', mgr.canRefresh);
-              resolve(new Agocms(mgr));
+          .fromToken({clientId: tokenData.client_id,
+                      portal: tokenData.url + '/sharing/rest',
+                      token: tokenData.token,
+                      tokenExpires: new Date(tokenData.expires),
+                      username: tokenData.username,
+                      redirectUri: window.location.hostname})
+          .then(idMgr => {
+              // set refresh token from drupal
+              idMgr._refreshToken = tokenData.refresh_token;
+              // adjust refresh token date by converting to miliseconds
+              idMgr._refreshTokenExpires = new Date(tokenData.refresh_expires);
+              // pass new manager to constructor
+              resolve(new Agocms(idMgr));
             },
             // pass no manager to constructor to make invalid api
-            e => {console.log(e); reject(new Agocms()); });
+            e => {
+              console.error('Arcgis id manager from token failed.', e);
+              reject(new Agocms());
+            });
       } else {
         // construct and return invalid class
         reject(new Agocms());
@@ -165,6 +164,11 @@ class Agocms {
     console.log(this.#agoIdMgr)
   }
 
+  testRefresh(){
+    // get new token
+    this.#refreshToken().then(idMgr => console.log(idMgr));
+  }
+
   // return bool
   #isAccessTokenExpired(){
     // compare expiration against 20 seconds before now
@@ -183,18 +187,21 @@ class Agocms {
 
     // async
     return new Promise((resolve, reject) => {
-      // use ago rest api to refresh creds
-      agocms.refreshCredentials().then(newAgoIdMgr => {
-          // token ref
-          const token = newAgoIdMgr.token();
-
+      // use ago id manager api to refresh creds
+      idMgr.refreshCredentials().then(newIdMgr => {
+          console.log('refreshed: ', newIdMgr);
           // update session token
-          jQuery.post('/agocms/token/update', token).then(() => {
+          jQuery.post('/agocms/token/update',
+                { token: newIdMgr.token,
+                  expires: newIdMgr.tokenExpires.getTime(),
+                  refresh_token: newIdMgr.refreshToken,
+                  refresh_expires: newIdMgr.refreshTokenExpires.getTime() })
+            .then(() => {
               // update local ref
-              agocms.#updateTokenRefs(token);
+              agocms.#updateTokenRefs(newIdMgr);
 
               // notify all other windows to unlock
-              agocms.#ch.postMessage({event: 'unlock', token});
+              agocms.#ch.postMessage({event: 'unlock', idMgr});
 
               // return new token from settings
               resolve(idMgr);
@@ -205,9 +212,10 @@ class Agocms {
     });
   }
 
-  #updateTokenRefs(token) {
+  #updateTokenRefs(idMgr) {
+    console.log('updating ago id manager', idMgr);
     // update ago id manager ref
-    this.#agoIdMgr.updateToken(token.access_token, token.expiraiton);
+    this.#agoIdMgr = idMgr;
 
     // unlock
     this.#locked = false;
