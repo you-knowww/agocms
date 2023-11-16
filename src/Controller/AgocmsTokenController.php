@@ -28,11 +28,12 @@ class AgocmsTokenController extends ControllerBase {
     // add frontend references. copy some permanent values
     $old_token = $session->get('ago_access_token');
 
+    // make sure expiration is integer
     $new_token = (object)array(
         'token' => $request->request->get('token'),
-        'expires' => $request->request->get('expires'),
+        'expires' => intval($request->request->get('expires')),
         'refresh_token' => $request->request->get('refresh_token'),
-        'refresh_expires' => $request->request->get('refresh_expires'),
+        'refresh_expires' => intval($request->request->get('refresh_expires')),
         'username' => $old_token->username,
         'url' => $old_token->url,
         'client_id' => $old_token->client_id);
@@ -41,6 +42,6 @@ class AgocmsTokenController extends ControllerBase {
     $session->set('ago_access_token', $new_token);
 
     // respond to client
-    return new JsonResponse($new_token->token);
+    return new JsonResponse($new_token);
   }
 }

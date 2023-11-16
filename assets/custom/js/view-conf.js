@@ -1,6 +1,6 @@
 // define web component for fields
 customElements.define(
-  "agocms-config-field",
+  'agocms-config-field',
   class extends HTMLElement {
     constructor() {
       super();
@@ -9,15 +9,7 @@ customElements.define(
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.appendChild(template.content.cloneNode(true));
     }
-  },
-);
-
-// wait for agocms to finish loading
-window.addEventListener('agocms_loaded', e => {
-  // layer add button click event listener
-  document.getElementById('agocmsViewMapConfAddBtn')
-    .addEventListener('click', agocmsViewConfigFormAddLayer);
-});
+  });
 
 function agocmsViewConfigFormAddLayer() {
   // get template and container

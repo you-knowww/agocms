@@ -2,7 +2,7 @@
 <div class='agocms-view-map-conf'>
   <p>Layers:<p>
   <div id='agocmsViewMapConfLayers'></div>
-  <button id='agocmsViewMapConfAddBtn'>Add layer</button>
+  <button onclick='agocmsViewConfigFormAddLayer();'>Add layer</button>
 </div>
 <template id='agocmsFeatureLayerSelect'>
   <div>
@@ -146,35 +146,51 @@
         <div>
           <label>Layer options:</label>
           <ul _="on setLayerCrud(dm)
-                  if call dm.capabilities.indexOf('Create') !== -1
-                    show first <li/> in me
-                  else hide first <li/> in me
-                  end
-                  if call dm.capabilities.indexOf('Delete') !== -1
-                    show second <li/> in me
-                  else hide second <li/> in me
-                  end
-                  if call dm.capabilities.indexOf('Update') !== -1
-                    show third <li/> in me
-                    if call dm.allowGeometryUpdates === true
-                      show fourth <li/> in me
+                  set el_create to
+                    <li.agocms-featurelayer-select-layer-crud__create/> in me
+                  set el_delete to
+                    <li.agocms-featurelayer-select-layer-crud__delete/> in me
+                  set el_attrUpdate to
+                    <li.agocms-featurelayer-select-layer-crud__attr-create/> in me
+                  set el_geoUpdate to
+                    <li.agocms-featurelayer-select-layer-crud__geo-update/> in me
+                  call dm.capabilities.indexOf('Create')
+                    if it !== -1
+                      show el_create
+                    else hide el_create
                     end
-                  else
-                    hide third <li/> in me
-                    hide fourth <li/> in me">
-            <li style='display: none;'>
+                  call dm.capabilities.indexOf('Delete')
+                    if it !== -1
+                      show el_delete
+                    else hide el_delete
+                    end
+                  call dm.capabilities.indexOf('Update')
+                    if it !== -1
+                      show el_attrUpdate
+                      if dm's allowGeometryUpdates === true
+                        show el_geoUpdate
+                      else hide el_geoUpdate
+                      end
+                    else
+                      hide el_attrUpdate
+                      hide el_geoUpdate">
+            <li style='display: none;'
+                class='agocms-featurelayer-select-layer-crud__create'>
               <label>Allow Create</label>
               <checkbox/>
             </li>
-            <li style='display: none;'>
+            <li style='display: none;'
+                class='agocms-featurelayer-select-layer-crud__delete'>
               <label>Allow Delete</label>
               <checkbox/>
             </li>
-            <li style='display: none;'>
+            <li style='display: none;'
+                class='agocms-featurelayer-select-layer-crud__geo-update'>
               <label>Allow Attribute Edit</label>
               <checkbox/>
             </li>
-            <li style='display: none;'>
+            <li style='display: none;'
+                class='agocms-featurelayer-select-layer-crud__attr-create'>
               <label>Allow Geometry Edit</label>
               <checkbox/>
             </li>

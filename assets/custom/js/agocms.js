@@ -14,16 +14,28 @@ class Agocms {
   refs = { data_models: {} };
 
   // requires build. if build doesnt provide agoIdMgr then set invalid
-  constructor(agoIdMgr = false){
+  constructor(){
     // context
     const agocms = this;
 
     // validate access token from AGO Social Auth
-    if(agoIdMgr === false){
-      // invalidate the entire thing and throw error
-      this.#valid = false;
-      console.error('AGO token is nonexistent or entirely invalid and unrenewable.');
-    } else {
+    if(drupalSettings.hasOwnProperty('agocms_token')
+        && drupalSettings.agocms_token != null
+        && drupalSettings.agocms_token.hasOwnProperty('token')){
+      // ref
+      const tokenData = drupalSettings.agocms_token;
+
+      // build manager object for ago rest api
+      this.#agoIdMgr = new arcgisRest.ArcGISIdentityManager(
+                              { clientId: tokenData.client_id,
+                                portal: tokenData.url + '/sharing/rest',
+                                token: tokenData.token,
+                                tokenExpires: new Date(tokenData.expires),
+                                refreshToken: tokenData.refresh_token,
+                                refreshTokenExpires: new Date(tokenData.refresh_expires),
+                                username: tokenData.username,
+                                redirectUri: window.location.hostname });
+
       // set event listener for lock and unlock
       this.#ch.onmessage = message => {
             // ref
@@ -42,50 +54,11 @@ class Agocms {
                 // basic log
                 console.error('Invalid agocms broadcast channel event: ' + data.event);
             } };
-
-      // add ago id manager ref
-      this.#agoIdMgr = agoIdMgr;
+    } else {
+      // invalidate the entire thing and throw error
+      this.#valid = false;
+      console.error('AGO token is nonexistent or entirely invalid and unrenewable.');
     }
-  }
-
-  // call constructor from build pattern
-  static build(){
-    // async build
-    return new Promise((resolve, reject) => {
-      // validate access token from AGO Social Auth
-      if(drupalSettings.hasOwnProperty('agocms_token')
-          && drupalSettings.agocms_token != null
-          && drupalSettings.agocms_token.hasOwnProperty('token')){
-        // build manager object for ago rest api
-        const agoIdMgr = arcgisRest.ArcGISIdentityManager,
-              tokenData = drupalSettings.agocms_token;
-
-        // build ago id manager from social auth token
-        agoIdMgr
-          .fromToken({clientId: tokenData.client_id,
-                      portal: tokenData.url + '/sharing/rest',
-                      token: tokenData.token,
-                      tokenExpires: new Date(tokenData.expires),
-                      username: tokenData.username,
-                      redirectUri: window.location.hostname})
-          .then(idMgr => {
-              // set refresh token from drupal
-              idMgr._refreshToken = tokenData.refresh_token;
-              // adjust refresh token date by converting to miliseconds
-              idMgr._refreshTokenExpires = new Date(tokenData.refresh_expires);
-              // pass new manager to constructor
-              resolve(new Agocms(idMgr));
-            },
-            // pass no manager to constructor to make invalid api
-            e => {
-              console.error('Arcgis id manager from token failed.', e);
-              reject(new Agocms());
-            });
-      } else {
-        // construct and return invalid class
-        reject(new Agocms());
-      }
-    })
   }
 
   // async return access token as string
@@ -126,7 +99,7 @@ class Agocms {
       // get token and perform api call with token, or reject
       agocms.reconcileToken().then(() => {
         // set auth, hide token in get, and limit url length of get to 2k
-        conf.authentication = agocms.agoIdMgr;
+        conf.authentication = agocms.#agoIdMgr;
         conf.hideToken = true;
         conf.maxUrlLength = 2000;
 
@@ -173,7 +146,7 @@ class Agocms {
   #isAccessTokenExpired(){
     // compare expiration against 20 seconds before now
     const now = new Date(Date.now() - 20000);
-    return now >= this.#agoIdMgr.tokenExpires();
+    return now >= this.#agoIdMgr.tokenExpires;
   }
 
   #refreshToken() {
@@ -189,13 +162,12 @@ class Agocms {
     return new Promise((resolve, reject) => {
       // use ago id manager api to refresh creds
       idMgr.refreshCredentials().then(newIdMgr => {
-          console.log('refreshed: ', newIdMgr);
           // update session token
           jQuery.post('/agocms/token/update',
-                { token: newIdMgr.token,
-                  expires: newIdMgr.tokenExpires.getTime(),
-                  refresh_token: newIdMgr.refreshToken,
-                  refresh_expires: newIdMgr.refreshTokenExpires.getTime() })
+              { token: newIdMgr.token,
+                expires: newIdMgr.tokenExpires.getTime(),
+                refresh_token: newIdMgr.refreshToken,
+                refresh_expires: newIdMgr.refreshTokenExpires.getTime() })
             .then(() => {
               // update local ref
               agocms.#updateTokenRefs(newIdMgr);
@@ -226,13 +198,6 @@ class Agocms {
 }
 
 (function (Drupal, drupalSettings){
-  // build window event for setting up agocms
-  const ev_agocmsLoaded = new Event('agocms_loaded');
-
-  // try building and add global reference on fail or success
-  Agocms.build().then(obj => {
-      agocms = obj;
-      // notify event listeners agocms is ready
-      window.dispatchEvent(ev_agocmsLoaded);
-    }, e => console.error('Auth failure', e));
+  // init global agocms
+  agocms = new Agocms();
 })(Drupal, drupalSettings);
