@@ -1,9 +1,9 @@
 .prod-inline-block {
-  display: inline-block;
+  display: inline-block !important;
 }
 
 .prod-none {
-  display: none;
+  display: none !important;
 }
 
 .prod-pad-0 {

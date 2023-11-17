@@ -142,7 +142,8 @@
                   call agocmsPopulateFieldConfigSlots(el_field, field)
                   put el_field at the end of me
                 end
-                send setLayerCrud(dm: dm) to next <ul/>"></div>
+                send setLayerCrud(dm: dm) to next <ul/>
+                send setLabelFieldOptions(dm: dm) to next <select/>"></div>
         <div>
           <label>Layer options:</label>
           <ul _="on setLayerCrud(dm)
@@ -177,28 +178,29 @@
             <li style='display: none;'
                 class='agocms-featurelayer-select-layer-crud__create'>
               <label>Allow Create</label>
-              <checkbox/>
+              <input type='checkbox'/>
             </li>
             <li style='display: none;'
                 class='agocms-featurelayer-select-layer-crud__delete'>
               <label>Allow Delete</label>
-              <checkbox/>
+              <input type='checkbox'/>
             </li>
             <li style='display: none;'
                 class='agocms-featurelayer-select-layer-crud__geo-update'>
               <label>Allow Attribute Edit</label>
-              <checkbox/>
+              <input type='checkbox'/>
             </li>
             <li style='display: none;'
                 class='agocms-featurelayer-select-layer-crud__attr-create'>
               <label>Allow Geometry Edit</label>
-              <checkbox/>
+              <input type='checkbox'/>
             </li>
           </ul>
           <div>
             <label>Label Field</label>
             <select
                 _="on setLabelFieldOptions(dm)
+                    log 'im trying, jennifer'
                     set my innerHTML to ''
                     for field in dm's fields
                       make an <option/>
@@ -208,7 +210,8 @@
                       -- set default to dm value
                       if dm.displayField == field's name
                         set el_option's @selected to 'selected'
-                      end"></select>
+                      end
+                      put el_option at the end of me"></select>
             <label>Label Font Size</label>
             <select>
               <option value='6'>6</option>
@@ -236,9 +239,11 @@
   </div>
 </template>
 <template id='agocmsFeatureLayerSelectField'>
+  <link href="/modules/custom/agocms/assets/custom/css/productivity.css"
+      rel="stylesheet" type="text/css">
   <div>
     <div>
-      <label>Field Name (alias):&nbsp;</label>
+      <label>Name (alias):&nbsp;</label>
       <p style='display: inline-block;'>
         <slot name="name"><em>Undefined</em></slot>
         &nbsp;
@@ -246,24 +251,30 @@
       </p>
     </div>
     <div>
-      <label>Field Type:&nbsp;</label>
-      <p style='display: inline-block;'>
-        <slot name="type">*<em>Unknown</em>*</slot>
-      </p>
+      <div class='prod-inline-block'>
+        <label>Type:&nbsp;</label>
+        <p style='display: inline-block;'>
+          <slot name="type">*<em>Unknown</em>*</slot>
+        </p>
+      </div>
+      <div class='prod-inline-block'>
+        <label>Is Optional:</label>
+        <p style='display: inline-block;'>
+          <slot name="nullable">false</slot>
+        </p>
+      </div>
     </div>
     <div>
-      <label>Optional value:</label>
-      <p style='display: inline-block;'>
-        <slot name="nullable">false</slot>
-      </p>
-    </div>
-    <div>
-      <label>Disabled</label>
-      <checkbox/>
-    </div>
-    <div>
-      <label>Hidden</label>
-      <checkbox/>
+      <div class='prod-inline-block'>
+        <label>Disabled:</label>
+        <input type='checkbox'
+            class='agocms-featurelayer-select-field-is-disabled'/>
+      </div>
+      <div class='prod-inline-block'>
+        <label>Hidden:</label>
+        <input type='checkbox'
+            class='agocms-featurelayer-select-field-is-hidden'/>
+      </div>
     </div>
     <!--
       <div style='display: none;'>
@@ -271,7 +282,7 @@
         <ul></ul>
       </div>
       <div style='display: none;'>
-        <label>Coded Values</label>
+        <label>Range</label>
         <p>Min: <span></span></p>
         <p>Max: <span></span></p>
       </div>
