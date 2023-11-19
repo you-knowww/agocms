@@ -185,7 +185,6 @@ class Agocms {
   }
 
   #updateTokenRefs(idMgr) {
-    console.log('updating ago id manager', idMgr);
     // update ago id manager ref
     this.#agoIdMgr = idMgr;
 

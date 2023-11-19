@@ -200,7 +200,6 @@
             <label>Label Field</label>
             <select
                 _="on setLabelFieldOptions(dm)
-                    log 'im trying, jennifer'
                     set my innerHTML to ''
                     for field in dm's fields
                       make an <option/>
@@ -287,6 +286,23 @@
         <p>Max: <span></span></p>
       </div>
     -->
+  </div>
+</template>
+<template id='agocmsFeatureLayerSelectFieldTextConf'>
+  <div>
+    <div>
+      <label>Make links active:</label>
+      <input type='checkbox'
+          class='agocms-featurelayer-select-field-links-hyperlink'/>
+    </div>
+    <div>
+      <label>Show images:</label>
+      <select class='agocms-featurelayer-select-field-links-image'/>
+        <option value='disabled'>disabled</option>
+        <option value='thumbnails'>thumbnails</option>
+        <option value='carousel'>carousel</option>
+      </select>
+    </div>
   </div>
 </template>
 <template id='agocmsFeatureLayerSelectCodedValues'>

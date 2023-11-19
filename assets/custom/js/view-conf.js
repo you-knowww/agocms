@@ -4,10 +4,10 @@ customElements.define(
   class extends HTMLElement {
     constructor() {
       super();
-      const template = document.getElementById("agocmsFeatureLayerSelectField");
+      const tpl = document.getElementById("agocmsFeatureLayerSelectField");
 
       const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.appendChild(template.content.cloneNode(true));
+      shadowRoot.appendChild(tpl.content.cloneNode(true));
     }
   });
 
@@ -129,4 +129,18 @@ function agocmsPopulateFieldConfigSlots(el_field, field){
     // update field
     el_field.append(el_text);
   })
+
+  // add field template options for specific field type
+  switch(field.type){
+    case 'esriFieldTypeBlob':
+    case 'esriFieldTypeString':
+      // add text field template for link options and clone
+      const tpl_fieldConf = document.getElementById(
+                              'agocmsFeatureLayerSelectFieldTextConf');
+      el_fieldConf = document.importNode(tpl_fieldConf.content, true);
+
+      // add to field shadow root
+      el_field.shadowRoot.appendChild(el_fieldConf);
+      break;
+  }
 }
