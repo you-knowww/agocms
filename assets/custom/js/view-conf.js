@@ -113,7 +113,35 @@ function agocmsViewConfigFormLayerSearch(url) {
 
 // returns dm ref
 function agocmsViewConfigFormLayerFields(url, id){
-  return  agocms.getDataModelRef(url, id);
+  return agocms.getDataModelRef(url, id);
+}
+
+function agocmsViewConfigAddMapLayerRef(url, dm){
+  console.log(dm);
+  // ref
+  const capableOf = dm.capabilities;
+  // add or replace layer ref in map and set defaults
+  agocms.viewConfig.layers.map[url] = { fields: {},
+                                        create: capableOf.indexOf('Create') != -1,
+                                        delete: capableOf.indexOf('Delete') != -1,
+                                        attr_create: capableOf.indexOf('Update') != -1,
+                                        geo_create: capableOf.allowGeometryUpdates === true,
+                                        label: {
+                                          field: dm.displayField,
+                                          font_size: 12,
+                                          font_color: '#000',
+                                          bg_color: '',
+                                          border_color: ''
+                                        },
+                                        relationships: [] };
+  // grab ref
+  const layerDef = agocms.viewConfig.layers.map[url];
+
+  // set field config defaults
+  for(const field of Object.values(dm.fields)){
+    // add ref with defaults
+    layerDef.fields[field.name] = {is_disabled: false, is_hidden: false};
+  }
 }
 
 // takes template, loops slots and builds text to replace slots from field attributes

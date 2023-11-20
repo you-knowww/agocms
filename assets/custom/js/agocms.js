@@ -13,6 +13,9 @@ class Agocms {
   // provide public references. Good for quick access to data model info
   refs = { data_models: {} };
 
+  // views have configs with maps and tables. public, set defaults
+  viewConfig = {layers: {map: [], tables: []}};
+
   // requires build. if build doesnt provide agoIdMgr then set invalid
   constructor(){
     // context

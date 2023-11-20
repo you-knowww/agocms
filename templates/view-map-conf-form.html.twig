@@ -126,7 +126,8 @@
                 end
                 on change call agocmsViewConfigFormLayerFields(my @d-url, my value) then
                   set dm to the result
-                  send populateFieldConfig(dm: dm) to next <div/>">
+                  send populateFieldConfig(dm: dm) to next <div/>
+                  call agocmsViewConfigAddMapLayerRef(my @d-url, dm)">
           <option disabled='disabled' selected='selected'>Select a layer</option>
         </select>
       </li>
@@ -311,3 +312,4 @@
     <span class='agocms-featurelayer-select-field-codes-value'></span>
   </li>
 </template>
+<template id='agocmsFeatureLayerSelectRelationship'></template>
