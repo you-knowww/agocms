@@ -117,25 +117,28 @@ function agocmsViewConfigFormLayerFields(url, id){
 }
 
 function agocmsViewConfigAddMapLayerRef(url, dm){
-  console.log(dm);
   // ref
-  const capableOf = dm.capabilities;
+  const capableOf = dm.capabilities,
+        layerUrl = url + '/' + dm.id;
+
   // add or replace layer ref in map and set defaults
-  agocms.viewConfig.layers.map[url] = { fields: {},
-                                        create: capableOf.indexOf('Create') != -1,
-                                        delete: capableOf.indexOf('Delete') != -1,
-                                        attr_create: capableOf.indexOf('Update') != -1,
-                                        geo_create: capableOf.allowGeometryUpdates === true,
-                                        label: {
-                                          field: dm.displayField,
-                                          font_size: 12,
-                                          font_color: '#000',
-                                          bg_color: '',
-                                          border_color: ''
-                                        },
-                                        relationships: [] };
+  agocms.viewConfig.map.layers[layerUrl]
+    = { fields: {},
+        create: capableOf.indexOf('Create') != -1,
+        delete: capableOf.indexOf('Delete') != -1,
+        attr_create: capableOf.indexOf('Update') != -1,
+        geo_create: capableOf.allowGeometryUpdates === true,
+        label: {
+          field: dm.displayField,
+          font_size: 12,
+          font_color: '#000',
+          bg_color: '',
+          border_color: ''
+        },
+        relationships: [] };
+
   // grab ref
-  const layerDef = agocms.viewConfig.layers.map[url];
+  const layerDef = agocms.viewConfig.map.layers[layerUrl];
 
   // set field config defaults
   for(const field of Object.values(dm.fields)){
@@ -146,6 +149,9 @@ function agocmsViewConfigAddMapLayerRef(url, dm){
 
 // takes template, loops slots and builds text to replace slots from field attributes
 function agocmsPopulateFieldConfigSlots(el_field, field){
+  // add ref to field
+  el_field.setAttribute('d-field', field.name);
+
   // loop all slots in shadow dom. Slot name matches data model to rely on template
   el_field.shadowRoot.querySelectorAll('slot').forEach(el_slot => {
     // make text element and set inner to field value
@@ -171,4 +177,27 @@ function agocmsPopulateFieldConfigSlots(el_field, field){
       el_field.shadowRoot.appendChild(el_fieldConf);
       break;
   }
+}
+
+// disable/enable feature layer field
+function agocmsMapFeatureLayerFieldToggleDisable(e){
+  const el = e.target;
+  const el_field = el.getRootNode().host;
+  const el_fields = el_field.closest('.agocms-featurelayer-select-fields');
+
+  // set field config is_disabled based on element checked
+  agocms.viewConfig.map.layers
+    [el_fields.getAttribute('d-url')].fields
+    [el_field.getAttribute('d-field')].is_disabled = el.checked;
+}
+// show/hide feature layer field
+function agocmsMapFeatureLayerFieldToggleHidden(e){
+  const el = e.target;
+  const el_field = el.getRootNode().host;
+  const el_fields = el_field.closest('.agocms-featurelayer-select-fields');
+
+  // set field config is_hidden based on element checked
+  agocms.viewConfig.map.layers
+    [el_fields.getAttribute('d-url')].fields
+    [el_field.getAttribute('d-field')].is_hidden = el.checked;
 }

@@ -126,7 +126,7 @@
                 end
                 on change call agocmsViewConfigFormLayerFields(my @d-url, my value) then
                   set dm to the result
-                  send populateFieldConfig(dm: dm) to next <div/>
+                  send populateFieldConfig(dm: dm, url: my @d-url) to next <div/>
                   call agocmsViewConfigAddMapLayerRef(my @d-url, dm)">
           <option disabled='disabled' selected='selected'>Select a layer</option>
         </select>
@@ -134,7 +134,9 @@
       <li style="display: none;">
         <span>Configure fields</span>
         <div class='agocms-featurelayer-select-fields'
-            _="on populateFieldConfig(dm)
+            d-url=''
+            _="on populateFieldConfig(dm, url)
+                set my @d-url to url + '/' + dm's id
                 show the closest <li/>
                 set my innerHTML to ''
                 for field in dm's fields
@@ -268,12 +270,14 @@
       <div class='prod-inline-block'>
         <label>Disabled:</label>
         <input type='checkbox'
-            class='agocms-featurelayer-select-field-is-disabled'/>
+            class='agocms-featurelayer-select-field-is-disabled'
+            onclick='agocmsMapFeatureLayerFieldToggleDisable(event);'/>
       </div>
       <div class='prod-inline-block'>
         <label>Hidden:</label>
         <input type='checkbox'
-            class='agocms-featurelayer-select-field-is-hidden'/>
+            class='agocms-featurelayer-select-field-is-hidden'
+            onclick='agocmsMapFeatureLayerFieldToggleHidden(event);'/>
       </div>
     </div>
     <!--
