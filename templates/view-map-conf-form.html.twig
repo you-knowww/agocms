@@ -1,8 +1,8 @@
 {# agcms/templates/view-map-conf-form.html.twig #}
-<div class='agocms-view-map-conf'>
+<div class='agocms-view-conf' d-type='map'>
   <p>Layers:<p>
   <div id='agocmsViewMapConfLayers'></div>
-  <button onclick='agocmsViewConfigFormAddLayer();'>Add layer</button>
+  <button type='button' onclick='agocmsViewConfigAddLayer();'>Add layer</button>
 </div>
 <template id='agocmsFeatureLayerSelect'>
   <div>
@@ -34,7 +34,7 @@
                     end
                   end
                   -- request ago group named like search term
-                  call agocmsViewConfigFormGroupSearch(my value, my @d-public == 'true') then
+                  call agocmsViewConfigGroupSearch(my value, my @d-public == 'true') then
                     set groups to the result
                     get next <datalist/>
                     set its innerHTML to ''
@@ -57,7 +57,7 @@
             autocomplete='off'
             _="on selectedGroup(groupId)
                 set my @d-group to groupId
-                call agocmsViewConfigFormServiceSearch(my value, groupId) then
+                call agocmsViewConfigServiceSearch(my value, groupId) then
                   set services to the result
                   get next <datalist/>
                   set its innerHTML to ''
@@ -81,7 +81,7 @@
                       exit
                     end
                   end
-                  call agocmsViewConfigFormServiceSearch(my value, my @d-group) then
+                  call agocmsViewConfigServiceSearch(my value, my @d-group) then
                   set services to the result
                   get next <datalist/>
                   set its innerHTML to ''
@@ -104,7 +104,7 @@
             d-url=''
             _="on selectedService(serviceUrl)
                 set my @d-url to serviceUrl
-                call agocmsViewConfigFormLayerSearch(serviceUrl) then
+                call agocmsViewConfigLayerSearch(serviceUrl) then
                   set layerGroups to the result
                   remove <optgroup/> from me
                   show the closest <li/>
@@ -124,7 +124,7 @@
                     end
                   end
                 end
-                on change call agocmsViewConfigFormLayerFields(my @d-url, my value) then
+                on change call agocmsViewConfigLayerFields(my @d-url, my value) then
                   set dm to the result
                   send populateFieldConfig(dm: dm, url: my @d-url) to next <div/>
                   call agocmsViewConfigAddMapLayerRef(my @d-url, dm)">
@@ -236,6 +236,8 @@
       </li>
       <li style="display: none;">
         <label>Relationships</label>
+        <div class='agocms-featurelayer-select-rels'></div>
+        <button type='button' onclick='agocmsViewConfigAddRel();'>Add layer</button>
       </li>
     </ol>
   </div>
@@ -271,13 +273,15 @@
         <label>Disabled:</label>
         <input type='checkbox'
             class='agocms-featurelayer-select-field-is-disabled'
-            onclick='agocmsMapFeatureLayerFieldToggleDisable(event);'/>
+            onclick='agocmsFieldConfigUpdate(event);'
+            d-setting='is_disabled'/>
       </div>
       <div class='prod-inline-block'>
         <label>Hidden:</label>
         <input type='checkbox'
             class='agocms-featurelayer-select-field-is-hidden'
-            onclick='agocmsMapFeatureLayerFieldToggleHidden(event);'/>
+            onclick='agocmsFieldConfigUpdate(event);'
+            d-setting='is_hidden'/>
       </div>
     </div>
     <!--
@@ -293,16 +297,38 @@
     -->
   </div>
 </template>
+<template id='agocmsFeatureLayerRelSelectField'>
+  <label>Select a configured map or table layer</label>
+  <select class='agocms-featurelayer-select-rels__select'
+      _="on focus
+        call Object.keys(agocms.map.layers)
+          and set mapLayerUrls to result
+        call Object.keys(agocms.tables.layers)
+          and set tableLayerUrls to result
+        if mapLayerUrls's length > 0
+          make an <optgroup/>
+          set optGroup to it
+          set optGroup's @label to 'Map Layers:'
+          for layerUrl in mapLayerUrls
+            make an <option/>
+            set its value to mapLayerUrls
+            set its innerHtml to agocms.map.layer[layerUrl]
+          end"></select>
+</template>
 <template id='agocmsFeatureLayerSelectFieldTextConf'>
   <div>
     <div>
       <label>Make links active:</label>
       <input type='checkbox'
-          class='agocms-featurelayer-select-field-links-hyperlink'/>
+          class='agocms-featurelayer-select-field-links-hyperlink'
+          onclick='agocmsFieldConfigUpdate(event);'
+          d-setting='links_active'/>
     </div>
     <div>
       <label>Show images:</label>
-      <select class='agocms-featurelayer-select-field-links-image'/>
+      <select class='agocms-featurelayer-select-field-links-image'
+          onchange='agocmsFieldConfigUpdate(event);'
+          d-setting='image_display'/>
         <option value='disabled'>disabled</option>
         <option value='thumbnails'>thumbnails</option>
         <option value='carousel'>carousel</option>

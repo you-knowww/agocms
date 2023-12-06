@@ -11,7 +11,7 @@ customElements.define(
     }
   });
 
-function agocmsViewConfigFormAddLayer() {
+function agocmsViewConfigAddLayer() {
   // get template and container
   const tpl_layerForm = document.getElementById('agocmsFeatureLayerSelect'),
         el_layerContainer = document.getElementById('agocmsViewMapConfLayers');
@@ -40,7 +40,26 @@ function agocmsViewConfigFormAddLayer() {
   els_hypserscripters.forEach(el => _hyperscript.processNode(el));
 }
 
-function agocmsViewConfigFormGroupSearch(searchText = '', usePublic = false){
+function agocmsViewConfigAddRel(e){
+  // get template and container
+  const tpl_rel = document.getElementById('agocmsFeatureLayerRelSelectField'),
+        el_relContainer = e.parentNode
+                            .getElementByClassname('agocms-featurelayer-select-rels');
+
+  // unwrap rel dom el
+  const el_rel = document.importNode(tpl_rel.content, true);
+
+  // make hyperscript el refs before appending to container
+  const els_hypserscripters = el_rel.querySelectorAll('[\_]');
+
+  // add to page
+  el_relContainer.appendChild(el_rel);
+
+  // apply hyperscript on necessary els. the fun times.
+  els_hypserscripters.forEach(el => _hyperscript.processNode(el));
+}
+
+function agocmsViewConfigGroupSearch(searchText = '', usePublic = false){
   return new Promise((resolve, reject) => {
     // validate search text
     if(searchText == '') resolve([]);
@@ -59,7 +78,7 @@ function agocmsViewConfigFormGroupSearch(searchText = '', usePublic = false){
   });
 }
 
-function agocmsViewConfigFormServiceSearch(searchText = '', groupId = ''){
+function agocmsViewConfigServiceSearch(searchText = '', groupId = ''){
   return new Promise((resolve, reject) => {
     // validate search text
     if(searchText == '' && groupId == '') resolve([]);
@@ -84,7 +103,7 @@ function agocmsViewConfigFormServiceSearch(searchText = '', groupId = ''){
   })
 }
 
-function agocmsViewConfigFormLayerSearch(url) {
+function agocmsViewConfigLayerSearch(url) {
   return new Promise((resolve, reject) => {
     // validate
     if(url == '') resolve([]);
@@ -112,7 +131,7 @@ function agocmsViewConfigFormLayerSearch(url) {
 }
 
 // returns dm ref
-function agocmsViewConfigFormLayerFields(url, id){
+function agocmsViewConfigLayerFields(url, id){
   return agocms.getDataModelRef(url, id);
 }
 
@@ -179,25 +198,18 @@ function agocmsPopulateFieldConfigSlots(el_field, field){
   }
 }
 
-// disable/enable feature layer field
-function agocmsMapFeatureLayerFieldToggleDisable(e){
+// flexible function to update config based on input.
+// new html and setting can rely on a d-setting input attribute.
+function agocmsFieldConfigUpdate(e){
+  // get field context
   const el = e.target;
   const el_field = el.getRootNode().host;
-  const el_fields = el_field.closest('.agocms-featurelayer-select-fields');
-
-  // set field config is_disabled based on element checked
-  agocms.viewConfig.map.layers
-    [el_fields.getAttribute('d-url')].fields
-    [el_field.getAttribute('d-field')].is_disabled = el.checked;
-}
-// show/hide feature layer field
-function agocmsMapFeatureLayerFieldToggleHidden(e){
-  const el = e.target;
-  const el_field = el.getRootNode().host;
-  const el_fields = el_field.closest('.agocms-featurelayer-select-fields');
+  const el_fields = el_field.closest('.agocms-featurelayer-select-fields'),
+        el_section = el_field.closest('.agocms-view-conf');
 
   // set field config is_hidden based on element checked
-  agocms.viewConfig.map.layers
-    [el_fields.getAttribute('d-url')].fields
-    [el_field.getAttribute('d-field')].is_hidden = el.checked;
+  agocms.viewConfig[el_section.getAttribute('d-type')]
+    .layers[el_fields.getAttribute('d-url')]
+    .fields[el_field.getAttribute('d-field')]
+    [el.getAttribute('d-setting')] = el.type == 'checkbox' ? el.checked : el.value;
 }
