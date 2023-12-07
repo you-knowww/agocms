@@ -44,7 +44,7 @@ function agocmsViewConfigAddRel(e){
   // get template and container
   const tpl_rel = document.getElementById('agocmsFeatureLayerRelSelectField'),
         el_relContainer = e.parentNode
-                            .getElementByClassname('agocms-featurelayer-select-rels');
+                            .getElementByClassname('agocms-conf-featurelayer-rels');
 
   // unwrap rel dom el
   const el_rel = document.importNode(tpl_rel.content, true);
@@ -198,18 +198,32 @@ function agocmsPopulateFieldConfigSlots(el_field, field){
   }
 }
 
-// flexible function to update config based on input.
-// new html and setting can rely on a d-setting input attribute.
+// flexible functions to update layer and field configs based on input
+// layer config inputs call to pass val by layer config prop ref in d-setting attr
+function agocmsLayerConfigUpdate(e){
+  // get field context
+  const el = e.target;
+  const el_layer = el.closest('li.agocms-conf-featurelayer-layer'),
+        el_section = el.closest('.agocms-view-conf');
+
+  // set field config is_hidden based on element checked
+  agocms.viewConfig[el_section.getAttribute('d-type')]
+    .layers[el_layer.getAttribute('d-url')]
+    [el.getAttribute('d-setting')] = el.type == 'checkbox' ? el.checked : el.value;
+}
+
+// field config inputs call to pass val by field config prop ref in d-setting attr
 function agocmsFieldConfigUpdate(e){
   // get field context
   const el = e.target;
   const el_field = el.getRootNode().host;
-  const el_fields = el_field.closest('.agocms-featurelayer-select-fields'),
+  const el_fields = el_field.closest('.agocms-conf-featurelayer-fields'),
+        el_layer = el_field.closest('li.agocms-conf-featurelayer-layer'),
         el_section = el_field.closest('.agocms-view-conf');
 
   // set field config is_hidden based on element checked
   agocms.viewConfig[el_section.getAttribute('d-type')]
-    .layers[el_fields.getAttribute('d-url')]
+    .layers[el_layer.getAttribute('d-url')]
     .fields[el_field.getAttribute('d-field')]
     [el.getAttribute('d-setting')] = el.type == 'checkbox' ? el.checked : el.value;
 }

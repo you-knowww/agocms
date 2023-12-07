@@ -17,7 +17,7 @@
                 get next <input/>
                 set its @d-public to my checked">
         <br/>
-        <input class='agocms-featurelayer-select-group__input'
+        <input class='agocms-conf-featurelayer-group__input'
             list='agocmsFeatureLayerSelectGroupSearch-'
             d-public='false'
             autocomplete='off'
@@ -51,7 +51,7 @@
       <li>
         <span>Search Feature Services within selected Group.<br/>
           *Use group search in <b>step 1</b> to narrow Feature Service results</span><br/>
-        <input class='agocms-featurelayer-select-service__input'
+        <input class='agocms-conf-featurelayer-service__input'
             list='agocmsFeatureLayerSelectServiceSearch-'
             d-group=''
             autocomplete='off'
@@ -100,7 +100,7 @@
       </li>
       <li style="display: none;">
         <span>Select Layer in Feature Service.</span><br/>
-        <select class='agocms-featurelayer-select-layer__select'
+        <select class='agocms-conf-featurelayer-layer__select'
             d-url=''
             _="on selectedService(serviceUrl)
                 set my @d-url to serviceUrl
@@ -126,38 +126,42 @@
                 end
                 on change call agocmsViewConfigLayerFields(my @d-url, my value) then
                   set dm to the result
-                  send populateFieldConfig(dm: dm, url: my @d-url) to next <div/>
+                  send populateFieldConfig(dm: dm)
+                    to next <div.agocms-conf-featurelayer-fields/>
+                  send populateLayerName(dm: dm)
+                    to next <input.agocms-conf-featurelayer-name/>
+                  send setLayerCrud(dm: dm)
+                    to next <ul.agocms-conf-featurelayer-crud/>
+                  send setLabelFieldOptions(dm: dm)
+                    to next <select.agocms-conf-featurelayer-label/>
+                  set the next <li/.agocms-conf-featurelayer-layer>'s' @d-url
+                    to my @d-url + '/' + dm's id
+                  show the next <li.agocms-conf-featurelayer-layer/>
                   call agocmsViewConfigAddMapLayerRef(my @d-url, dm)">
           <option disabled='disabled' selected='selected'>Select a layer</option>
         </select>
       </li>
-      <li style="display: none;">
-        <span>Configure fields</span>
-        <div class='agocms-featurelayer-select-fields'
-            d-url=''
-            _="on populateFieldConfig(dm, url)
-                set my @d-url to url + '/' + dm's id
-                show the closest <li/>
-                set my innerHTML to ''
-                for field in dm's fields
-                  make an <agocms-config-field/>
-                  set el_field to it
-                  call agocmsPopulateFieldConfigSlots(el_field, field)
-                  put el_field at the end of me
-                end
-                send setLayerCrud(dm: dm) to next <ul/>
-                send setLabelFieldOptions(dm: dm) to next <select/>"></div>
+      <li style="display: none;" d-url='' class='agocms-conf-featurelayer-layer'>
         <div>
           <label>Layer options:</label>
-          <ul _="on setLayerCrud(dm)
+          <div>
+            <label>Layer Display Name</label>
+            <input type='text'
+                class='agocms-conf-featurelayer-name'
+                d-setting='name'
+                onchange='agocmsLayerConfigUpdate(event);'
+                _="on populateLayerName(dm) set my value to dm's name"/>
+          </div>
+          <ul class='agocms-conf-featurelayer-crud'
+              _="on setLayerCrud(dm)
                   set el_create to
-                    <li.agocms-featurelayer-select-layer-crud__create/> in me
+                    <li.agocms-conf-featurelayer-layer-crud__create/> in me
                   set el_delete to
-                    <li.agocms-featurelayer-select-layer-crud__delete/> in me
+                    <li.agocms-conf-featurelayer-layer-crud__delete/> in me
                   set el_attrUpdate to
-                    <li.agocms-featurelayer-select-layer-crud__attr-create/> in me
+                    <li.agocms-conf-featurelayer-layer-crud__attr-create/> in me
                   set el_geoUpdate to
-                    <li.agocms-featurelayer-select-layer-crud__geo-update/> in me
+                    <li.agocms-conf-featurelayer-layer-crud__geo-update/> in me
                   call dm.capabilities.indexOf('Create')
                     if it !== -1
                       show el_create
@@ -179,29 +183,39 @@
                       hide el_attrUpdate
                       hide el_geoUpdate">
             <li style='display: none;'
-                class='agocms-featurelayer-select-layer-crud__create'>
+                class='agocms-conf-featurelayer-crud__create'>
               <label>Allow Create</label>
-              <input type='checkbox'/>
+              <input type='checkbox'
+                  d-setting='can_create'
+                  onchange='agocmsLayerConfigUpdate(event);'/>
             </li>
             <li style='display: none;'
-                class='agocms-featurelayer-select-layer-crud__delete'>
+                class='agocms-conf-featurelayer-crud__delete'>
               <label>Allow Delete</label>
-              <input type='checkbox'/>
+              <input type='checkbox'
+                  d-setting='can_delete'
+                  onchange='agocmsLayerConfigUpdate(event);'/>
             </li>
             <li style='display: none;'
-                class='agocms-featurelayer-select-layer-crud__geo-update'>
+                class='agocms-conf-featurelayer-crud__geo-update'>
               <label>Allow Attribute Edit</label>
-              <input type='checkbox'/>
+              <input type='checkbox'
+                  d-setting='can_update_attr'
+                  onchange='agocmsLayerConfigUpdate(event);'/>
             </li>
             <li style='display: none;'
-                class='agocms-featurelayer-select-layer-crud__attr-create'>
+                class='agocms-conf-featurelayer-crud__attr-create'>
               <label>Allow Geometry Edit</label>
-              <input type='checkbox'/>
+              <input type='checkbox'
+                  d-setting='can_update_geo'
+                  onchange='agocmsLayerConfigUpdate(event);'/>
             </li>
           </ul>
           <div>
             <label>Label Field</label>
-            <select
+            <select class='agocms-conf-featurelayer-label'
+                d-setting='label_field'
+                onchange='agocmsLayerConfigUpdate(event);'
                 _="on setLabelFieldOptions(dm)
                     set my innerHTML to ''
                     for field in dm's fields
@@ -215,7 +229,8 @@
                       end
                       put el_option at the end of me"></select>
             <label>Label Font Size</label>
-            <select>
+            <select d-setting='label_size_px'
+                onchange='agocmsLayerConfigUpdate(event);'>
               <option value='6'>6</option>
               <option value='8'>8</option>
               <option value='10'>10</option>
@@ -226,17 +241,32 @@
               <option value='20'>20</option>
             </select>
             <label>Label Font Color</label>
-            <input type='color'/>
+            <input type='color'
+                d-setting='label_font_color'
+                onchange='agocmsLayerConfigUpdate(event);'/>
             <label>Label Background Color</label>
-            <input type='color'/>
+            <input type='color'
+                d-setting='label_bg_color'
+                onchange='agocmsLayerConfigUpdate(event);'/>
             <label>Label Border Color</label>
-            <input type='color'/>
+            <input type='color'
+                d-setting='label_border_color'
+                onchange='agocmsLayerConfigUpdate(event);'/>
           </div>
         </div>
+        <span>Configure fields</span>
+        <div class='agocms-conf-featurelayer-fields'
+            _="on populateFieldConfig(dm)
+                set my innerHTML to ''
+                for field in dm's fields
+                  make an <agocms-config-field/>
+                  set el_field to it
+                  call agocmsPopulateFieldConfigSlots(el_field, field)
+                  put el_field at the end of me"></div>
       </li>
       <li style="display: none;">
         <label>Relationships</label>
-        <div class='agocms-featurelayer-select-rels'></div>
+        <div class='agocms-conf-featurelayer-rels'></div>
         <button type='button' onclick='agocmsViewConfigAddRel();'>Add layer</button>
       </li>
     </ol>
@@ -272,14 +302,14 @@
       <div class='prod-inline-block'>
         <label>Disabled:</label>
         <input type='checkbox'
-            class='agocms-featurelayer-select-field-is-disabled'
+            class='agocms-conf-featurelayer-field-is-disabled'
             onclick='agocmsFieldConfigUpdate(event);'
             d-setting='is_disabled'/>
       </div>
       <div class='prod-inline-block'>
         <label>Hidden:</label>
         <input type='checkbox'
-            class='agocms-featurelayer-select-field-is-hidden'
+            class='agocms-conf-featurelayer-field-is-hidden'
             onclick='agocmsFieldConfigUpdate(event);'
             d-setting='is_hidden'/>
       </div>
@@ -299,7 +329,7 @@
 </template>
 <template id='agocmsFeatureLayerRelSelectField'>
   <label>Select a configured map or table layer</label>
-  <select class='agocms-featurelayer-select-rels__select'
+  <select class='agocms-conf-featurelayer-rels__select'
       _="on focus
         call Object.keys(agocms.map.layers)
           and set mapLayerUrls to result
@@ -311,7 +341,7 @@
           set optGroup's @label to 'Map Layers:'
           for layerUrl in mapLayerUrls
             make an <option/>
-            set its value to mapLayerUrls
+            set its value to layerUrl
             set its innerHtml to agocms.map.layer[layerUrl]
           end"></select>
 </template>
@@ -320,13 +350,13 @@
     <div>
       <label>Make links active:</label>
       <input type='checkbox'
-          class='agocms-featurelayer-select-field-links-hyperlink'
+          class='agocms-conf-featurelayer-field-links-hyperlink'
           onclick='agocmsFieldConfigUpdate(event);'
           d-setting='links_active'/>
     </div>
     <div>
       <label>Show images:</label>
-      <select class='agocms-featurelayer-select-field-links-image'
+      <select class='agocms-conf-featurelayer-field-links-image'
           onchange='agocmsFieldConfigUpdate(event);'
           d-setting='image_display'/>
         <option value='disabled'>disabled</option>
@@ -338,8 +368,8 @@
 </template>
 <template id='agocmsFeatureLayerSelectCodedValues'>
   <li>
-    <span class='agocms-featurelayer-select-field-codes-code'></span>
-    <span class='agocms-featurelayer-select-field-codes-value'></span>
+    <span class='agocms-conf-featurelayer-field-codes-code'></span>
+    <span class='agocms-conf-featurelayer-field-codes-value'></span>
   </li>
 </template>
 <template id='agocmsFeatureLayerSelectRelationship'></template>
