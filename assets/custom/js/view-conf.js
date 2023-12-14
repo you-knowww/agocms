@@ -11,6 +11,48 @@ customElements.define(
     }
   });
 
+// contain in iif
+(() => {
+  // refs
+  const el_accessList = document.getElementById('agocmsConfSearchAccessList'),
+        el_groupSearch = document.getElementById('agocmsConfSearchGroups'),
+        el_groupSearchList = document.getElementById('agocmsConfSearchGroupsList'),
+        el_serviceSearch = document.getElementById('agocmsConfSearchServices'),
+        el_serviceSearchList = document.getElementById('agocmsConfSearchServicesList'),
+        el_layerList = document.getElementById('agocmsConfSearchLayerList');
+
+  // default to private
+  let accessLvl = 'private';
+
+  // add click event listeners to select access for group and service search
+  for(const el_li of [...el_accessList.children]){
+    el_li.addEventListener('click', e => searchLiSelect(e, v => accessLvl = v));
+  }
+
+  // deselect siblings, select option, and fire callback with selection
+  function searchLiSelect(e, callback){
+    // ref
+    const el = e.target;
+    const classes = el.classList,
+          selectedClass = 'agocms-conf-search-item--selected';
+
+    // only proceed if not selected as determined by set classes
+    if(!classes.contains(selectedClass)){
+      // get all siblings and loop
+      for(el_sib of [...el.parentNode.children].filter(n => n != el)){
+        // remove selected class from all siblings
+        el_sib.classList.remove(selectedClass);
+      }
+
+      // add selected class to this element
+      classes.add(selectedClass);
+
+      // get value from data and send to callback
+      callback(el.getAttribute('d-val'));
+    }
+  }
+})();
+
 function agocmsViewConfigAddLayer() {
   // get template and container
   const tpl_layerForm = document.getElementById('agocmsFeatureLayerSelect'),

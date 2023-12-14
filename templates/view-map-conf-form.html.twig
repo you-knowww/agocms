@@ -1,8 +1,56 @@
 {# agcms/templates/view-map-conf-form.html.twig #}
 <div class='agocms-view-conf' d-type='map'>
   <p>Layers:<p>
-  <div id='agocmsViewMapConfLayers'></div>
-  <button type='button' onclick='agocmsViewConfigAddLayer();'>Add layer</button>
+  <div id='agocmsConfAddContent'>
+    <div>
+      <div>
+        <label>Access</label>
+      <div>
+      <ul id='agocmsConfSearchAccessList'>
+        <li d-val='private'
+            class='agocms-conf-search-item agocms-conf-search-item--selected'>
+          private
+        </li>
+        <li d-val='public' class='agocms-conf-search-item'>
+          public
+        </li>
+        <li d-val='all' class='agocms-conf-search-item'>
+          all
+        </li>
+      </ul>
+    </div>
+    <div>
+      <div>
+        <label>Groups</label>
+        <input id='agocmsConfSearchGroups'>
+      <div>
+      <ul id='agocmsConfSearchGroupsList'></ul>
+    </div>
+    <div>
+      <div>
+        <label>Services</label>
+        <input id='agocmsConfSearchServices'>
+      <div>
+      <ul id='agocmsConfSearchServicesList'></ul>
+    </div>
+    <div>
+      <div>
+        <label>Layers</label>
+      <div>
+      <ul id='agocmsConfSearchLayersList'></ul>
+    </div>
+  </div>
+  <!--<button type='button' onclick='agocmsViewConfigAddLayer();'>Add layer</button>-->
+  <div>
+    <div>
+      <label>Map Layers</label>
+      <ul id='agocmsConfMapLayers'></ul>
+    </div>
+    <div>
+      <label>Data Tables</label>
+      <ul id='agocmsConfTables'></ul>
+    </div>
+  </div>
 </div>
 <template id='agocmsFeatureLayerSelect'>
   <div>

@@ -136,15 +136,6 @@ class Agocms {
     return this.refs.data_models[url];
   }
 
-  testToken(){
-    console.log(this.#agoIdMgr)
-  }
-
-  testRefresh(){
-    // get new token
-    this.#refreshToken().then(idMgr => console.log(idMgr));
-  }
-
   // return bool
   #isAccessTokenExpired(){
     // compare expiration against 20 seconds before now
