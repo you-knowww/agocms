@@ -16,25 +16,53 @@ customElements.define(
   // refs
   const el_accessList = document.getElementById('agocmsConfSearchAccessList'),
         el_groupSearch = document.getElementById('agocmsConfSearchGroups'),
-        el_groupSearchList = document.getElementById('agocmsConfSearchGroupsList'),
+        el_groupList = document.getElementById('agocmsConfSearchGroupsList'),
         el_serviceSearch = document.getElementById('agocmsConfSearchServices'),
-        el_serviceSearchList = document.getElementById('agocmsConfSearchServicesList'),
+        el_serviceList = document.getElementById('agocmsConfSearchServicesList'),
         el_layerList = document.getElementById('agocmsConfSearchLayerList');
-
-  // default to private
-  let accessLvl = 'private';
 
   // add click event listeners to select access for group and service search
   for(const el_li of [...el_accessList.children]){
-    el_li.addEventListener('click', e => searchLiSelect(e, v => accessLvl = v));
+    el_li.addEventListener('click', e => searchLiSelect(e));
+  }
+
+  function lameTest(){console.log('test');}
+
+  //const processChange = debounce(() => lameTest());
+  // const processChange = debounce(() => console.log('test'));
+
+  // get private groups and list on initial load
+  agocmsViewConfigGroupSearch()
+    .then(groups => searchLiBuilder(el_groupList, groups, 'id', 'title'));
+
+  // add search event listeners to the two searches
+  // el_groupSearch.addEventListener('keyup', debounce(() => console.log('test')));
+
+  el_groupSearch.addEventListener('keyup', debounce(e =>
+    agocmsViewConfigGroupSearch(e.target.value, getListVal(el_accessList) == 'public')
+        .then(groups => searchLiBuilder(el_groupList, groups, 'id', 'title')) ));
+  el_serviceSearch.addEventListener('keyup', e => debounce(() => {
+    agocmsViewConfigGroupSearch(e.target.value, accessLvl == 'public')
+      .then(services => {
+        console.log(services);
+      });
+  }, 700));
+
+  // take list element and return value from selected option
+  function getListVal(el_ul){
+    // get selected access level element
+    const el_li = el_ul.querySelector('li.agocms-conf-search-list-item--selected');
+
+    // get value from li. fallback on empty string
+    return el_li ? el_li.getAttribute('d-val') : '';
   }
 
   // deselect siblings, select option, and fire callback with selection
-  function searchLiSelect(e, callback){
+  function searchLiSelect(e, callback = false){
     // ref
     const el = e.target;
     const classes = el.classList,
-          selectedClass = 'agocms-conf-search-item--selected';
+          selectedClass = 'agocms-conf-search-list-item--selected';
 
     // only proceed if not selected as determined by set classes
     if(!classes.contains(selectedClass)){
@@ -47,8 +75,40 @@ customElements.define(
       // add selected class to this element
       classes.add(selectedClass);
 
-      // get value from data and send to callback
-      callback(el.getAttribute('d-val'));
+      // validate callback then get value from data and send to callback
+      if(callback !== false) callback(el.getAttribute('d-val'));
+    }
+  }
+
+  // callback to write search results to list
+  function searchLiBuilder(el_ul, items, valProp, lblProp){
+    // empty list
+    el_ul.innerHTML = '';
+
+    // validate results
+    if(items.length == 0){
+      // no results make error li to prompt user
+      const el_errorLi = document.createElement('li');
+      // error message
+      el_errorLi.innerHTML = 'No results. Try different search or access to get results.';
+      // add to result list
+      el_ul.appendChild(el_errorLi);
+    } else {
+      // add all options to group list
+      for(const item of items){
+        // make li element
+        const el_li = document.createElement('li');
+        // add ref to unique identifier value
+        el_li.setAttribute('d-val', item[valProp]);
+        // set content for user to recognize item
+        el_li.innerHTML = item[lblProp];
+        // apply class
+        el_li.className = 'agocms-conf-search-list-item';
+        // set up click events
+        el_li.addEventListener('click', searchLiSelect)
+        // add to result list
+        el_ul.appendChild(el_li);
+      }
     }
   }
 })();
@@ -103,14 +163,22 @@ function agocmsViewConfigAddRel(e){
 
 function agocmsViewConfigGroupSearch(searchText = '', usePublic = false){
   return new Promise((resolve, reject) => {
-    // validate search text
-    if(searchText == '') resolve([]);
+    // if blank and public then respond with empty results
+    if(searchText == '' && usePublic === true) resolve([]);
 
+    // build query
     const q = new arcgisRest.SearchQueryBuilder()
-                .match(searchText).in('title');
 
-    // only search private groups
-    if(!usePublic) q.and().match('private').in('access');
+    // if blank and private, send back all private possible. else search
+    if(searchText !== ''){
+      q.match(searchText).in('title');
+      // only search private groups
+      if(!usePublic) q.and().match('private').in('access');
+    } else {
+      // search text is blank and would not arrive here with public
+      q.match('private').in('access');
+    }
+
 
     // validate token and search. return array. Empty on failure
     agocms.ajx(arcgisRest.searchGroups, {q, sortField: 'title'})
@@ -269,3 +337,12 @@ function agocmsFieldConfigUpdate(e){
     .fields[el_field.getAttribute('d-field')]
     [el.getAttribute('d-setting')] = el.type == 'checkbox' ? el.checked : el.value;
 }
+
+// debounce very simple now. David Walsch example
+function debounce(f, wait = 700) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => f.apply(this, args), wait);
+  };
+};

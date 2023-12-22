@@ -1,43 +1,43 @@
 {# agcms/templates/view-map-conf-form.html.twig #}
 <div class='agocms-view-conf' d-type='map'>
   <p>Layers:<p>
-  <div id='agocmsConfAddContent'>
-    <div>
-      <div>
+  <div id='agocmsConfAddContent' class='agocms-conf-search'>
+    <div class='agocms-conf-search-col'>
+      <div class='agocms-conf-search-col-header'>
         <label>Access</label>
-      <div>
-      <ul id='agocmsConfSearchAccessList'>
+      </div>
+      <ul class='agocms-conf-search-list' id='agocmsConfSearchAccessList'>
         <li d-val='private'
-            class='agocms-conf-search-item agocms-conf-search-item--selected'>
+            class='agocms-conf-search-list-item agocms-conf-search-list-item--selected'>
           private
         </li>
-        <li d-val='public' class='agocms-conf-search-item'>
+        <li d-val='public' class='agocms-conf-search-list-item'>
           public
         </li>
-        <li d-val='all' class='agocms-conf-search-item'>
+        <li d-val='all' class='agocms-conf-search-list-item'>
           all
         </li>
       </ul>
     </div>
-    <div>
-      <div>
+    <div class='agocms-conf-search-col'>
+      <div class='agocms-conf-search-col-header'>
         <label>Groups</label>
-        <input id='agocmsConfSearchGroups'>
-      <div>
-      <ul id='agocmsConfSearchGroupsList'></ul>
+        <input id='agocmsConfSearchGroups' placeholder='search'>
+      </div>
+      <ul class='agocms-conf-search-list' id='agocmsConfSearchGroupsList'></ul>
     </div>
-    <div>
-      <div>
+    <div class='agocms-conf-search-col'>
+      <div class='agocms-conf-search-col-header'>
         <label>Services</label>
-        <input id='agocmsConfSearchServices'>
-      <div>
-      <ul id='agocmsConfSearchServicesList'></ul>
+        <input id='agocmsConfSearchServices' placeholder='search'>
+      </div>
+      <ul class='agocms-conf-search-list' id='agocmsConfSearchServicesList'></ul>
     </div>
-    <div>
-      <div>
+    <div class='agocms-conf-search-col'>
+      <div class='agocms-conf-search-col-header agocms-conf-search-col-header--disabled'>
         <label>Layers</label>
-      <div>
-      <ul id='agocmsConfSearchLayersList'></ul>
+      </div>
+      <ul class='agocms-conf-search-list' id='agocmsConfSearchLayersList'></ul>
     </div>
   </div>
   <!--<button type='button' onclick='agocmsViewConfigAddLayer();'>Add layer</button>-->

@@ -26,3 +26,6 @@ view-conf:
       { type: external,
         attributes: { type: application/javascript, crossorigin: anonymous } }
     assets/custom/js/view-conf.js: {}
+  css:
+    component:
+      assets/custom/css/agocms.css: {}

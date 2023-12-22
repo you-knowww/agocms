@@ -1,0 +1,34 @@
+.agocms-conf-search {
+  display: flex;
+  flex-direction: row;
+}
+.agocms-conf-search-col {
+  border: 1px #000 solid;
+  display: flex;
+  flex-direction: column;
+  width: 30%;
+  word-break: break-all;
+}
+.agocms-conf-search-col:first-of-type {
+  width: 10%;
+}
+.agocms-conf-search-col-header {
+  border-bottom: 1px #000 solid;
+}
+.agocms-conf-search-col-header--disabled {
+  opacity: 0.5;
+}
+.agocms-conf-search-list {
+  list-style: none;
+  margin: 0;
+}
+.agocms-conf-search-list-item {
+  cursor: pointer;
+  padding-left: 6px;
+}
+.agocms-conf-search-list-item--selected {
+  background-color: #000;
+  color: #fff;
+  cursor: auto;
+  font-weight: bold;
+}
