@@ -26,32 +26,21 @@ customElements.define(
     el_li.addEventListener('click', e => searchLiSelect(e));
   }
 
-  function lameTest(){console.log('test');}
-
-  //const processChange = debounce(() => lameTest());
-  // const processChange = debounce(() => console.log('test'));
-
   // get private groups and list on initial load
-  agocmsViewConfigGroupSearch()
-    .then(groups => searchLiBuilder(el_groupList, groups, 'id', 'title'));
+  agocmsViewConfigGroupSearch().then(groups =>
+      searchLiBuilder(el_groupList, groups, 'id', 'title', listGroupServices));
 
-  // add search event listeners to the two searches
-  // el_groupSearch.addEventListener('keyup', debounce(() => console.log('test')));
-
+  // add search event listeners to group and service searches
   el_groupSearch.addEventListener('keyup', debounce(e =>
-    agocmsViewConfigGroupSearch(e.target.value, getListVal(el_accessList) == 'public')
-        .then(groups => searchLiBuilder(el_groupList, groups, 'id', 'title')) ));
-  el_serviceSearch.addEventListener('keyup', e => debounce(() => {
-    agocmsViewConfigGroupSearch(e.target.value, accessLvl == 'public')
-      .then(services => {
-        console.log(services);
-      });
-  }, 700));
+      agocmsViewConfigGroupSearch(e.target.value, getListVal(el_accessList) == 'public')
+        .then(groups =>
+          searchLiBuilder(el_groupList, groups, 'id', 'title', listGroupServices)) ));
+  el_serviceSearch.addEventListener('keyup', debounce(listGroupServices));
 
   // take list element and return value from selected option
-  function getListVal(el_ul){
+  function getListVal(el_list){
     // get selected access level element
-    const el_li = el_ul.querySelector('li.agocms-conf-search-list-item--selected');
+    const el_li = el_list.querySelector('.agocms-conf-search-list-item--selected');
 
     // get value from li. fallback on empty string
     return el_li ? el_li.getAttribute('d-val') : '';
@@ -76,12 +65,12 @@ customElements.define(
       classes.add(selectedClass);
 
       // validate callback then get value from data and send to callback
-      if(callback !== false) callback(el.getAttribute('d-val'));
+      if(callback !== false) callback();
     }
   }
 
   // callback to write search results to list
-  function searchLiBuilder(el_ul, items, valProp, lblProp){
+  function searchLiBuilder(el_ul, items, valProp, lblProp, callback = false){
     // empty list
     el_ul.innerHTML = '';
 
@@ -104,11 +93,35 @@ customElements.define(
         el_li.innerHTML = item[lblProp];
         // apply class
         el_li.className = 'agocms-conf-search-list-item';
-        // set up click events
-        el_li.addEventListener('click', searchLiSelect)
+        // set up click events. add callback if included
+        el_li.addEventListener('click', e =>
+              searchLiSelect(e, callback === false ? false : callback));
         // add to result list
         el_ul.appendChild(el_li);
       }
+    }
+  }
+
+  // callback for service keyup and group search click
+  function listGroupServices(){
+    // call service search. if selected group el, get val. otherwise empty string
+    agocmsViewConfigServiceSearch(el_serviceSearch.value, getListVal(el_groupList))
+      .then(services =>
+        searchLiBuilder(el_serviceList, services, 'url', 'title', listServiceLayers));
+  }
+
+  // callback for service click
+  function listServiceLayers(){
+    // get selected group el
+    const val = getListVal(el_serviceList);
+
+    // validate
+    if(val !== ''){
+      // call service search. if selected group el, get val. otherwise empty string
+      agocmsViewConfigLayerSearch(val).then(layers => {
+        console.log(layers);
+        // searchLiBuilder(el_layerList, layers, 'url', 'title')
+      });
     }
   }
 })();
@@ -194,22 +207,15 @@ function agocmsViewConfigServiceSearch(searchText = '', groupId = ''){
     if(searchText == '' && groupId == '') resolve([]);
 
     // keyword search on all items filtered to Feature Services
-    const q = new arcgisRest.SearchQueryBuilder()
-                .match('Feature Service').in('type');
+    const q = new arcgisRest.SearchQueryBuilder().match('Feature Service').in('type');
 
     // skip if search is empty
     if(searchText !== '') q.and().match(searchText).in('title');
 
-    // if no group set, search all available feature services
-    const searchFn = groupId == ''
-                      ? arcgisRest.searchItems
-                      : arcgisRest.searchGroupContent;
-
     // run group search if groupId is set. If not, groupId ignored by api
-    agocms.ajx(searchFn, {q, groupId, sortField: 'title'})
-      .then(response =>
-          resolve(Array.isArray(response.results) ? response.results : []),
-        () => resolve([]));
+    agocms.ajx(groupId == '' ? arcgisRest.searchItems : arcgisRest.searchGroupContent,
+        {q, groupId, sortField: 'title'})
+      .then(r => resolve(Array.isArray(r.results) ? r.results : []), () => resolve([]));
   })
 }
 
@@ -219,8 +225,7 @@ function agocmsViewConfigLayerSearch(url) {
     if(url == '') resolve([]);
 
     // get layers in feature service
-    agocms.ajx(arcgisRest.getAllLayersAndTables, {url})
-      .then(response => {
+    agocms.ajx(arcgisRest.getAllLayersAndTables, {url}).then(response => {
         // validate
         if(response.hasOwnProperty('error')){
           console.error('FAILURE: service layers.', response.error);
