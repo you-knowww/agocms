@@ -19,7 +19,7 @@ customElements.define(
         el_groupList = document.getElementById('agocmsConfSearchGroupsList'),
         el_serviceSearch = document.getElementById('agocmsConfSearchServices'),
         el_serviceList = document.getElementById('agocmsConfSearchServicesList'),
-        el_layerList = document.getElementById('agocmsConfSearchLayerList');
+        el_layerList = document.getElementById('agocmsConfSearchLayersList');
 
   // add click event listeners to select access for group and service search
   for(const el_li of [...el_accessList.children]){
@@ -28,13 +28,15 @@ customElements.define(
 
   // get private groups and list on initial load
   agocmsViewConfigGroupSearch().then(groups =>
-      searchLiBuilder(el_groupList, groups, 'id', 'title', listGroupServices));
+    searchListBuilder(el_groupList, groups, 'id', 'title', listGroupServices));
 
   // add search event listeners to group and service searches
   el_groupSearch.addEventListener('keyup', debounce(e =>
       agocmsViewConfigGroupSearch(e.target.value, getListVal(el_accessList) == 'public')
-        .then(groups =>
-          searchLiBuilder(el_groupList, groups, 'id', 'title', listGroupServices)) ));
+        .then(groups => {
+          clearSearchList(el_serviceList);
+          searchListBuilder(el_groupList, groups, 'id', 'title', listGroupServices);
+        }) ));
   el_serviceSearch.addEventListener('keyup', debounce(listGroupServices));
 
   // take list element and return value from selected option
@@ -44,6 +46,16 @@ customElements.define(
 
     // get value from li. fallback on empty string
     return el_li ? el_li.getAttribute('d-val') : '';
+  }
+
+  // give search result to error
+  function addErrorToList(el_ul){
+    // no results make error li to prompt user
+    const el_errorLi = document.createElement('li');
+    // error message
+    el_errorLi.innerHTML = 'No results. Try different search or access to get results.';
+    // add to result list
+    el_ul.appendChild(el_errorLi);
   }
 
   // deselect siblings, select option, and fire callback with selection
@@ -70,18 +82,10 @@ customElements.define(
   }
 
   // callback to write search results to list
-  function searchLiBuilder(el_ul, items, valProp, lblProp, callback = false){
-    // empty list
-    el_ul.innerHTML = '';
-
+  function searchListBuilder(el_ul, items, valProp, lblProp, callback = false){
     // validate results
     if(items.length == 0){
-      // no results make error li to prompt user
-      const el_errorLi = document.createElement('li');
-      // error message
-      el_errorLi.innerHTML = 'No results. Try different search or access to get results.';
-      // add to result list
-      el_ul.appendChild(el_errorLi);
+      addErrorToList(el_ul);
     } else {
       // add all options to group list
       for(const item of items){
@@ -94,20 +98,24 @@ customElements.define(
         // apply class
         el_li.className = 'agocms-conf-search-list-item';
         // set up click events. add callback if included
-        el_li.addEventListener('click', e =>
-              searchLiSelect(e, callback === false ? false : callback));
+        el_li.addEventListener('click', e => searchLiSelect(e, callback));
         // add to result list
         el_ul.appendChild(el_li);
       }
     }
   }
 
+  // empty list
+  function clearSearchList(el_ul){ el_ul.innerHTML = ''; }
+
   // callback for service keyup and group search click
   function listGroupServices(){
     // call service search. if selected group el, get val. otherwise empty string
     agocmsViewConfigServiceSearch(el_serviceSearch.value, getListVal(el_groupList))
-      .then(services =>
-        searchLiBuilder(el_serviceList, services, 'url', 'title', listServiceLayers));
+      .then(services => {
+        clearSearchList(el_serviceList);
+        searchListBuilder(el_serviceList, services, 'url', 'title', listServiceLayers);
+      });
   }
 
   // callback for service click
@@ -118,9 +126,57 @@ customElements.define(
     // validate
     if(val !== ''){
       // call service search. if selected group el, get val. otherwise empty string
-      agocmsViewConfigLayerSearch(val).then(layers => {
-        console.log(layers);
-        // searchLiBuilder(el_layerList, layers, 'url', 'title')
+      agocmsViewConfigLayerSearch(val).then(layerGroups => {
+        console.log(layerGroups);
+        clearSearchList(el_layerList);
+        // validate
+        if(layerGroups.length == 0){
+          // show error
+          addErrorToList(el_ul);
+        } else {
+          // loop results
+          for(const layerGroup of layerGroups){
+            // make li element for group label
+            const el_labelLi = document.createElement('li');
+            // set content for user to recognize group label
+            el_labelLi.innerHTML = layerGroup.name + ':';
+            // add label to list
+            el_layerList.appendChild(el_labelLi);
+
+            // loop all layers and add list items
+            for(const layer of layerGroup.layers){
+              // make li element
+              const el_li = document.createElement('li'),
+                    el_layerName = document.createElement('p'),
+                    el_addBtn = document.createElement('button');
+
+              // add ref to layer url on button. keep with button for memory
+              el_addBtn.setAttribute('d-url', val + '/' + layer.id);
+
+              // set content for user to recognize item
+              el_layerName.innerHTML = '&nbsp;' + layer.name;
+              // give button cta
+              el_addBtn.innerHTML = 'add';
+
+              // apply classes
+              el_li.className = 'agocms-conf-search-list-item agocm-conf-search-layer-item';
+              el_addBtn.className = 'prod-word-break--keep';
+              el_layerName.className = 'prod-margin-0 prod-word-break-keep';
+
+              // set up click events. add callback if included
+              el_addBtn.addEventListener('click', e => {
+                console.log(e.target.getAttribute('d-url'));
+              });
+
+              // add button to layer list item
+              el_li.appendChild(el_addBtn);
+              // add layer name ref to list item
+              el_li.appendChild(el_layerName);
+              // add to result list
+              el_layerList.appendChild(el_li);
+            }
+          }
+        }
       });
     }
   }

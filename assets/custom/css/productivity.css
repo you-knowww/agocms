@@ -9,3 +9,11 @@
 .prod-pad-0 {
   padding: 0;
 }
+
+.prod-margin-0 {
+  margin: 0;
+}
+
+.prod-word-break-keep {
+  word-break: keep-all;
+}
