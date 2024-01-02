@@ -19,7 +19,9 @@ customElements.define(
         el_groupList = document.getElementById('agocmsConfSearchGroupsList'),
         el_serviceSearch = document.getElementById('agocmsConfSearchServices'),
         el_serviceList = document.getElementById('agocmsConfSearchServicesList'),
-        el_layerList = document.getElementById('agocmsConfSearchLayersList');
+        el_layerList = document.getElementById('agocmsConfSearchLayersList'),
+        el_mapLayerList = document.getElementById('agocmsConfMapLayers'),
+        el_tableLayerList = document.getElementById('agocmsConfTables');
 
   // add click event listeners to select access for group and service search
   for(const el_li of [...el_accessList.children]){
@@ -127,7 +129,6 @@ customElements.define(
     if(val !== ''){
       // call service search. if selected group el, get val. otherwise empty string
       agocmsViewConfigLayerSearch(val).then(layerGroups => {
-        console.log(layerGroups);
         clearSearchList(el_layerList);
         // validate
         if(layerGroups.length == 0){
@@ -150,8 +151,8 @@ customElements.define(
                     el_layerName = document.createElement('p'),
                     el_addBtn = document.createElement('button');
 
-              // add ref to layer url on button. keep with button for memory
-              el_addBtn.setAttribute('d-url', val + '/' + layer.id);
+              // also have to set type to 'button' to prevent form submit
+              el_addBtn.type = 'button';
 
               // set content for user to recognize item
               el_layerName.innerHTML = '&nbsp;' + layer.name;
@@ -164,9 +165,7 @@ customElements.define(
               el_layerName.className = 'prod-margin-0 prod-word-break-keep';
 
               // set up click events. add callback if included
-              el_addBtn.addEventListener('click', e => {
-                console.log(e.target.getAttribute('d-url'));
-              });
+              el_addBtn.addEventListener('click', () => addLayerToConf(val, layer));
 
               // add button to layer list item
               el_li.appendChild(el_addBtn);
@@ -178,6 +177,48 @@ customElements.define(
           }
         }
       });
+    }
+  }
+
+  // called by layer add button
+  function addLayerToConf(serviceUrl, layer){
+    // build layer url and new item for layer list
+    const url = serviceUrl + '/' + layer.id,
+          el_layer = document.createElement('li'),
+          el_layerName = document.createElement('p'),
+          el_removeBtn = document.createElement('button');
+
+    // prevent submit
+    el_removeBtn.type = 'button';
+
+    // build list item before adding to list
+    el_layer.setAttribute('d-url', url);
+
+    // set content for user to recognize item
+    el_layerName.innerHTML = '&nbsp;' + layer.name;
+    // give button cta
+    el_removeBtn.innerHTML = 'remove';
+
+    // apply classes
+    el_layer.className = 'agocms-conf-search-list-item agocm-conf-search-layer-item';
+    el_removeBtn.className = 'prod-word-break--keep';
+    el_layerName.className = 'prod-margin-0 prod-word-break-keep';
+
+    console.log(layer);
+
+    // add remove button first
+    el_layer.appendChild(el_removeBtn);
+    // add layer name after
+    el_layer.appendChild(el_layerName);
+
+    // does layer have geometry?
+    if(layer.hasOwnProperty('geometryType')){
+      // add to map list and conf
+      el_mapLayerList.appendChild(el_layer);
+    } else {
+      // add to data tables list and conf
+      // add to map list and conf
+      el_tableLayerList.appendChild(el_layer);
     }
   }
 })();
