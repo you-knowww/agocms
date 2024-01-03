@@ -14,7 +14,7 @@ class Agocms {
   refs = { data_models: {} };
 
   // views have configs with maps and tables. public, set defaults
-  viewConfig = { map: {layers: {}}, tables: {layers: {}} };
+  viewConfig = { map: {layers: []}, tables: {layers: []} };
 
   // requires build. if build doesnt provide agoIdMgr then set invalid
   constructor(){

@@ -122,8 +122,9 @@ customElements.define(
 
   // callback for service click
   function listServiceLayers(){
-    // get selected group el
-    const val = getListVal(el_serviceList);
+    // get selected group el and other refs
+    const val = getListVal(el_serviceList),
+          conf = agocms.viewConfig;
 
     // validate
     if(val !== ''){
@@ -149,7 +150,8 @@ customElements.define(
               // make li element
               const el_li = document.createElement('li'),
                     el_layerName = document.createElement('p'),
-                    el_addBtn = document.createElement('button');
+                    el_addBtn = document.createElement('button'),
+                    url = val + '/' + layer.id;
 
               // also have to set type to 'button' to prevent form submit
               el_addBtn.type = 'button';
@@ -160,12 +162,21 @@ customElements.define(
               el_addBtn.innerHTML = 'add';
 
               // apply classes
-              el_li.className = 'agocms-conf-search-list-item agocm-conf-search-layer-item';
-              el_addBtn.className = 'prod-word-break--keep';
+              el_li.className = 'agocm-conf-search-layer-item';
+              el_addBtn.className = 'prod-word-break--keep prod-pointer';
               el_layerName.className = 'prod-margin-0 prod-word-break-keep';
 
-              // set up click events. add callback if included
-              el_addBtn.addEventListener('click', () => addLayerToConf(val, layer));
+              // if already added then disable
+              if(conf.map.layers.findIndex(l => l.url === url) !== -1
+                  || conf.tables.layers.findIndex(l => l.url === url) !== -1){
+                el_addBtn.setAttribute('disabled', 'disabled');
+              } else {
+                // set up click event to disable button and add to conf
+                el_addBtn.addEventListener('click', () => {
+                    el_addBtn.setAttribute('disabled', 'disabled');
+                    addLayerToConf(val, layer)
+                  });
+              }
 
               // add button to layer list item
               el_li.appendChild(el_addBtn);
@@ -183,10 +194,12 @@ customElements.define(
   // called by layer add button
   function addLayerToConf(serviceUrl, layer){
     // build layer url and new item for layer list
-    const url = serviceUrl + '/' + layer.id,
+    const conf = agocms.viewConfig,
+          url = serviceUrl + '/' + layer.id,
           el_layer = document.createElement('li'),
           el_layerName = document.createElement('p'),
-          el_removeBtn = document.createElement('button');
+          el_removeBtn = document.createElement('button'),
+          capableOf = layer.capabilities;
 
     // prevent submit
     el_removeBtn.type = 'button';
@@ -200,11 +213,9 @@ customElements.define(
     el_removeBtn.innerHTML = 'remove';
 
     // apply classes
-    el_layer.className = 'agocms-conf-search-list-item agocm-conf-search-layer-item';
-    el_removeBtn.className = 'prod-word-break--keep';
+    el_layer.className = 'agocm-conf-search-layer-item';
+    el_removeBtn.className = 'prod-word-break--keep prod-pointer';
     el_layerName.className = 'prod-margin-0 prod-word-break-keep';
-
-    console.log(layer);
 
     // add remove button first
     el_layer.appendChild(el_removeBtn);
@@ -215,11 +226,32 @@ customElements.define(
     if(layer.hasOwnProperty('geometryType')){
       // add to map list and conf
       el_mapLayerList.appendChild(el_layer);
+      conf.map.layers.push(
+          { url,
+            fields: {},
+            create: capableOf.indexOf('Create') != -1,
+            delete: capableOf.indexOf('Delete') != -1,
+            attr_create: capableOf.indexOf('Update') != -1,
+            geo_create: capableOf.allowGeometryUpdates === true,
+            label: {field: layer.displayField,
+                    font_size: 12,
+                    font_color: '#000',
+                    bg_color: '',
+                    border_color: ''},
+            relationships: [] });
     } else {
       // add to data tables list and conf
-      // add to map list and conf
       el_tableLayerList.appendChild(el_layer);
+      conf.tables.layers.push(
+          { url,
+            fields: {},
+            create: capableOf.indexOf('Create') != -1,
+            delete: capableOf.indexOf('Delete') != -1,
+            attr_create: capableOf.indexOf('Update') != -1,
+            relationships: [] });
     }
+
+    console.log(conf);
   }
 })();
 

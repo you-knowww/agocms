@@ -36,4 +36,5 @@
   align-items: flex-start;
   display: flex;
   flex-direction: row;
+  padding-left: 6px;
 }

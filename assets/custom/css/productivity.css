@@ -17,3 +17,7 @@
 .prod-word-break-keep {
   word-break: keep-all;
 }
+
+.prod-pointer {
+  cursor: pointer;
+}
