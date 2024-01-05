@@ -194,18 +194,29 @@ customElements.define(
 
   // called by layer add button
   function addLayerToConf(serviceUrl, layer, toMap = false){
+    console.log(layer);
     // build layer url and new item for layer list
     const conf = agocms.viewConfig,
           url = serviceUrl + '/' + layer.id,
           el_layer = document.createElement('li'),
+          el_settingsBtn = document.createElement('button'),
           el_layerName = document.createElement('p'),
           el_removeBtn = document.createElement('button'),
           capableOf = layer.capabilities;
     const mapLayers = conf.map.layers,
-          tableLayers = conf.tables.layers;
+          tableLayers = conf.tables.layers,
+          layerConf = { url,
+                        fields: layer.fields.map(f => {
+                          return {name: f.name, label: f.alias,
+                                  disabled: false, hidden: false}; }),
+                        create: capableOf.indexOf('Create') != -1,
+                        delete: capableOf.indexOf('Delete') != -1,
+                        attr_create: capableOf.indexOf('Update') != -1,
+                        relationships: [] };
 
     // prevent form submit
     el_removeBtn.type = 'button';
+    el_settingsBtn.type = 'button';
 
     // build list item before adding to list
     el_layer.setAttribute('d-url', url);
@@ -213,17 +224,22 @@ customElements.define(
     // set content for user to recognize item
     el_layerName.innerHTML = '&nbsp;' + layer.name;
     // give button cta
+    el_settingsBtn.innerHTML = 'settings';
     el_removeBtn.innerHTML = 'remove';
 
     // apply classes
     el_layer.className = 'agocms-conf-search-layer-item';
+    el_settingsBtn.className = 'prod-word-break--keep prod-pointer';
     el_removeBtn.className = 'prod-word-break--keep prod-pointer';
     el_layerName.className = 'prod-margin-0 prod-word-break-keep';
 
-    // add remove button first
+    // add settings button, remove button, and layer name
+    el_layer.appendChild(el_settingsBtn);
     el_layer.appendChild(el_removeBtn);
-    // add layer name after
     el_layer.appendChild(el_layerName);
+
+    // add click event for layer settings
+    el_settingsBtn.addEventListener('click', () => openLayerConfForm(layerConf, layer));
 
     // does layer have geometry?
     if(toMap === true){
@@ -261,21 +277,14 @@ customElements.define(
       // add button to layer output
       el_layer.prepend(el_tablesBtn);
 
+      // give layer config map settings
+      layerConf.geo_create = capableOf.allowGeometryUpdates === true;
+      layerConf.label = { field: layer.displayField, font_size: 12,
+                          font_color: '#000', bg_color: '', border_color: '' };
+
       // add to map list and conf
       el_mapLayerList.appendChild(el_layer);
-      mapLayers.push(
-          { url,
-            fields: {},
-            create: capableOf.indexOf('Create') != -1,
-            delete: capableOf.indexOf('Delete') != -1,
-            attr_create: capableOf.indexOf('Update') != -1,
-            geo_create: capableOf.allowGeometryUpdates === true,
-            label: {field: layer.displayField,
-                    font_size: 12,
-                    font_color: '#000',
-                    bg_color: '',
-                    border_color: ''},
-            relationships: [] });
+      mapLayers.push(layerConf);
     } else {
       // add to data tables list and conf
       el_tableLayerList.appendChild(el_layer);
@@ -299,14 +308,13 @@ customElements.define(
         }
       });
 
-      tableLayers.push(
-          { url,
-            fields: {},
-            create: capableOf.indexOf('Create') != -1,
-            delete: capableOf.indexOf('Delete') != -1,
-            attr_create: capableOf.indexOf('Update') != -1,
-            relationships: [] });
+      tableLayers.push(layerConf);
     }
+  }
+
+  // build layer conf form
+  function openLayerConfForm(conf, layer){
+    console.log(conf, layer);
   }
 })();
 
