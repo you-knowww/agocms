@@ -1,10 +1,10 @@
 // define web component for fields
 customElements.define(
-  'agocms-config-field',
+  'agocms-config-layer',
   class extends HTMLElement {
     constructor() {
       super();
-      const tpl = document.getElementById("agocmsFeatureLayerSelectField");
+      const tpl = document.getElementById("agocmsFeatureLayerSelectRelationship");
 
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.appendChild(tpl.content.cloneNode(true));
@@ -194,7 +194,6 @@ customElements.define(
 
   // called by layer add button
   function addLayerToConf(serviceUrl, layer, toMap = false){
-    console.log(layer);
     // build layer url and new item for layer list
     const conf = agocms.viewConfig,
           url = serviceUrl + '/' + layer.id,
@@ -206,13 +205,16 @@ customElements.define(
     const mapLayers = conf.map.layers,
           tableLayers = conf.tables.layers,
           layerConf = { url,
+                        display_name: layer.name,
                         fields: layer.fields.map(f => {
                           return {name: f.name, label: f.alias,
                                   disabled: false, hidden: false}; }),
-                        create: capableOf.indexOf('Create') != -1,
-                        delete: capableOf.indexOf('Delete') != -1,
-                        attr_create: capableOf.indexOf('Update') != -1,
                         relationships: [] };
+
+    // validate crud and default each conf to false
+    if(capableOf.indexOf('Create') != -1) layerConf.can_create = false;
+    if(capableOf.indexOf('Delete') != -1) layerConf.can_delete = false;
+    if(capableOf.indexOf('Update') != -1) layerConf.can_update_attr = false;
 
     // prevent form submit
     el_removeBtn.type = 'button';
@@ -239,7 +241,12 @@ customElements.define(
     el_layer.appendChild(el_layerName);
 
     // add click event for layer settings
-    el_settingsBtn.addEventListener('click', () => openLayerConfForm(layerConf, layer));
+    el_settingsBtn.addEventListener('click', () => {
+      // build layer form and add to page
+      const el_layerForm = buildLayerConfForm(layerConf, layer);
+      el_section = document.querySelector('.agocms-view-conf')
+      el_section.appendChild(el_layerForm);
+    });
 
     // does layer have geometry?
     if(toMap === true){
@@ -277,8 +284,8 @@ customElements.define(
       // add button to layer output
       el_layer.prepend(el_tablesBtn);
 
-      // give layer config map settings
-      layerConf.geo_create = capableOf.allowGeometryUpdates === true;
+      // give layer config map settings if availabel
+      if(capableOf.allowGeometryUpdates === true) layerConf.can_update_geo = false;
       layerConf.label = { field: layer.displayField, font_size: 12,
                           font_color: '#000', bg_color: '', border_color: '' };
 
@@ -313,8 +320,80 @@ customElements.define(
   }
 
   // build layer conf form
-  function openLayerConfForm(conf, layer){
+  function buildLayerConfForm(conf, layer){
     console.log(conf, layer);
+    // refs
+    const el_layerForm = document.createElement('agocms-config-layer').shadowRoot;
+    const el_name = el_layerForm.getElementById('agocmsConfLayerFormLayerName'),
+          el_url = el_layerForm.getElementById('agocmsConfLayerFormLayerUrl'),
+          el_nameField = el_layerForm.getElementById('agocmsConfLayerFormDisplayName'),
+          els_crudConfigs = el_layerForm.querySelectorAll('#agocmsConfLayerFormCrud input'),
+          el_lblDiv = el_layerForm.getElementById('agocmsConfLayerFormLbl');
+
+    // layer defining attributes
+    el_name.innerHTML = layer.name;
+    el_url.innerHTML = conf.url;
+
+    // set layer name input val
+    el_nameField.value = conf.display_name;
+
+
+    // loop all possible crud fields and show applicable fields
+    els_crudConfigs.forEach(el_input => {
+      // get relevant setting
+      const setting = el_input.getAttribute('d-setting');
+
+      if(conf.hasOwnProperty(setting)){
+        // set configured value
+        if(setting === true) el_input.checked = true;
+        // reveal parent
+        el_input.parentNode.style = "";
+      }
+    })
+
+    if(layer.hasOwnProperty('label')){
+      const el_lblField = el_layerForm.getElementById('agocmsConfLayerFormLblField');
+
+      // show label config container
+      el_lblDiv.style = "";
+
+      // add all fields as options
+      for(const field of layer.fields){
+        // make new options
+        const el_fieldOpt = document.createElement('option');
+        el_fieldOpt.value = field.name
+        el_fieldOpt.innerHTML = field.alias
+
+        // default option to current config value
+        if(conf.label.field === field.name){
+          el_fieldOpt.setAttribute('selected', 'selected');
+        }
+      }
+    }
+
+    // send element back and let caller manage
+    return el_layerForm;
+
+    /*
+      // get template and container
+      const layerFormContent = document.importNode(tpl_layerForm.content, true);
+
+      // find datalist and their input to update ID and ref to layer specific
+      el_layerForm.querySelectorAll('datalist').forEach(el_datalist => {
+        // ref input for datalist
+        const el_input = el_layerForm.querySelector('input[list="'+ el_datalist.id +'"');
+
+        // update datalist id to unique val and ref in list attrib
+        el_datalist.id = el_datalist.id + layerCnt;
+        el_input.setAttribute('list', el_datalist.id);
+      })
+
+      // make hyperscript el refs before appending to container
+      const els_hypserscripters = el_layerForm.querySelectorAll('[\_]');
+
+      // get container and add template content to it. wonder if this works with hypertext
+      el_layerContainer.appendChild(el_layerForm);
+    */
   }
 })();
 
