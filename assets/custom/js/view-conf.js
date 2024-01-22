@@ -4,7 +4,7 @@ customElements.define(
   class extends HTMLElement {
     constructor() {
       super();
-      const tpl = document.getElementById("agocmsFeatureLayerSelectRelationship");
+      const tpl = document.getElementById("agocmsConfFeatureLayer");
 
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.appendChild(tpl.content.cloneNode(true));
@@ -36,7 +36,9 @@ customElements.define(
   el_groupSearch.addEventListener('keyup', debounce(e =>
       agocmsViewConfigGroupSearch(e.target.value, getListVal(el_accessList) == 'public')
         .then(groups => {
+          // clear service list and group list
           clearSearchList(el_serviceList);
+          clearSearchList(el_groupList);
           searchListBuilder(el_groupList, groups, 'id', 'title', listGroupServices);
         }) ));
   el_serviceSearch.addEventListener('keyup', debounce(listGroupServices));
@@ -244,8 +246,10 @@ customElements.define(
     el_settingsBtn.addEventListener('click', () => {
       // build layer form and add to page
       const el_layerForm = buildLayerConfForm(layerConf, layer);
-      el_section = document.querySelector('.agocms-view-conf')
-      el_section.appendChild(el_layerForm);
+
+      // open dialog box
+      const d_dialog = Drupal.dialog(el_layerForm);
+      d_dialog.show();
     });
 
     // does layer have geometry?
@@ -285,7 +289,7 @@ customElements.define(
       el_layer.prepend(el_tablesBtn);
 
       // give layer config map settings if availabel
-      if(capableOf.allowGeometryUpdates === true) layerConf.can_update_geo = false;
+      if(layer.allowGeometryUpdates === true) layerConf.can_update_geo = false;
       layerConf.label = { field: layer.displayField, font_size: 12,
                           font_color: '#000', bg_color: '', border_color: '' };
 
@@ -323,12 +327,13 @@ customElements.define(
   function buildLayerConfForm(conf, layer){
     console.log(conf, layer);
     // refs
-    const el_layerForm = document.createElement('agocms-config-layer').shadowRoot;
-    const el_name = el_layerForm.getElementById('agocmsConfLayerFormLayerName'),
-          el_url = el_layerForm.getElementById('agocmsConfLayerFormLayerUrl'),
-          el_nameField = el_layerForm.getElementById('agocmsConfLayerFormDisplayName'),
-          els_crudConfigs = el_layerForm.querySelectorAll('#agocmsConfLayerFormCrud input'),
-          el_lblDiv = el_layerForm.getElementById('agocmsConfLayerFormLbl');
+    const el_layerForm = document.createElement('agocms-config-layer');
+    const el_shadow = el_layerForm.shadowRoot;
+    const el_name = el_shadow.getElementById('agocmsConfLayerFormLayerName'),
+          el_url = el_shadow.getElementById('agocmsConfLayerFormLayerUrl'),
+          el_nameField = el_shadow.getElementById('agocmsConfLayerFormDisplayName'),
+          els_crudConfigs = el_shadow.querySelectorAll('#agocmsConfLayerFormCrud input'),
+          el_lblDiv = el_shadow.getElementById('agocmsConfLayerFormLbl');
 
     // layer defining attributes
     el_name.innerHTML = layer.name;
@@ -336,7 +341,6 @@ customElements.define(
 
     // set layer name input val
     el_nameField.value = conf.display_name;
-
 
     // loop all possible crud fields and show applicable fields
     els_crudConfigs.forEach(el_input => {
@@ -351,8 +355,10 @@ customElements.define(
       }
     })
 
-    if(layer.hasOwnProperty('label')){
-      const el_lblField = el_layerForm.getElementById('agocmsConfLayerFormLblField');
+    if(conf.hasOwnProperty('label')){
+      const el_lblField = el_shadow.getElementById('agocmsConfLayerFormLblField'),
+            // get all input fields and set label setting name prefix
+            els_lblSettings = el_lblDiv.querySelectorAll('input');
 
       // show label config container
       el_lblDiv.style = "";
@@ -368,32 +374,37 @@ customElements.define(
         if(conf.label.field === field.name){
           el_fieldOpt.setAttribute('selected', 'selected');
         }
+
+        // add to select
+        el_lblField.appendChild(el_fieldOpt);
       }
+
+      // fill in current settings
+      els_lblSettings.forEach(el_input => {
+        // parse setting conf field from string with dot reference
+        const settingVal = getConfSettingFromEl(el_input, conf);
+        // set value to element
+        el_input.value = settingVal;
+      })
     }
 
     // send element back and let caller manage
     return el_layerForm;
+  }
 
-    /*
-      // get template and container
-      const layerFormContent = document.importNode(tpl_layerForm.content, true);
+  function getConfSettingFromEl(el, conf) {
+    // parse settings el by period
+    const settingParts = el.getAttribute('d-setting').split('.');
+    // get starting point
+    let out = conf;
 
-      // find datalist and their input to update ID and ref to layer specific
-      el_layerForm.querySelectorAll('datalist').forEach(el_datalist => {
-        // ref input for datalist
-        const el_input = el_layerForm.querySelector('input[list="'+ el_datalist.id +'"');
+    // loop parts to get to end config value
+    for(const part of settingParts) {
+      out = out[part];
+    }
 
-        // update datalist id to unique val and ref in list attrib
-        el_datalist.id = el_datalist.id + layerCnt;
-        el_input.setAttribute('list', el_datalist.id);
-      })
-
-      // make hyperscript el refs before appending to container
-      const els_hypserscripters = el_layerForm.querySelectorAll('[\_]');
-
-      // get container and add template content to it. wonder if this works with hypertext
-      el_layerContainer.appendChild(el_layerForm);
-    */
+    // done return output
+    return out;
   }
 })();
 

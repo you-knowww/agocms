@@ -30,3 +30,8 @@ function agocms_theme($existing, $type, $theme, $path) {
     'view_tables_conf_form' => []
   ];
 }
+
+// add Drupal modals to view config page
+function agocms_preprocess_node__page(array &$variables) : void {
+  $variables['#attached']['library'][] = 'agocms/view-conf';
+}
