@@ -421,56 +421,74 @@
   </li>
 </template>
 <template id='agocmsConfFeatureLayer'>
+  <link href="/modules/custom/agocms/assets/custom/css/productivity.css"
+        rel="stylesheet" type="text/css">
   <div>
-    <label>Layer options:</label>
     <div>
-      <label>Layer Name:</label>
-      <p id='agocmsConfLayerFormLayerName'></p>
-      <label>Layer Url:</label>
-      <p id='agocmsConfLayerFormLayerUrl'></p>
+      <div>
+        <label>Layer Name:</label>
+        <p class='prod-inline-block prod-margin-0' id='agocmsConfLayerFormLayerName'></p>
+      </div>
+      <div>
+        <label>Layer Url:</label>
+        <p class='prod-inline-block prod-margin-0' id='agocmsConfLayerFormLayerUrl'></p>
+      </div>
     </div>
     <div>
       <label>Display Name</label>
       <input type='text' id='agocmsConfLayerFormDisplayName' d-setting='display_name'/>
     </div>
-    <ul id='agocmsConfLayerFormCrud'>
-      <li style='display: none;' id='agocmsConfLayerFormCreateLi'>
-        <label>Allow Create</label>
+    <div id='agocmsConfLayerFormCrud'>
+      <div style='display: none;'>
         <input type='checkbox' id='agocmsConfLayerFormCreate' d-setting='can_create'/>
-      </li>
-      <li style='display: none;' id='agocmsConfLayerFormDeleteLi'>
-        <label>Allow Delete</label>
+        <label for='agocmsConfLayerFormCreate'>Allow Create</label>
+      </div>
+      <div style='display: none;'>
         <input type='checkbox' id='agocmsConfLayerFormDelete' d-setting='can_delete'/>
-      </li>
-      <li style='display: none;' id='agocmsConfLayerFormAttrUpdateLi'>
-        <label>Allow Attribute Edit</label>
+        <label for='agocmsConfLayerFormDelete'>Allow Delete</label>
+      </div>
+      <div style='display: none;'>
         <input type='checkbox' id='agocmsConfLayerFormAttrUpdate' d-setting='can_update_attr'/>
-      </li>
-      <li style='display: none;' id='agocmsConfLayerFormGeoUpdateLi'>
-        <label>Allow Geometry Edit</label>
+        <label for='agocmsConfLayerFormAttrUpdate'>Allow Attribute Edit</label>
+      </div>
+      <div style='display: none;'>
         <input type='checkbox' id='agocmsConfLayerFormGeoUpdate' d-setting='can_update_geo'/>
-      </li>
-    </ul>
-    <div id='agocmsConfLayerFormLbl' style='display: none;'>
-      <label>Label Field</label>
-      <select id='agocmsConfLayerFormLblField' d-setting='label.field'></select>
-      <label>Label Font Size</label>
-      <select id='agocmsConfLayerFormLblSize' d-setting='label.size_px'>
-        <option value='6'>6</option>
-        <option value='8'>8</option>
-        <option value='10'>10</option>
-        <option value='12'>12</option>
-        <option value='14'>14</option>
-        <option value='16'>16</option>
-        <option value='18'>18</option>
-        <option value='20'>20</option>
-      </select>
-      <label>Label Font Color</label>
-      <input type='color' d-setting='label.font_color' id='agocmsConfLayerFormLblColor'/>
-      <label>Label Background Color</label>
-      <input type='color' d-setting='label.bg_color' id='agocmsConfLayerFormLblBgColor'/>
-      <label>Label Border Color</label>
-      <input type='color' d-setting='label.border_color' id='agocmsConfLayerFormLblBdColor'/>
+        <label for='agocmsConfLayerFormGeoUpdate'>Allow Geometry Edit</label>
+      </div>
     </div>
+    <div id='agocmsConfLayerFormLbl' style='display: none;'>
+      <div>
+        <label>Label Field</label>
+        <select id='agocmsConfLayerFormLblField' d-setting='label.field'></select>
+      </div>
+      <div>
+        <label>Label Font Size</label>
+        <select id='agocmsConfLayerFormLblSize'
+                d-setting='label.font_size'
+                d-number>
+          <option value='6'>6</option>
+          <option value='8'>8</option>
+          <option value='10'>10</option>
+          <option value='12'>12</option>
+          <option value='14'>14</option>
+          <option value='16'>16</option>
+          <option value='18'>18</option>
+          <option value='20'>20</option>
+        </select>
+      </div>
+      <div>
+        <label>Label Font Color</label>
+        <input type='color' d-setting='label.font_color' id='agocmsConfLayerFormLblColor'/>
+      </div>
+      <div>
+        <label>Label Background Color</label>
+        <input type='color' d-setting='label.bg_color' id='agocmsConfLayerFormLblBgColor'/>
+      </div>
+      <div>
+        <label>Label Border Color</label>
+        <input type='color' d-setting='label.border_color' id='agocmsConfLayerFormLblBdColor'/>
+      </div>
+    </div>
+    <button id='agocmsConfLayerFormSaveBtn' type='button'>Save</button>
   </div>
 </template>

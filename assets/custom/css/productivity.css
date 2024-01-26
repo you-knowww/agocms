@@ -21,3 +21,7 @@
 .prod-pointer {
   cursor: pointer;
 }
+
+.prod-bg--white {
+  background-color: #fff;
+}

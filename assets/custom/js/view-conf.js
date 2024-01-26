@@ -244,12 +244,17 @@ customElements.define(
 
     // add click event for layer settings
     el_settingsBtn.addEventListener('click', () => {
-      // build layer form and add to page
-      const el_layerForm = buildLayerConfForm(layerConf, layer);
+      // build layer form container and add to dialog box
+      const el_layerFormContainer = document.createElement('div');;
+      const d_dialog = Drupal.dialog(el_layerFormContainer,
+                          {title: 'Feature Layer Settings', width: 500});
 
-      // open dialog box
-      const d_dialog = Drupal.dialog(el_layerForm);
-      d_dialog.show();
+      // build form and add ref to dialog box so save can close
+      el_layerForm = buildLayerConfForm(layerConf, layer, d_dialog)
+
+      // add form to container and open dialog box
+      el_layerFormContainer.appendChild(el_layerForm);
+      d_dialog.showModal();
     });
 
     // does layer have geometry?
@@ -324,8 +329,7 @@ customElements.define(
   }
 
   // build layer conf form
-  function buildLayerConfForm(conf, layer){
-    console.log(conf, layer);
+  function buildLayerConfForm(conf, layer, d_dialog){
     // refs
     const el_layerForm = document.createElement('agocms-config-layer');
     const el_shadow = el_layerForm.shadowRoot;
@@ -333,7 +337,9 @@ customElements.define(
           el_url = el_shadow.getElementById('agocmsConfLayerFormLayerUrl'),
           el_nameField = el_shadow.getElementById('agocmsConfLayerFormDisplayName'),
           els_crudConfigs = el_shadow.querySelectorAll('#agocmsConfLayerFormCrud input'),
-          el_lblDiv = el_shadow.getElementById('agocmsConfLayerFormLbl');
+          el_lblDiv = el_shadow.getElementById('agocmsConfLayerFormLbl'),
+          el_saveBtn = el_shadow.getElementById('agocmsConfLayerFormSaveBtn'),
+          els_settings = el_shadow.querySelectorAll('[d-setting]');
 
     // layer defining attributes
     el_name.innerHTML = layer.name;
@@ -358,7 +364,7 @@ customElements.define(
     if(conf.hasOwnProperty('label')){
       const el_lblField = el_shadow.getElementById('agocmsConfLayerFormLblField'),
             // get all input fields and set label setting name prefix
-            els_lblSettings = el_lblDiv.querySelectorAll('input');
+            els_lblSettings = el_lblDiv.querySelectorAll('input, select');
 
       // show label config container
       el_lblDiv.style = "";
@@ -388,14 +394,22 @@ customElements.define(
       })
     }
 
+    // callback for save
+    el_saveBtn.addEventListener('click', () => {
+      // loop all elements with settings to update config
+      els_settings.forEach(el => setConfSettingFromEl(el, conf));
+      console.log(conf);
+      // remove ref for mem
+      d_dialog.close();
+    })
+
     // send element back and let caller manage
     return el_layerForm;
   }
 
   function getConfSettingFromEl(el, conf) {
-    // parse settings el by period
+    // parse settings el by period and set starting point
     const settingParts = el.getAttribute('d-setting').split('.');
-    // get starting point
     let out = conf;
 
     // loop parts to get to end config value
@@ -405,6 +419,22 @@ customElements.define(
 
     // done return output
     return out;
+  }
+
+  function setConfSettingFromEl(el, conf) {
+    // parse settings el by period and set starting point
+    const parts = el.getAttribute('d-setting').split('.');
+    // convert checkbox to bool
+    let val = el.type == 'checkbox' ? el.checked : el.value,
+        fieldRef = conf;
+
+    // loop all parts except lat one
+    for(const part of parts.slice(0, -1)) {
+      fieldRef = fieldRef[part];
+    }
+
+    // use last part to set config value. convert numbers
+    fieldRef[parts.at(-1)] = el.hasAttribute('d-number') ? Number(val) : val;
   }
 })();
 
