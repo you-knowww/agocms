@@ -170,9 +170,10 @@ customElements.define(
 
               // set up click event to disable button and add to conf
               el_addBtn.addEventListener('click', () => {
+                // disable button, add ref to api and add layer to conf
                 el_addBtn.setAttribute('disabled', 'disabled');
-                // check for geometry type to see if it should go to map
-                addLayerToConf(val, layer, layer.hasOwnProperty('geometryType'))
+                agocms.addDataModelRef(val, layer);
+                addLayerToConf(url);
               });
 
               // if already added then disable
@@ -195,14 +196,10 @@ customElements.define(
   }
 
   // called by layer add button
-  function addLayerToConf(serviceUrl, layer, toMap = false){
-    // build layer url and new item for layer list
+  function addLayerToConf(url, toTable = false){
+    // refs
+    const layer = agocms.getDataModelRef(url);
     const conf = agocms.viewConfig,
-          url = serviceUrl + '/' + layer.id,
-          el_layer = document.createElement('li'),
-          el_settingsBtn = document.createElement('button'),
-          el_layerName = document.createElement('p'),
-          el_removeBtn = document.createElement('button'),
           capableOf = layer.capabilities;
     const mapLayers = conf.map.layers,
           tableLayers = conf.tables.layers,
@@ -210,13 +207,41 @@ customElements.define(
                         display_name: layer.name,
                         fields: layer.fields.map(f => {
                           return {name: f.name, label: f.alias,
-                                  disabled: false, hidden: false}; }),
-                        relationships: [] };
+                                  disabled: false, hidden: false}; }) };
 
     // validate crud and default each conf to false
     if(capableOf.indexOf('Create') != -1) layerConf.can_create = false;
     if(capableOf.indexOf('Delete') != -1) layerConf.can_delete = false;
     if(capableOf.indexOf('Update') != -1) layerConf.can_update_attr = false;
+
+    // does layer have geometry? if so default add to map
+    if(layer.hasOwnProperty('geometryType') && toTable === false){
+      // give layer config map settings if available
+      if(layer.allowGeometryUpdates === true) layerConf.can_update_geo = false;
+      layerConf.label = { field: layer.displayField, font_size: 12,
+                          font_color: '#000', bg_color: '', border_color: '' };
+
+      // add ref and add li to map list
+      mapLayers.push(layerConf);
+      el_mapLayerList.appendChild(buildLayerConfLi(layerConf));
+    } else {
+      // add to data tables list and conf
+      el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
+      tableLayers.push(layerConf);
+    }
+  }
+
+  // ui for layer conf list item
+  function buildLayerConfLi(layerConf){
+    const conf = agocms.viewConfig,
+          url = layerConf.url,
+          el_layer = document.createElement('li'),
+          el_settingsBtn = document.createElement('button'),
+          el_layerName = document.createElement('p'),
+          el_removeBtn = document.createElement('button');
+    const layer = agocms.getDataModelRef(url),
+          mapLayers = conf.map.layers,
+          tableLayers = conf.tables.layers;
 
     // prevent form submit
     el_removeBtn.type = 'button';
@@ -226,7 +251,7 @@ customElements.define(
     el_layer.setAttribute('d-url', url);
 
     // set content for user to recognize item
-    el_layerName.innerHTML = '&nbsp;' + layer.name;
+    el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
     // give button cta
     el_settingsBtn.innerHTML = 'settings';
     el_removeBtn.innerHTML = 'remove';
@@ -245,34 +270,37 @@ customElements.define(
     // add click event for layer settings
     el_settingsBtn.addEventListener('click', () => {
       // build layer form container and add to dialog box
-      const el_layerFormContainer = document.createElement('div');;
+      const el_layerFormContainer = document.createElement('div');
       const d_dialog = Drupal.dialog(el_layerFormContainer,
                           {title: 'Feature Layer Settings', width: 500});
 
       // build form and add ref to dialog box so save can close
-      el_layerForm = buildLayerConfForm(layerConf, layer, d_dialog)
+      el_layerForm = buildLayerConfForm(layerConf, () => {
+                        // close dialog on save and update layer name
+                        el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
+                        d_dialog.close(); });
 
       // add form to container and open dialog box
       el_layerFormContainer.appendChild(el_layerForm);
       d_dialog.showModal();
     });
 
-    // does layer have geometry?
-    if(toMap === true){
+    // only maps have label config
+    if(layerConf.hasOwnProperty('label')){
       // make button to add to data tables
       const el_tablesBtn = document.createElement('button');
 
       // prevent form submit
       el_tablesBtn.type = 'button';
 
-      // fille out text and classes
+      // fill out text and classes
       el_tablesBtn.innerHTML = 'add to tables';
       el_tablesBtn.className = 'prod-word-break--keep prod-pointer agocms-conf-map-layer-add-tables';
 
       // add event listener to add reference to tables and disable button
       el_tablesBtn.addEventListener('click', () => {
         el_tablesBtn.setAttribute('disabled', 'disabled');
-        addLayerToConf(serviceUrl, layer)
+        addLayerToConf(url, true);
       });
 
       // remove button removes from map ref
@@ -286,25 +314,11 @@ customElements.define(
       });
 
       // disable if already in tables
-      if(tableLayers.findIndex(l => l.url === url) !== -1){
-        el_tablesBtn.setAttribute('disabled', 'disabled');
-      }
+      if(tableLayers.findIndex(l => l.url === url) !== -1) el_tablesBtn.disabled = true;
 
       // add button to layer output
       el_layer.prepend(el_tablesBtn);
-
-      // give layer config map settings if availabel
-      if(layer.allowGeometryUpdates === true) layerConf.can_update_geo = false;
-      layerConf.label = { field: layer.displayField, font_size: 12,
-                          font_color: '#000', bg_color: '', border_color: '' };
-
-      // add to map list and conf
-      el_mapLayerList.appendChild(el_layer);
-      mapLayers.push(layerConf);
     } else {
-      // add to data tables list and conf
-      el_tableLayerList.appendChild(el_layer);
-
       // remove button removes from map ref
       el_removeBtn.addEventListener('click', () => {
         // get layer conf ref index and remove it
@@ -313,6 +327,7 @@ customElements.define(
         el_layer.remove();
         // refresh layer select list
         listServiceLayers();
+
         // if layer has geometry look for a map counterpart
         if(layer.hasOwnProperty('geometryType')){
           // look for selected counterpart
@@ -323,15 +338,17 @@ customElements.define(
           if(el_mapLayerAddTblBtn !== null) el_mapLayerAddTblBtn.removeAttribute('disabled');
         }
       });
-
-      tableLayers.push(layerConf);
     }
+
+    // return list item
+    return el_layer;
   }
 
   // build layer conf form
-  function buildLayerConfForm(conf, layer, d_dialog){
+  function buildLayerConfForm(conf, saveCallback = () => null){
     // refs
-    const el_layerForm = document.createElement('agocms-config-layer');
+    const layer = agocms.getDataModelRef(conf.url),
+          el_layerForm = document.createElement('agocms-config-layer');
     const el_shadow = el_layerForm.shadowRoot;
     const el_name = el_shadow.getElementById('agocmsConfLayerFormLayerName'),
           el_url = el_shadow.getElementById('agocmsConfLayerFormLayerUrl'),
@@ -398,9 +415,8 @@ customElements.define(
     el_saveBtn.addEventListener('click', () => {
       // loop all elements with settings to update config
       els_settings.forEach(el => setConfSettingFromEl(el, conf));
-      console.log(conf);
-      // remove ref for mem
-      d_dialog.close();
+      // run any save callbacks
+      saveCallback();
     })
 
     // send element back and let caller manage
