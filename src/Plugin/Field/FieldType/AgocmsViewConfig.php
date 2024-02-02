@@ -10,20 +10,20 @@ use Drupal\Core\TypedData\DataDefinition;
  * Provides a field type of AGO CMS Feature Layer Select.
  *
  * @FieldType(
- *   id = "agocms_view_map",
- *   label = @Translation("View ESRI data in map."),
+ *   id = "agocms_view_config",
+ *   label = @Translation("View ESRI data"),
  *   module = "agocms",
- *   default_widget = "agocms_view_map_config_w",
- *   default_formatter = "agocms_view_map"
+ *   default_widget = "agocms_view_config_w",
+ *   default_formatter = "agocms_view_config"
  * )
  */
 
-class AgocmsViewMap extends FieldItemBase {
+class AgocmsViewConfig extends FieldItemBase {
   /**
     * {@inheritdoc}
     */
   public static function schema(FieldStorageDefinitionInterface $field_definition) {
-    return ['columns' => ['conf' => ['type' => 'text', 'size' => 'big', 'not null' => FALSE]]];
+    return ['columns' => ['value' => ['type' => 'blob','size' => 'big', 'not null' => FALSE]]];
   }
 
   /**
@@ -31,8 +31,7 @@ class AgocmsViewMap extends FieldItemBase {
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
     // empty array init
-    $properties = ['conf' => DataDefinition::create('string')
-      ->setLabel(t('{layers: [{url: "https://example.layer.dot.com/12345"}]}'))];
+    $properties = ['value' => DataDefinition::create('string')->setLabel(t('Config'))];
     return $properties;
   }
 
@@ -41,9 +40,9 @@ class AgocmsViewMap extends FieldItemBase {
    */
   public function isEmpty() {
     // check if there are any definined layers
-    $conf = $this->get('conf');
+    $val = $this->get('value')->getValue();
 
     // check if both are null or empty
-    return $conf === NULL || $conf === '';
+    return $val === NULL || $val === '';
   }
 }

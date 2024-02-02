@@ -9,16 +9,16 @@ use Drupal\Core\Form\FormStateInterface;
  * Plugin implementation of the 'agocms_feature_layer_select_w' widget.
  *
  * @FieldWidget(
- *   id = "agocms_view_map_w",
+ *   id = "agocms_view_config_w",
  *   module = "agocms",
- *   label = @Translation("AGO CMS: View Map Config - Widget"),
+ *   label = @Translation("AGO CMS: View Config - Widget"),
  *   description = @Translation("Use AGO credentials to search and select layer and their relaitonships to other views."),
- *   field_types = { "agocms_view_map" },
+ *   field_types = { "agocms_view_config" },
  *   multiple_values = FALSE,
  * )
  */
 // https://api.drupal.org/api/drupal/developer%21topics%21forms_api_reference.html/7.x
-class AgocmsViewMapWidget extends WidgetBase {
+class AgocmsViewConfigWidget extends WidgetBase {
   /**
    * {@inheritdoc}
    */
@@ -27,18 +27,20 @@ class AgocmsViewMapWidget extends WidgetBase {
       single config input hidden and disable from view. form
       builds config in JSON and updates hidden field.
     */
-    $tpl_form = ['#theme' => 'view_map_conf_form'];
+    $tpl_form = ['#theme' => 'view_config_form'];
 
-    $element['conf'] = array(
-      '#type' => 'textfield',
-      '#title' => $this->t('Map View Config'),
-      '#attributes' => ['style' => 'display: none;', 'disabled' => 'disabled',
-          'id' => 'agocms-view-map-conf', 'class' => ['agocms-view-conf__input']],
+    $element += [
+      '#type' => 'textarea',
+      '#title' => $this->t('View Config'),
+      '#attributes' => [
+        'class' => ['agocms-conf__input'],
+        'readonly' => 'readonly',
+        'id' => 'agocms-view-conf',
+        'style' => 'display: none;'],
       '#attached' => ['library' => ['agocms/view-conf']],
       '#suffix' => \Drupal::service('renderer')->renderPlain($tpl_form)
-    );
+    ];
 
-    return $element;
-    // $parsed_field_name = str_replace(' ', '-', $element['#title']);
+    return ['value' => $element];
   }
 }

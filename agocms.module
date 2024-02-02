@@ -26,8 +26,7 @@ function agocms_page_attachments(array &$page) {
  */
 function agocms_theme($existing, $type, $theme, $path) {
   return [
-    'view_map_conf_form' => [],
-    'view_tables_conf_form' => []
+    'view_config_form' => []
   ];
 }
 

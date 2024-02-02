@@ -14,7 +14,9 @@ customElements.define(
 // contain in iif
 (() => {
   // refs
-  const el_accessList = document.getElementById('agocmsConfSearchAccessList'),
+  const conf = agocms.viewConfig,
+        el_confField = document.getElementById('agocms-view-conf'),
+        el_accessList = document.getElementById('agocmsConfSearchAccessList'),
         el_groupSearch = document.getElementById('agocmsConfSearchGroups'),
         el_groupList = document.getElementById('agocmsConfSearchGroupsList'),
         el_serviceSearch = document.getElementById('agocmsConfSearchServices'),
@@ -22,6 +24,8 @@ customElements.define(
         el_layerList = document.getElementById('agocmsConfSearchLayersList'),
         el_mapLayerList = document.getElementById('agocmsConfMapLayers'),
         el_tableLayerList = document.getElementById('agocmsConfTables');
+  const mapLayers = conf.map.layers,
+        tableLayers = conf.tables.layers;
 
   // add click event listeners to select access for group and service search
   for(const el_li of [...el_accessList.children]){
@@ -43,6 +47,13 @@ customElements.define(
         }) ));
   el_serviceSearch.addEventListener('keyup', debounce(listGroupServices));
 
+  document.getElementById('node-ago-view-form').addEventListener('submit', () => {
+    el_confField.value = JSON.stringify(conf);
+  })
+
+  // function to update conf field after every change
+  // function updateElConfField(){ el_confField.value = JSON.stringify(conf); }
+  function updateElConfField(){ console.log('ignore'); }
   // take list element and return value from selected option
   function getListVal(el_list){
     // get selected access level element
@@ -125,8 +136,7 @@ customElements.define(
   // callback for service click
   function listServiceLayers(){
     // get selected group el and other refs
-    const val = getListVal(el_serviceList),
-          conf = agocms.viewConfig;
+    const val = getListVal(el_serviceList);
 
     // validate
     if(val !== ''){
@@ -177,8 +187,8 @@ customElements.define(
               });
 
               // if already added then disable
-              if(conf.map.layers.findIndex(l => l.url === url) !== -1
-                  || conf.tables.layers.findIndex(l => l.url === url) !== -1){
+              if(mapLayers.findIndex(l => l.url === url) !== -1
+                  || tableLayers.findIndex(l => l.url === url) !== -1){
                 el_addBtn.setAttribute('disabled', 'disabled');
               }
 
@@ -199,11 +209,8 @@ customElements.define(
   function addLayerToConf(url, toTable = false){
     // refs
     const layer = agocms.getDataModelRef(url);
-    const conf = agocms.viewConfig,
-          capableOf = layer.capabilities;
-    const mapLayers = conf.map.layers,
-          tableLayers = conf.tables.layers,
-          layerConf = { url,
+    const capableOf = layer.capabilities;
+    const layerConf = { url,
                         display_name: layer.name,
                         fields: layer.fields.map(f => {
                           return {name: f.name, label: f.alias,
@@ -229,19 +236,19 @@ customElements.define(
       el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
       tableLayers.push(layerConf);
     }
+
+    // update config field
+    updateElConfField();
   }
 
   // ui for layer conf list item
   function buildLayerConfLi(layerConf){
-    const conf = agocms.viewConfig,
-          url = layerConf.url,
+    const url = layerConf.url,
           el_layer = document.createElement('li'),
           el_settingsBtn = document.createElement('button'),
           el_layerName = document.createElement('p'),
           el_removeBtn = document.createElement('button');
-    const layer = agocms.getDataModelRef(url),
-          mapLayers = conf.map.layers,
-          tableLayers = conf.tables.layers;
+    const layer = agocms.getDataModelRef(url);
 
     // prevent form submit
     el_removeBtn.type = 'button';
@@ -276,6 +283,9 @@ customElements.define(
 
       // build form and add ref to dialog box so save can close
       el_layerForm = buildLayerConfForm(layerConf, () => {
+                        // update config field
+                        updateElConfField();
+
                         // close dialog on save and update layer name
                         el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
                         d_dialog.close(); });
@@ -307,8 +317,13 @@ customElements.define(
       el_removeBtn.addEventListener('click', () => {
         // get layer conf ref index and remove it
         mapLayers.splice(mapLayers.findIndex(l => l.url === url), 1);
+
+        // update config field
+        updateElConfField();
+
         // delete el
         el_layer.remove();
+
         // refresh layer select list
         listServiceLayers();
       });
@@ -323,8 +338,13 @@ customElements.define(
       el_removeBtn.addEventListener('click', () => {
         // get layer conf ref index and remove it
         tableLayers.splice(tableLayers.findIndex(l => l.url === url), 1);
+
+        // update config field
+        updateElConfField();
+
         // delete el
         el_layer.remove();
+
         // refresh layer select list
         listServiceLayers();
 
@@ -345,9 +365,9 @@ customElements.define(
   }
 
   // build layer conf form
-  function buildLayerConfForm(conf, saveCallback = () => null){
+  function buildLayerConfForm(layerConf, saveCallback = () => null){
     // refs
-    const layer = agocms.getDataModelRef(conf.url),
+    const layer = agocms.getDataModelRef(layerConf.url),
           el_layerForm = document.createElement('agocms-config-layer');
     const el_shadow = el_layerForm.shadowRoot;
     const el_name = el_shadow.getElementById('agocmsConfLayerFormLayerName'),
@@ -360,17 +380,17 @@ customElements.define(
 
     // layer defining attributes
     el_name.innerHTML = layer.name;
-    el_url.innerHTML = conf.url;
+    el_url.innerHTML = layerConf.url;
 
     // set layer name input val
-    el_nameField.value = conf.display_name;
+    el_nameField.value = layerConf.display_name;
 
     // loop all possible crud fields and show applicable fields
     els_crudConfigs.forEach(el_input => {
       // get relevant setting
       const setting = el_input.getAttribute('d-setting');
 
-      if(conf.hasOwnProperty(setting)){
+      if(layerConf.hasOwnProperty(setting)){
         // set configured value
         if(setting === true) el_input.checked = true;
         // reveal parent
@@ -378,7 +398,7 @@ customElements.define(
       }
     })
 
-    if(conf.hasOwnProperty('label')){
+    if(layerConf.hasOwnProperty('label')){
       const el_lblField = el_shadow.getElementById('agocmsConfLayerFormLblField'),
             // get all input fields and set label setting name prefix
             els_lblSettings = el_lblDiv.querySelectorAll('input, select');
@@ -394,7 +414,7 @@ customElements.define(
         el_fieldOpt.innerHTML = field.alias
 
         // default option to current config value
-        if(conf.label.field === field.name){
+        if(layerConf.label.field === field.name){
           el_fieldOpt.setAttribute('selected', 'selected');
         }
 
@@ -405,7 +425,7 @@ customElements.define(
       // fill in current settings
       els_lblSettings.forEach(el_input => {
         // parse setting conf field from string with dot reference
-        const settingVal = getConfSettingFromEl(el_input, conf);
+        const settingVal = getConfSettingFromEl(el_input, layerConf);
         // set value to element
         el_input.value = settingVal;
       })
@@ -414,7 +434,7 @@ customElements.define(
     // callback for save
     el_saveBtn.addEventListener('click', () => {
       // loop all elements with settings to update config
-      els_settings.forEach(el => setConfSettingFromEl(el, conf));
+      els_settings.forEach(el => setConfSettingFromEl(el, layerConf));
       // run any save callbacks
       saveCallback();
     })
@@ -423,10 +443,10 @@ customElements.define(
     return el_layerForm;
   }
 
-  function getConfSettingFromEl(el, conf) {
+  function getConfSettingFromEl(el, layerConf) {
     // parse settings el by period and set starting point
     const settingParts = el.getAttribute('d-setting').split('.');
-    let out = conf;
+    let out = layerConf;
 
     // loop parts to get to end config value
     for(const part of settingParts) {
@@ -437,12 +457,12 @@ customElements.define(
     return out;
   }
 
-  function setConfSettingFromEl(el, conf) {
+  function setConfSettingFromEl(el, layerConf) {
     // parse settings el by period and set starting point
     const parts = el.getAttribute('d-setting').split('.');
     // convert checkbox to bool
     let val = el.type == 'checkbox' ? el.checked : el.value,
-        fieldRef = conf;
+        fieldRef = layerConf;
 
     // loop all parts except lat one
     for(const part of parts.slice(0, -1)) {

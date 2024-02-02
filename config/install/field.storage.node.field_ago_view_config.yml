@@ -1,14 +1,14 @@
-# field.storage.node.field_ago_feature_rel_layer_one.yml
+# field.storage.node.field_ago_view_config.yml
 langcode: en
 status: true
 dependencies:
   module:
     - node
     - text
-id: node.field_ago_feature_rel_layer_one
-field_name: field_ago_feature_rel_layer_one
+id: node.field_ago_view_config
+field_name: field_ago_view_config
 entity_type: node
-type: agocms_feature_layer_select
+type: agocms_view_config
 settings: {}
 module: text
 locked: false

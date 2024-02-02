@@ -3,8 +3,7 @@ langcode: en
 status: true
 dependencies:
     config:
-        - field.field.node.ago_view.field_ago_view_map
-        - field.field.node.ago_view.field_ago_view_tables
+        - field.field.node.ago_view.field_ago_view_config
         - node.type.ago_view
     module:
         - text
@@ -14,17 +13,9 @@ targetEntityType: node
 bundle: ago_view
 mode: default
 content:
-    field_ago_view_map:
+    field_ago_view_config:
         label: hidden
-        type: agocms_view_map_w
-        weight: 101
-        settings:
-          size: 120
-          placeholder: ''
-        third_party_settings: {  }
-    field_ago_view_tables:
-        label: hidden
-        type: agocms_view_tables_w
+        type: agocms_view_config_w
         weight: 101
         settings:
           size: 120

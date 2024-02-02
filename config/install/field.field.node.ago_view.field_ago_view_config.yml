@@ -1,4 +1,4 @@
-# field.field.node.ago_view.field_ago_view_map.yml
+# field.field.node.ago_view.field_ago_view_config.yml
 langcode: en
 status: true
 dependencies:
@@ -7,15 +7,15 @@ dependencies:
         - node.type.ago_view
     module:
         - text
-id: node.ago_view.field_ago_view_map
-field_name: field_ago_view_map
+id: node.ago_view.field_ago_view_config
+field_name: field_ago_view_config
 entity_type: node
 bundle: ago_view
-label: AGO Map View
-description: 'Add geospatial feature layers to map.'
+label: AGO View
+description: 'Add geospatial feature layers view.'
 required: false
 translatable: true
 default_value: {  }
 default_value_callback: ''
 settings: {}
-field_type: agocms_view_map
+field_type: agocms_view_config
