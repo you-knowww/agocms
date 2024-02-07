@@ -10,7 +10,7 @@ function agocms_js_settings_alter(array &$settings,
   $session = $request->getSession();
 
   // add frontend references
-  $settings['agocms_token'] = $session->get('ago_access_token');
+  $settings['agocms']['token'] = $session->get('ago_access_token');
 }
 
 /**
@@ -25,12 +25,5 @@ function agocms_page_attachments(array &$page) {
  * Implements hook_theme().
  */
 function agocms_theme($existing, $type, $theme, $path) {
-  return [
-    'view_config_form' => []
-  ];
-}
-
-// add Drupal modals to view config page
-function agocms_preprocess_node__page(array &$variables) : void {
-  $variables['#attached']['library'][] = 'agocms/view-conf';
+  return ['view_config_form' => []];
 }

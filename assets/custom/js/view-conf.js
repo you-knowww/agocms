@@ -27,6 +27,9 @@ customElements.define(
   const mapLayers = conf.map.layers,
         tableLayers = conf.tables.layers;
 
+  // if value already set on config field then load it
+  //if(el_conf)
+
   // add click event listeners to select access for group and service search
   for(const el_li of [...el_accessList.children]){
     el_li.addEventListener('click', e => searchLiSelect(e));
@@ -51,9 +54,6 @@ customElements.define(
     el_confField.value = JSON.stringify(conf);
   })
 
-  // function to update conf field after every change
-  // function updateElConfField(){ el_confField.value = JSON.stringify(conf); }
-  function updateElConfField(){ console.log('ignore'); }
   // take list element and return value from selected option
   function getListVal(el_list){
     // get selected access level element
@@ -236,9 +236,6 @@ customElements.define(
       el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
       tableLayers.push(layerConf);
     }
-
-    // update config field
-    updateElConfField();
   }
 
   // ui for layer conf list item
@@ -283,9 +280,6 @@ customElements.define(
 
       // build form and add ref to dialog box so save can close
       el_layerForm = buildLayerConfForm(layerConf, () => {
-                        // update config field
-                        updateElConfField();
-
                         // close dialog on save and update layer name
                         el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
                         d_dialog.close(); });
@@ -318,9 +312,6 @@ customElements.define(
         // get layer conf ref index and remove it
         mapLayers.splice(mapLayers.findIndex(l => l.url === url), 1);
 
-        // update config field
-        updateElConfField();
-
         // delete el
         el_layer.remove();
 
@@ -338,9 +329,6 @@ customElements.define(
       el_removeBtn.addEventListener('click', () => {
         // get layer conf ref index and remove it
         tableLayers.splice(tableLayers.findIndex(l => l.url === url), 1);
-
-        // update config field
-        updateElConfField();
 
         // delete el
         el_layer.remove();

@@ -30,4 +30,5 @@ view-conf:
     component:
       assets/custom/css/agocms.css: {}
   dependencies:
-  - core/drupal.dialog.ajax
+    - core/drupalSettings
+    - core/drupal.dialog.ajax

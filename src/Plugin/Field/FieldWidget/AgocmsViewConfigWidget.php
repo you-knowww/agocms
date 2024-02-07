@@ -24,9 +24,11 @@ class AgocmsViewConfigWidget extends WidgetBase {
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
     /*
-      single config input hidden and disable from view. form
-      builds config in JSON and updates hidden field.
+      single hidden disabled config input. form builds config
+      in JSON and updates hidden field at submit to save.
     */
+    // output
+    $build = [];
     $tpl_form = ['#theme' => 'view_config_form'];
 
     $element += [
@@ -41,6 +43,16 @@ class AgocmsViewConfigWidget extends WidgetBase {
       '#suffix' => \Drupal::service('renderer')->renderPlain($tpl_form)
     ];
 
-    return ['value' => $element];
+    // add reference to output here so settings can be attached
+    $build['value'] = $element;
+
+    // if items available attach only expected val as drupal setting
+    if(count($items) > 0 && $items[0]->value != null){
+      // convert saves string to json
+      $build['#attached']['drupalSettings']['agocms']['conf']
+        = json_decode($items[0]->value);
+    }
+
+    return $build;
   }
 }

@@ -22,11 +22,12 @@ class Agocms {
     const agocms = this;
 
     // validate access token from AGO Social Auth
-    if(drupalSettings.hasOwnProperty('agocms_token')
-        && drupalSettings.agocms_token != null
-        && drupalSettings.agocms_token.hasOwnProperty('token')){
+    if(drupalSettings.hasOwnProperty('agocms')
+        && drupalSettings.agocms.hasOwnProperty('token')
+        && drupalSettings.agocms.token != null
+        && drupalSettings.agocms.token.hasOwnProperty('token')){
       // ref
-      const tokenData = drupalSettings.agocms_token;
+      const tokenData = drupalSettings.agocms.token.token;
 
       // build manager object for ago rest api
       this.#agoIdMgr = new arcgisRest.ArcGISIdentityManager(

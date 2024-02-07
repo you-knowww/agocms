@@ -29,27 +29,18 @@ class AgocmsViewConfigFormatter extends FormatterBase {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-    $element = [];
+    // ref
+    $el = [];
 
-
-    foreach ($items as $delta => $item) {
-      // Render each element as markup.
-      $element[$delta] = ['#markup' => $item->value];
+    // only one json field to show and attach ref to drupal settings
+    if(count($items) > 0 && $items[0]->value != null){
+      // show on page
+      $el[0] = ['#markup' => $item->value];
+      // if items available attach only expected val as drupal setting
+      $el['#attached']['drupalSettings']['agocms']['conf']
+        = json_decode($items[0]->value);
     }
 
-    return $element;
-    /*
-    foreach ($items as $delta => $item) {
-      $elements[$delta] = [
-        // create a render array to produce markup
-        // See theme_html_tag().
-        '#type' => 'html_tag',
-        '#tag' => 'p',
-        '#value' => $this->t('Test view.'),
-      ];
-    }
-
-    return $elements;
-    */
+    return $el;
   }
 }
