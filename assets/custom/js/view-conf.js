@@ -12,9 +12,15 @@ customElements.define(
   });
 
 // contain in iif
-(() => {
+((drupalSettings) => {
   // refs
-  const conf = agocms.viewConfig,
+  const conf = drupalSettings.hasOwnProperty('agocms')
+                  && drupalSettings.agocms.hasOwnProperty('conf')
+                  && drupalSettings.agocms.conf.hasOwnProperty('map')
+                ? drupalSettings.agocms.conf
+                : {map: {layers: []}, tables: {layers: []}, relationships: []},
+        el_addForm = document.getElementById('node-ago-view-form'),
+        el_editForm = document.getElementById('node-ago-view-edit-form'),
         el_confField = document.getElementById('agocms-view-conf'),
         el_accessList = document.getElementById('agocmsConfSearchAccessList'),
         el_groupSearch = document.getElementById('agocmsConfSearchGroups'),
@@ -26,9 +32,6 @@ customElements.define(
         el_tableLayerList = document.getElementById('agocmsConfTables');
   const mapLayers = conf.map.layers,
         tableLayers = conf.tables.layers;
-
-  // if value already set on config field then load it
-  //if(el_conf)
 
   // add click event listeners to select access for group and service search
   for(const el_li of [...el_accessList.children]){
@@ -50,9 +53,26 @@ customElements.define(
         }) ));
   el_serviceSearch.addEventListener('keyup', debounce(listGroupServices));
 
-  document.getElementById('node-ago-view-form').addEventListener('submit', () => {
-    el_confField.value = JSON.stringify(conf);
-  })
+  // event listener for add/edit form submit
+  if(el_addForm){
+    el_addForm.addEventListener('submit',
+      () => el_confField.value = JSON.stringify(conf));
+  } else if(el_editForm){
+    el_editForm.addEventListener('submit',
+      () => el_confField.value = JSON.stringify(conf));
+  }
+
+  // load existing map layers to ui then same with table layers
+  for(const layer of mapLayers){
+    // add layer ref to agocms and build config ui
+    agocms.getDm(layer.url)
+      .then(dm => el_mapLayerList.appendChild(buildLayerConfLi(layer)));
+  }
+  for(const layer of tableLayers){
+    // add layer ref to agocms and build config ui
+    agocms.getDm(layer.url)
+      .then(dm => el_tableLayerList.appendChild(buildLayerConfLi(layer)));
+  }
 
   // take list element and return value from selected option
   function getListVal(el_list){
@@ -140,102 +160,107 @@ customElements.define(
 
     // validate
     if(val !== ''){
-      // call service search. if selected group el, get val. otherwise empty string
-      agocmsViewConfigLayerSearch(val).then(layerGroups => {
-        clearSearchList(el_layerList);
-        // validate
-        if(layerGroups.length == 0){
-          // show error
-          addErrorToList(el_ul);
-        } else {
-          // loop results
-          for(const layerGroup of layerGroups){
-            // make li element for group label
-            const el_labelLi = document.createElement('li');
-            // set content for user to recognize group label
-            el_labelLi.innerHTML = layerGroup.name + ':';
-            // add label to list
-            el_layerList.appendChild(el_labelLi);
+      // get layers for service url
+      agocmsViewConfigLayersForService(val)
+        .then(layerGroups => {
+          clearSearchList(el_layerList);
+          // validate
+          if(layerGroups.length == 0){
+            // show error
+            addErrorToList(el_ul);
+          } else {
+            // loop results
+            for(const layerGroup of layerGroups){
+              // make li element for group label
+              const el_labelLi = document.createElement('li');
+              // set content for user to recognize group label
+              el_labelLi.innerHTML = layerGroup.name + ':';
+              // add label to list
+              el_layerList.appendChild(el_labelLi);
 
-            // loop all layers and add list items
-            for(const layer of layerGroup.layers){
-              // make li element
-              const el_li = document.createElement('li'),
-                    el_layerName = document.createElement('p'),
-                    el_addBtn = document.createElement('button'),
-                    url = val + '/' + layer.id;
+              // loop all layers and add list items
+              for(const layer of layerGroup.layers){
+                // make li element
+                const el_li = document.createElement('li'),
+                      el_layerName = document.createElement('p'),
+                      el_addBtn = document.createElement('button'),
+                      url = val + '/' + layer.id;
 
-              // also have to set type to 'button' to prevent form submit
-              el_addBtn.type = 'button';
+                // also have to set type to 'button' to prevent form submit
+                el_addBtn.type = 'button';
 
-              // set content for user to recognize item
-              el_layerName.innerHTML = '&nbsp;' + layer.name;
-              // give button cta
-              el_addBtn.innerHTML = 'add';
+                // set content for user to recognize item
+                el_layerName.innerHTML = '&nbsp;' + layer.name;
+                // give button cta
+                el_addBtn.innerHTML = 'add';
 
-              // apply classes
-              el_li.className = 'agocms-conf-search-layer-item';
-              el_addBtn.className = 'prod-word-break--keep prod-pointer';
-              el_layerName.className = 'prod-margin-0 prod-word-break-keep';
+                // apply classes
+                el_li.className = 'agocms-conf-search-layer-item';
+                el_addBtn.className = 'prod-word-break--keep prod-pointer';
+                el_layerName.className = 'prod-margin-0 prod-word-break-keep';
 
-              // set up click event to disable button and add to conf
-              el_addBtn.addEventListener('click', () => {
-                // disable button, add ref to api and add layer to conf
-                el_addBtn.setAttribute('disabled', 'disabled');
-                agocms.addDataModelRef(val, layer);
-                addLayerToConf(url);
-              });
+                // set up click event to disable button and add to conf
+                el_addBtn.addEventListener('click', () => {
+                  // disable button, add ref to api and add layer to conf
+                  el_addBtn.setAttribute('disabled', 'disabled');
+                  agocms.addDataModelRef(val, layer);
+                  addLayerToConf(url);
+                });
 
-              // if already added then disable
-              if(mapLayers.findIndex(l => l.url === url) !== -1
-                  || tableLayers.findIndex(l => l.url === url) !== -1){
-                el_addBtn.setAttribute('disabled', 'disabled');
+                // if already added then disable
+                if(mapLayers.findIndex(l => l.url === url) !== -1
+                    || tableLayers.findIndex(l => l.url === url) !== -1){
+                  el_addBtn.setAttribute('disabled', 'disabled');
+                }
+
+                // add button to layer list item
+                el_li.appendChild(el_addBtn);
+                // add layer name ref to list item
+                el_li.appendChild(el_layerName);
+                // add to result list
+                el_layerList.appendChild(el_li);
               }
-
-              // add button to layer list item
-              el_li.appendChild(el_addBtn);
-              // add layer name ref to list item
-              el_li.appendChild(el_layerName);
-              // add to result list
-              el_layerList.appendChild(el_li);
             }
           }
-        }
-      });
+        });
     }
   }
 
   // called by layer add button
   function addLayerToConf(url, toTable = false){
-    // refs
-    const layer = agocms.getDataModelRef(url);
-    const capableOf = layer.capabilities;
-    const layerConf = { url,
-                        display_name: layer.name,
-                        fields: layer.fields.map(f => {
-                          return {name: f.name, label: f.alias,
-                                  disabled: false, hidden: false}; }) };
+    // get dm from reference
+    agocms.getDm(url).then(layer => {
+      // refs
+      const capableOf = layer.capabilities,
+            layerConf = { url,
+                          display_name: layer.name,
+                          // simplifies config
+                          has_geometry: layer.hasOwnProperty('geometryType'),
+                          fields: layer.fields.map(f => {
+                            return {name: f.name, label: f.alias,
+                                    disabled: false, hidden: false}; }) };
 
-    // validate crud and default each conf to false
-    if(capableOf.indexOf('Create') != -1) layerConf.can_create = false;
-    if(capableOf.indexOf('Delete') != -1) layerConf.can_delete = false;
-    if(capableOf.indexOf('Update') != -1) layerConf.can_update_attr = false;
+      // validate crud and default each conf to false
+      if(capableOf.indexOf('Create') != -1) layerConf.can_create = false;
+      if(capableOf.indexOf('Delete') != -1) layerConf.can_delete = false;
+      if(capableOf.indexOf('Update') != -1) layerConf.can_update_attr = false;
 
-    // does layer have geometry? if so default add to map
-    if(layer.hasOwnProperty('geometryType') && toTable === false){
-      // give layer config map settings if available
-      if(layer.allowGeometryUpdates === true) layerConf.can_update_geo = false;
-      layerConf.label = { field: layer.displayField, font_size: 12,
-                          font_color: '#000', bg_color: '', border_color: '' };
+      // does layer have geometry? if so default add to map
+      if(layerConf.has_geometry && toTable === false){
+        // give layer config map settings if available
+        if(layer.allowGeometryUpdates === true) layerConf.can_update_geo = false;
+        layerConf.label = { field: layer.displayField, font_size: 12,
+                            font_color: '#000', bg_color: '', border_color: '' };
 
-      // add ref and add li to map list
-      mapLayers.push(layerConf);
-      el_mapLayerList.appendChild(buildLayerConfLi(layerConf));
-    } else {
-      // add to data tables list and conf
-      el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
-      tableLayers.push(layerConf);
-    }
+        // add ref and add li to map list
+        mapLayers.push(layerConf);
+        el_mapLayerList.appendChild(buildLayerConfLi(layerConf));
+      } else {
+        // add to data tables list and conf
+        el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
+        tableLayers.push(layerConf);
+      }
+    });
   }
 
   // ui for layer conf list item
@@ -245,7 +270,6 @@ customElements.define(
           el_settingsBtn = document.createElement('button'),
           el_layerName = document.createElement('p'),
           el_removeBtn = document.createElement('button');
-    const layer = agocms.getDataModelRef(url);
 
     // prevent form submit
     el_removeBtn.type = 'button';
@@ -279,14 +303,16 @@ customElements.define(
                           {title: 'Feature Layer Settings', width: 500});
 
       // build form and add ref to dialog box so save can close
-      el_layerForm = buildLayerConfForm(layerConf, () => {
-                        // close dialog on save and update layer name
-                        el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
-                        d_dialog.close(); });
+      buildLayerConfForm(layerConf,
+          // close dialog on save and update layer name
+          () => { el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
+                  d_dialog.close(); })
+        .then(el_layerForm => {
+          // add form to container and open dialog box
+          el_layerFormContainer.appendChild(el_layerForm);
+          d_dialog.showModal();
+        });
 
-      // add form to container and open dialog box
-      el_layerFormContainer.appendChild(el_layerForm);
-      d_dialog.showModal();
     });
 
     // only maps have label config
@@ -337,7 +363,7 @@ customElements.define(
         listServiceLayers();
 
         // if layer has geometry look for a map counterpart
-        if(layer.hasOwnProperty('geometryType')){
+        if(layerConf.has_geometry){
           // look for selected counterpart
           const el_mapLayerAddTblBtn = el_mapLayerList.querySelector(
                                           '[d-url="'+url+'"] .agocms-conf-map-layer-add-tables');
@@ -354,81 +380,90 @@ customElements.define(
 
   // build layer conf form
   function buildLayerConfForm(layerConf, saveCallback = () => null){
-    // refs
-    const layer = agocms.getDataModelRef(layerConf.url),
-          el_layerForm = document.createElement('agocms-config-layer');
-    const el_shadow = el_layerForm.shadowRoot;
-    const el_name = el_shadow.getElementById('agocmsConfLayerFormLayerName'),
-          el_url = el_shadow.getElementById('agocmsConfLayerFormLayerUrl'),
-          el_nameField = el_shadow.getElementById('agocmsConfLayerFormDisplayName'),
-          els_crudConfigs = el_shadow.querySelectorAll('#agocmsConfLayerFormCrud input'),
-          el_lblDiv = el_shadow.getElementById('agocmsConfLayerFormLbl'),
-          el_saveBtn = el_shadow.getElementById('agocmsConfLayerFormSaveBtn'),
-          els_settings = el_shadow.querySelectorAll('[d-setting]');
+    return new Promise((resolve, reject) => {
+      agocms.getDm(layerConf.url).then(layer => {
+        // refs
+        const el_layerForm = document.createElement('agocms-config-layer');
+        const el_shadow = el_layerForm.shadowRoot;
+        const el_name = el_shadow.getElementById('agocmsConfLayerFormLayerName'),
+              el_url = el_shadow.getElementById('agocmsConfLayerFormLayerUrl'),
+              el_nameField = el_shadow.getElementById('agocmsConfLayerFormDisplayName'),
+              els_crudConfigs = el_shadow.querySelectorAll('#agocmsConfLayerFormCrud input'),
+              el_lblDiv = el_shadow.getElementById('agocmsConfLayerFormLbl'),
+              el_saveBtn = el_shadow.getElementById('agocmsConfLayerFormSaveBtn');
 
-    // layer defining attributes
-    el_name.innerHTML = layer.name;
-    el_url.innerHTML = layerConf.url;
+        // layer defining attributes
+        el_name.innerHTML = layer.name;
+        el_url.innerHTML = layerConf.url;
 
-    // set layer name input val
-    el_nameField.value = layerConf.display_name;
+        // set layer name input val
+        el_nameField.value = layerConf.display_name;
 
-    // loop all possible crud fields and show applicable fields
-    els_crudConfigs.forEach(el_input => {
-      // get relevant setting
-      const setting = el_input.getAttribute('d-setting');
+        // loop all possible crud fields and show applicable fields
+        els_crudConfigs.forEach(el_input => {
+          // get relevant setting
+          const setting = el_input.getAttribute('d-setting');
 
-      if(layerConf.hasOwnProperty(setting)){
-        // set configured value
-        if(setting === true) el_input.checked = true;
-        // reveal parent
-        el_input.parentNode.style = "";
-      }
-    })
+          if(layerConf.hasOwnProperty(setting)){
+            // set configured value
+            if(setting === true) el_input.checked = true;
+            // reveal parent
+            el_input.parentNode.style = "";
+          } else {
+            // remove parent elment
+            el_input.parentNode.remove();
+          }
+        })
 
-    if(layerConf.hasOwnProperty('label')){
-      const el_lblField = el_shadow.getElementById('agocmsConfLayerFormLblField'),
-            // get all input fields and set label setting name prefix
-            els_lblSettings = el_lblDiv.querySelectorAll('input, select');
+        if(layerConf.hasOwnProperty('label')){
+          const el_lblField = el_shadow.getElementById('agocmsConfLayerFormLblField'),
+                // get all input fields and set label setting name prefix
+                els_lblSettings = el_lblDiv.querySelectorAll('input, select');
 
-      // show label config container
-      el_lblDiv.style = "";
+          // show label config container
+          el_lblDiv.style = "";
 
-      // add all fields as options
-      for(const field of layer.fields){
-        // make new options
-        const el_fieldOpt = document.createElement('option');
-        el_fieldOpt.value = field.name
-        el_fieldOpt.innerHTML = field.alias
+          // add all fields as options
+          for(const field of layer.fields){
+            // make new options
+            const el_fieldOpt = document.createElement('option');
+            el_fieldOpt.value = field.name
+            el_fieldOpt.innerHTML = field.alias
 
-        // default option to current config value
-        if(layerConf.label.field === field.name){
-          el_fieldOpt.setAttribute('selected', 'selected');
+            // default option to current config value
+            if(layerConf.label.field === field.name){
+              el_fieldOpt.setAttribute('selected', 'selected');
+            }
+
+            // add to select
+            el_lblField.appendChild(el_fieldOpt);
+          }
+
+          // fill in current settings
+          els_lblSettings.forEach(el_input => {
+            // parse setting conf field from string with dot reference
+            const settingVal = getConfSettingFromEl(el_input, layerConf);
+            // set value to element
+            el_input.value = settingVal;
+          })
+        } else {
+          // remove layer label configs
+          el_shadow.getElementById('agocmsConfLayerFormLbl').remove();
         }
 
-        // add to select
-        el_lblField.appendChild(el_fieldOpt);
-      }
+        // callback for save
+        el_saveBtn.addEventListener('click', () => {
+          // loop all elements with settings to update config
+          el_shadow.querySelectorAll('[d-setting]')
+            .forEach(el => setConfSettingFromEl(el, layerConf));
+          // run any save callbacks
+          saveCallback();
+        })
 
-      // fill in current settings
-      els_lblSettings.forEach(el_input => {
-        // parse setting conf field from string with dot reference
-        const settingVal = getConfSettingFromEl(el_input, layerConf);
-        // set value to element
-        el_input.value = settingVal;
-      })
-    }
-
-    // callback for save
-    el_saveBtn.addEventListener('click', () => {
-      // loop all elements with settings to update config
-      els_settings.forEach(el => setConfSettingFromEl(el, layerConf));
-      // run any save callbacks
-      saveCallback();
+        // send element back and let caller manage
+        resolve(el_layerForm);
+      });
     })
-
-    // send element back and let caller manage
-    return el_layerForm;
   }
 
   function getConfSettingFromEl(el, layerConf) {
@@ -460,56 +495,9 @@ customElements.define(
     // use last part to set config value. convert numbers
     fieldRef[parts.at(-1)] = el.hasAttribute('d-number') ? Number(val) : val;
   }
-})();
+})(drupalSettings);
 
-function agocmsViewConfigAddLayer() {
-  // get template and container
-  const tpl_layerForm = document.getElementById('agocmsFeatureLayerSelect'),
-        el_layerContainer = document.getElementById('agocmsViewMapConfLayers');
-
-  // get existing list count. clone form as element
-  const layerCnt = el_layerContainer.children.length,
-        el_layerForm = document.importNode(tpl_layerForm.content, true);
-
-  // find datalist and their input to update ID and ref to layer specific
-  el_layerForm.querySelectorAll('datalist').forEach(el_datalist => {
-    // ref input for datalist
-    const el_input = el_layerForm.querySelector('input[list="'+ el_datalist.id +'"');
-
-    // update datalist id to unique val and ref in list attrib
-    el_datalist.id = el_datalist.id + layerCnt;
-    el_input.setAttribute('list', el_datalist.id);
-  })
-
-  // make hyperscript el refs before appending to container
-  const els_hypserscripters = el_layerForm.querySelectorAll('[\_]');
-
-  // get container and add template content to it. wonder if this works with hypertext
-  el_layerContainer.appendChild(el_layerForm);
-
-  // apply hyperscript on necessary els. the fun times.
-  els_hypserscripters.forEach(el => _hyperscript.processNode(el));
-}
-
-function agocmsViewConfigAddRel(e){
-  // get template and container
-  const tpl_rel = document.getElementById('agocmsFeatureLayerRelSelectField'),
-        el_relContainer = e.parentNode
-                            .getElementByClassname('agocms-conf-featurelayer-rels');
-
-  // unwrap rel dom el
-  const el_rel = document.importNode(tpl_rel.content, true);
-
-  // make hyperscript el refs before appending to container
-  const els_hypserscripters = el_rel.querySelectorAll('[\_]');
-
-  // add to page
-  el_relContainer.appendChild(el_rel);
-
-  // apply hyperscript on necessary els. the fun times.
-  els_hypserscripters.forEach(el => _hyperscript.processNode(el));
-}
-
+// search for groups in private or public and private
 function agocmsViewConfigGroupSearch(searchText = '', usePublic = false){
   return new Promise((resolve, reject) => {
     // if blank and public then respond with empty results
@@ -537,6 +525,7 @@ function agocmsViewConfigGroupSearch(searchText = '', usePublic = false){
   });
 }
 
+// search for services available to a group
 function agocmsViewConfigServiceSearch(searchText = '', groupId = ''){
   return new Promise((resolve, reject) => {
     // validate search text
@@ -555,7 +544,8 @@ function agocmsViewConfigServiceSearch(searchText = '', groupId = ''){
   })
 }
 
-function agocmsViewConfigLayerSearch(url) {
+// get all layers for service
+function agocmsViewConfigLayersForService(url) {
   return new Promise((resolve, reject) => {
     // validate
     if(url == '') resolve([]);
@@ -579,104 +569,6 @@ function agocmsViewConfigLayerSearch(url) {
         }
       });
   });
-}
-
-// returns dm ref
-function agocmsViewConfigLayerFields(url, id){
-  return agocms.getDataModelRef(url, id);
-}
-
-function agocmsViewConfigAddMapLayerRef(url, dm){
-  // ref
-  const capableOf = dm.capabilities,
-        layerUrl = url + '/' + dm.id;
-
-  // add or replace layer ref in map and set defaults
-  agocms.viewConfig.map.layers[layerUrl]
-    = { fields: {},
-        create: capableOf.indexOf('Create') != -1,
-        delete: capableOf.indexOf('Delete') != -1,
-        attr_create: capableOf.indexOf('Update') != -1,
-        geo_create: capableOf.allowGeometryUpdates === true,
-        label: {
-          field: dm.displayField,
-          font_size: 12,
-          font_color: '#000',
-          bg_color: '',
-          border_color: ''
-        },
-        relationships: [] };
-
-  // grab ref
-  const layerDef = agocms.viewConfig.map.layers[layerUrl];
-
-  // set field config defaults
-  for(const field of Object.values(dm.fields)){
-    // add ref with defaults
-    layerDef.fields[field.name] = {is_disabled: false, is_hidden: false};
-  }
-}
-
-// takes template, loops slots and builds text to replace slots from field attributes
-function agocmsPopulateFieldConfigSlots(el_field, field){
-  // add ref to field
-  el_field.setAttribute('d-field', field.name);
-
-  // loop all slots in shadow dom. Slot name matches data model to rely on template
-  el_field.shadowRoot.querySelectorAll('slot').forEach(el_slot => {
-    // make text element and set inner to field value
-    const el_text = document.createElement('text');
-    el_text.innerHTML = field[el_slot.name];
-    // assign text to slot
-    el_text.slot = el_slot.name;
-
-    // update field
-    el_field.append(el_text);
-  })
-
-  // add field template options for specific field type
-  switch(field.type){
-    case 'esriFieldTypeBlob':
-    case 'esriFieldTypeString':
-      // add text field template for link options and clone
-      const tpl_fieldConf = document.getElementById(
-                              'agocmsFeatureLayerSelectFieldTextConf');
-      el_fieldConf = document.importNode(tpl_fieldConf.content, true);
-
-      // add to field shadow root
-      el_field.shadowRoot.appendChild(el_fieldConf);
-      break;
-  }
-}
-
-// flexible functions to update layer and field configs based on input
-// layer config inputs call to pass val by layer config prop ref in d-setting attr
-function agocmsLayerConfigUpdate(e){
-  // get field context
-  const el = e.target;
-  const el_layer = el.closest('li.agocms-conf-featurelayer-layer'),
-        el_section = el.closest('.agocms-view-conf');
-
-  // set field config is_hidden based on element checked
-  agocms.viewConfig[el_section.getAttribute('d-type')]
-    .layers[el_layer.getAttribute('d-url')]
-    [el.getAttribute('d-setting')] = el.type == 'checkbox' ? el.checked : el.value;
-}
-
-// field config inputs call to pass val by field config prop ref in d-setting attr
-function agocmsFieldConfigUpdate(e){
-  // get field context
-  const el = e.target;
-  const el_field = el.getRootNode().host;
-  const el_fields = el_field.closest('.agocms-conf-featurelayer-fields'),
-        el_layer = el_field.closest('li.agocms-conf-featurelayer-layer'),
-        el_section = el_field.closest('.agocms-view-conf');
-
-  // set field config is_hidden based on element checked
-  agocms.viewConfig[el_section.getAttribute('d-type')]
-    .layers[el_layer.getAttribute('d-url')]
-    .fields[el_field.getAttribute('d-field')]
-    [el.getAttribute('d-setting')] = el.type == 'checkbox' ? el.checked : el.value;
 }
 
 // debounce very simple now. David Walsch example

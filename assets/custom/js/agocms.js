@@ -13,9 +13,6 @@ class Agocms {
   // provide public references. Good for quick access to data model info
   refs = { data_models: {} };
 
-  // views have configs with maps, tables, and relationships. public
-  viewConfig = { map: {layers: []}, tables: {layers: []}, relationships: [] };
-
   // requires build. if build doesnt provide agoIdMgr then set invalid
   constructor(){
     // context
@@ -27,7 +24,7 @@ class Agocms {
         && drupalSettings.agocms.token != null
         && drupalSettings.agocms.token.hasOwnProperty('token')){
       // ref
-      const tokenData = drupalSettings.agocms.token.token;
+      const tokenData = drupalSettings.agocms.token;
 
       // build manager object for ago rest api
       this.#agoIdMgr = new arcgisRest.ArcGISIdentityManager(
@@ -125,16 +122,32 @@ class Agocms {
     if(!dms.hasOwnProperty(url)) dms[url] = layer;
   }
 
-  // if layer id included expects url to be service url.
-  // if no layer id expects url to be full layer url.
-  getDataModelRef(url, id = null){
-    // if layer id included expects url to be service url.
-    if(id !== null){
-      // build with service url and layer id. check service url for trailing /
-      url += url.substr(-1) == '/' ? id : '/' + id;
-    }
+  // try to get dm from ref. if none then find
+  getDm(url, id = null){
+    // ref
+    const context = this,
+          dms = this.refs.data_models;
 
-    return this.refs.data_models[url];
+    // if layer id included expects url to be service url
+    if(id !== null) url += url.substr(-1) == '/' ? id : '/' + id;
+
+    // async
+    return new Promise((resolve, reject) => {
+      // if exists return dm
+      if(dms.hasOwnProperty('url')) resolve(dms[url]);
+
+      // get data model, add as ref and return
+      context.ajx(arcgisRest.getLayer, {url}).then(dm => {
+        // validate
+        if(dm.hasOwnProperty('error')){
+          console.error('FAILURE: feature layer.', dm.error);
+        } else {
+          // add ref and return dm
+          dms[url] = dm;
+          resolve(dm);
+        }
+      });
+    });
   }
 
   // return bool
