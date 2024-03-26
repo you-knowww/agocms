@@ -1,15 +1,25 @@
 // define web component for fields
-customElements.define(
-  'agocms-config-layer',
-  class extends HTMLElement {
-    constructor() {
-      super();
-      const tpl = document.getElementById("agocmsConfFeatureLayer");
+const customEls = [{handle: 'agocms-config-layer', id: 'agocmsConfFeatureLayer'},
+                    {handle: 'agocms-config-fields', id: 'agocmsConfFields'},
+                    {handle: 'agocms-config-field', id: 'agocmsConfField'},
+                    {handle: 'agocms-config-field-coded-vals-settings', id: 'agocmsConfFieldCodedValsSettings'},
+                    {handle: 'agocms-config-field-text-settings', id: 'agocmsConfFieldTextSettings'},
+                    // hurr
+                    {handle: 'agocms-config-field-decimal-settings', id: 'agocmsConfFieldDecimalSettings'},
+                    {handle: 'agocms-config-field-number-settings', id: 'agocmsConfFieldNumberSettings'},
+                    {handle: 'agocms-config-field-date-settings', id: 'agocmsConfFieldDateSettings'}];
 
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.appendChild(tpl.content.cloneNode(true));
-    }
-  });
+// define all custom elements
+for(const customEl of customEls){
+  customElements.define(customEl.handle,
+    class extends HTMLElement {
+      constructor() {
+        super();
+        const tpl = document.getElementById(customEl.id);
+        const shadowRoot = this.attachShadow({mode: 'open'});
+        shadowRoot.appendChild(tpl.content.cloneNode(true));
+      } });
+}
 
 // contain in iif
 ((drupalSettings) => {
@@ -55,23 +65,19 @@ customElements.define(
 
   // event listener for add/edit form submit
   if(el_addForm){
-    el_addForm.addEventListener('submit',
-      () => el_confField.value = JSON.stringify(conf));
+    el_addForm.addEventListener('submit', () => el_confField.value = JSON.stringify(conf));
   } else if(el_editForm){
-    el_editForm.addEventListener('submit',
-      () => el_confField.value = JSON.stringify(conf));
+    el_editForm.addEventListener('submit', () => el_confField.value = JSON.stringify(conf));
   }
 
   // load existing map layers to ui then same with table layers
   for(const layer of mapLayers){
     // add layer ref to agocms and build config ui
-    agocms.getDm(layer.url)
-      .then(dm => el_mapLayerList.appendChild(buildLayerConfLi(layer)));
+    agocms.getDm(layer.url).then(dm => el_mapLayerList.appendChild(buildLayerConfLi(layer)));
   }
   for(const layer of tableLayers){
     // add layer ref to agocms and build config ui
-    agocms.getDm(layer.url)
-      .then(dm => el_tableLayerList.appendChild(buildLayerConfLi(layer)));
+    agocms.getDm(layer.url).then(dm => el_tableLayerList.appendChild(buildLayerConfLi(layer)));
   }
 
   // take list element and return value from selected option
@@ -268,12 +274,14 @@ customElements.define(
     const url = layerConf.url,
           el_layer = document.createElement('li'),
           el_settingsBtn = document.createElement('button'),
+          el_fieldsBtn = document.createElement('button'),
           el_layerName = document.createElement('p'),
           el_removeBtn = document.createElement('button');
 
     // prevent form submit
     el_removeBtn.type = 'button';
     el_settingsBtn.type = 'button';
+    el_fieldsBtn.type = 'button';
 
     // build list item before adding to list
     el_layer.setAttribute('d-url', url);
@@ -283,15 +291,18 @@ customElements.define(
     // give button cta
     el_settingsBtn.innerHTML = 'settings';
     el_removeBtn.innerHTML = 'remove';
+    el_fieldsBtn.innerHTML = 'fields';
 
     // apply classes
     el_layer.className = 'agocms-conf-search-layer-item';
     el_settingsBtn.className = 'prod-word-break--keep prod-pointer';
+    el_fieldsBtn.className = 'prod-word-break--keep prod-pointer';
     el_removeBtn.className = 'prod-word-break--keep prod-pointer';
     el_layerName.className = 'prod-margin-0 prod-word-break-keep';
 
     // add settings button, remove button, and layer name
     el_layer.appendChild(el_settingsBtn);
+    el_layer.appendChild(el_fieldsBtn);
     el_layer.appendChild(el_removeBtn);
     el_layer.appendChild(el_layerName);
 
@@ -302,9 +313,8 @@ customElements.define(
       const d_dialog = Drupal.dialog(el_layerFormContainer,
                           {title: 'Feature Layer Settings', width: 500});
 
-      // build form and add ref to dialog box so save can close
+      // build form and close dialog on save and update layer name on save
       buildLayerConfForm(layerConf,
-          // close dialog on save and update layer name
           () => { el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
                   d_dialog.close(); })
         .then(el_layerForm => {
@@ -312,7 +322,21 @@ customElements.define(
           el_layerFormContainer.appendChild(el_layerForm);
           d_dialog.showModal();
         });
+    });
 
+    el_fieldsBtn.addEventListener('click', () => {
+      // build layer form container and add to dialog box
+      const el_fieldsFormContainer = document.createElement('div');
+      const d_dialog = Drupal.dialog(el_fieldsFormContainer,
+                          {title: 'Feature Layer Fields', width: 500});
+
+      // build form and close dialog box on callback
+      buildLayerFieldsForm(layerConf, () => d_dialog.close())
+        .then(el_fieldsForm => {
+          // add form to container and open dialog box
+          el_fieldsFormContainer.appendChild(el_fieldsForm);
+          d_dialog.showModal();
+        });
     });
 
     // only maps have label config
@@ -463,7 +487,101 @@ customElements.define(
         // send element back and let caller manage
         resolve(el_layerForm);
       });
-    })
+    });
+  }
+
+  // build layer fields form
+  function buildLayerFieldsForm(layerConf, saveCallback = () => null) {
+    return new Promise((resolve, reject) => {
+      agocms.getDm(layerConf.url).then(layer => {
+        // get form element
+        const el_layerForm = document.createElement('agocms-config-fields');
+        const el_shadow = el_layerForm.shadowRoot;
+        const el_saveBtn = el_shadow.getElementById('agocmsConfFieldsFormSaveBtn'),
+              el_fieldsContainer = el_shadow.getElementById('agocmsConfFieldsFormFieldList');
+
+        el_shadow.getElementById('agocmsConfFieldsFormLayerName').innerHTML = layer.name;
+        el_shadow.getElementById('agocmsConfFieldsFormLayerUrl').innerHTML = layerConf.url;
+        el_shadow.getElementById('agocmsConfFieldsFormLayerDisplayName').innerHTML = layerConf.display_name;
+
+        // validate layer has fields
+        if(layer.fields.length > 0){
+          // build all field configs
+          for(const dmField of layer.fields){
+            // get configured counterparts
+            let fieldConf = layerConf.fields.find(f => f.name == layer.name);
+
+            // validate dm hasnt introduced a new field to configure
+            if(typeof fieldConf == 'undefined'){
+              // add default field config add to config
+              fieldConf = { name: dmField.name, label: dmField.alias,
+                            disabled: false, hidden: false };
+              layerConf.fields.push(fieldConf);
+            }
+
+            // get field settings element
+            const el_field = buildFieldConfEl(document.createElement('agocms-config-field'),
+                                fieldConf, dmField);
+            // add to fields container
+            el_fieldsContainer.appendChild(el_field);
+          }
+        } else {
+          // warn user
+          el_fieldsContainer.innerHMTL = '<b>Could not get fields from service</b>';
+        }
+
+        resolve(el_layerForm);
+      }, e => reject(e));
+    });
+
+    // takes template, loops slots and builds text to replace slots from field attributes
+    function buildFieldConfEl(el_field, conf, dm){
+      // add ref to field
+      el_field.setAttribute('d-field', dm.name);
+      // merge dm and configs
+      const dmConf = Object.assign({}, conf, dm);
+      const el_shadow = el_field.shadowRoot;
+
+      // loop all slots in shadow dom. Slot name matches data model to rely on template
+      el_shadow.querySelectorAll('slot').forEach(el_slot => {
+        // make text element and set inner to field value
+        const el_text = document.createElement('text');
+        el_text.innerHTML = dmConf[el_slot.name];
+        // assign text to slot
+        el_text.slot = el_slot.name;
+
+        // update field
+        el_field.append(el_text);
+      });
+
+      // add field template options for specific field type
+      switch(dmConf.type){
+        case 'esriFieldTypeBlob':
+        case 'esriFieldTypeString':
+          // add text field template for link options and clone to shadow root
+          el_shadow.appendChild(document.createElement('agocms-config-field-text-settings'));
+          break;
+        case 'esriFieldTypeSmallInteger':
+        case 'esriFieldTypeDouble':
+        case 'esriFieldTypeSingle':
+          // add decimal field template for link options and clone to shadow root
+          el_shadow.appendChild(document.createElement('agocms-config-field-decimal-settings'));
+          // decimal places
+          // fall through to get general number settings
+        case 'esriFieldTypeInteger':
+          // add number field template for link options and clone to shadow root
+          el_shadow.appendChild(document.createElement('agocms-config-field-number-settings'));
+          // pre-label. post-label
+          break;
+        case 'esriFieldTypeDate':
+          // add date field template for link options and clone to shadow root
+          el_shadow.appendChild(document.createElement('agocms-config-field-date-settings'));
+          // format.
+          break;
+      }
+
+      return el_field;
+    }
   }
 
   function getConfSettingFromEl(el, layerConf) {

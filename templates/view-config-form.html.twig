@@ -320,45 +320,41 @@
     </ol>
   </div>
 </template>
-<template id='agocmsFeatureLayerSelectField'>
+<template id='agocmsConfField'>
   <link href="/modules/custom/agocms/assets/custom/css/productivity.css"
       rel="stylesheet" type="text/css">
   <div>
     <div>
       <label>Name (alias):&nbsp;</label>
-      <p style='display: inline-block;'>
+      <p class='prod-inline-block'>
         <slot name="name"><em>Undefined</em></slot>
         &nbsp;
-        (<slot name="alias"><em>NA</em></slot>)
+        (<slot name="label"><em>NA</em></slot>)
       </p>
     </div>
     <div>
-      <div class='prod-inline-block'>
-        <label>Type:&nbsp;</label>
-        <p style='display: inline-block;'>
-          <slot name="type">*<em>Unknown</em>*</slot>
-        </p>
-      </div>
-      <div class='prod-inline-block'>
-        <label>Is Optional:</label>
-        <p style='display: inline-block;'>
-          <slot name="nullable">false</slot>
-        </p>
-      </div>
+      <label>Type:&nbsp;</label>
+      <p class='prod-inline-block'>
+        <slot name="type">*<em>Unknown</em>*</slot>
+      </p>
+    </div>
+    <div>
+      <label>Is Optional:</label>
+      <p class='prod-inline-block'>
+        <slot name="nullable">false</slot>
+      </p>
     </div>
     <div>
       <div class='prod-inline-block'>
         <label>Disabled:</label>
         <input type='checkbox'
             class='agocms-conf-featurelayer-field-is-disabled'
-            onclick='agocmsFieldConfigUpdate(event);'
             d-setting='is_disabled'/>
       </div>
       <div class='prod-inline-block'>
         <label>Hidden:</label>
         <input type='checkbox'
             class='agocms-conf-featurelayer-field-is-hidden'
-            onclick='agocmsFieldConfigUpdate(event);'
             d-setting='is_hidden'/>
       </div>
     </div>
@@ -375,37 +371,17 @@
     -->
   </div>
 </template>
-<template id='agocmsFeatureLayerRelSelectField'>
-  <label>Select a configured map or table layer</label>
-  <select class='agocms-conf-featurelayer-rels__select'
-      _="on focus
-        call Object.keys(agocms.map.layers)
-          and set mapLayerUrls to result
-        call Object.keys(agocms.tables.layers)
-          and set tableLayerUrls to result
-        if mapLayerUrls's length > 0
-          make an <optgroup/>
-          set optGroup to it
-          set optGroup's @label to 'Map Layers:'
-          for layerUrl in mapLayerUrls
-            make an <option/>
-            set its value to layerUrl
-            set its innerHtml to agocms.map.layer[layerUrl]
-          end"></select>
-</template>
-<template id='agocmsFeatureLayerSelectFieldTextConf'>
+<template id='agocmsConfFieldTextSettings'>
   <div>
     <div>
       <label>Make links active:</label>
       <input type='checkbox'
           class='agocms-conf-featurelayer-field-links-hyperlink'
-          onclick='agocmsFieldConfigUpdate(event);'
           d-setting='links_active'/>
     </div>
     <div>
-      <label>Show images:</label>
+      <label>Parse image links:</label>
       <select class='agocms-conf-featurelayer-field-links-image'
-          onchange='agocmsFieldConfigUpdate(event);'
           d-setting='image_display'/>
         <option value='disabled'>disabled</option>
         <option value='thumbnails'>thumbnails</option>
@@ -414,7 +390,7 @@
     </div>
   </div>
 </template>
-<template id='agocmsFeatureLayerSelectCodedValues'>
+<template id='agocmsConfFieldCodedValsSettings'>
   <li>
     <span class='agocms-conf-featurelayer-field-codes-code'></span>
     <span class='agocms-conf-featurelayer-field-codes-value'></span>
@@ -490,5 +466,27 @@
       </div>
     </div>
     <button id='agocmsConfLayerFormSaveBtn' type='button'>Save</button>
+  </div>
+</template>
+<template id='agocmsConfFields'>
+  <link href="/modules/custom/agocms/assets/custom/css/productivity.css"
+        rel="stylesheet" type="text/css">
+  <div>
+    <div>
+      <div>
+        <label>Display Name:</label>
+        <p class='prod-inline-block prod-margin-0' id='agocmsConfFieldsFormLayerDisplayName'></p>
+      </div>
+      <div>
+        <label>Data Model Name:</label>
+        <p class='prod-inline-block prod-margin-0' id='agocmsConfFieldsFormLayerName'></p>
+      </div>
+      <div>
+        <label>Layer Url:</label>
+        <p class='prod-inline-block prod-margin-0' id='agocmsConfFieldsFormLayerUrl'></p>
+      </div>
+    </div>
+    <div id='agocmsConfFieldsFormFieldList'></div>
+    <button id='agocmsConfFieldsFormSaveBtn' type='button'>Save</button>
   </div>
 </template>
