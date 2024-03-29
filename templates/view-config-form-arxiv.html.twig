@@ -1,0 +1,268 @@
+<template id='agocmsFeatureLayerSelect'>
+  <div>
+    <p>Layer:<p>
+    <ol>
+      <li>
+        <span>Search AGO Groups to narrow Feature Service results.</span>
+        <br/>
+        <label>Include public groups:</label>
+        <input type='checkbox'
+            _="on input
+                get next <input/>
+                set its @d-public to my checked">
+        <br/>
+        <input class='agocms-conf-featurelayer-group__input'
+            list='agocmsFeatureLayerSelectGroupSearch-'
+            d-public='false'
+            autocomplete='off'
+            _="on input debounced at 700ms
+                -- require some search text
+                if my value != ''
+                  -- if selecting datalist value then bail
+                  set el_datalistOps to <option/> in next <datalist/>
+                  for el_datalistOp in el_datalistOps
+                    if my value == el_datalistOp's value
+                      -- provide id reference to service search and exit
+                      send selectedGroup(groupId: el_datalistOp's @d-id) to next <input/>
+                      exit
+                    end
+                  end
+                  -- request ago group named like search term
+                  call agocmsViewConfigGroupSearch(my value, my @d-public == 'true') then
+                    set groups to the result
+                    get next <datalist/>
+                    set its innerHTML to ''
+                    for group in groups
+                      make an <option/>
+                      put group's title into its innerHTML
+                      put group's title into its value
+                      put group's id into its @d-id
+                      put it at end of next <datalist/>
+                    end
+                end">
+        <datalist id='agocmsFeatureLayerSelectGroupSearch-'></datalist>
+      </li>
+      <li>
+        <span>Search Feature Services within selected Group.<br/>
+          *Use group search in <b>step 1</b> to narrow Feature Service results</span><br/>
+        <input class='agocms-conf-featurelayer-service__input'
+            list='agocmsFeatureLayerSelectServiceSearch-'
+            d-group=''
+            autocomplete='off'
+            _="on selectedGroup(groupId)
+                set my @d-group to groupId
+                call agocmsViewConfigServiceSearch(my value, groupId) then
+                  set services to the result
+                  get next <datalist/>
+                  set its innerHTML to ''
+                  for service in services
+                    make an <option/>
+                    put service's title into its innerHTML
+                    put service's title into its value
+                    put service's url into its @d-id
+                    put it at end of next <datalist/>
+                  end
+              end
+              on input(isFromFocus) debounced at 700ms
+                -- validate and dont run an extra query if this is from focus
+                if isFromFocus !== true and (my @d-group != '' or my value != '')
+                  -- if selecting datalist value then bail
+                  set el_datalistOps to <option/> in next <datalist/>
+                  for el_datalistOp in el_datalistOps
+                    if my value == el_datalistOp's value
+                      -- provide id reference to service search and exit
+                      send selectedService(serviceUrl: el_datalistOp's @d-id) to next <select/>
+                      exit
+                    end
+                  end
+                  call agocmsViewConfigServiceSearch(my value, my @d-group) then
+                  set services to the result
+                  get next <datalist/>
+                  set its innerHTML to ''
+                  for service in services
+                    make an <option/>
+                    put service's title into its innerHTML
+                    put service's title into its value
+                    put service's url into its @d-id
+                    put it at end of next <datalist/>
+                  end
+                end
+              end
+              -- auto open datalist on click
+              on focus send input(isFromFocus: true) to me">
+        <datalist id='agocmsFeatureLayerSelectServiceSearch-'></datalist>
+      </li>
+      <li style="display: none;">
+        <span>Select Layer in Feature Service.</span><br/>
+        <select class='agocms-conf-featurelayer-layer__select'
+            d-url=''
+            _="on selectedService(serviceUrl)
+                set my @d-url to serviceUrl
+                call agocmsViewConfigLayerSearch(serviceUrl) then
+                  set layerGroups to the result
+                  remove <optgroup/> from me
+                  show the closest <li/>
+                  for group in layerGroups
+                    -- only allow feature layers on map
+                    if group's name == 'layers'
+                      make an <optgroup/>
+                      set optGroup to it
+                      set optGroup's @label to group's name
+                      for layer in group's layers
+                        make an <option/>
+                        put layer's name into its innerHTML
+                        put layer's id into its value
+                        put it at end of optGroup
+                      end
+                      put optGroup at end of me
+                    end
+                  end
+                end
+                on change call agocmsViewConfigLayerFields(my @d-url, my value) then
+                  set dm to the result
+                  send populateFieldConfig(dm: dm)
+                    to next <div.agocms-conf-featurelayer-fields/>
+                  send populateLayerName(dm: dm)
+                    to next <input.agocms-conf-featurelayer-name/>
+                  send setLayerCrud(dm: dm)
+                    to next <ul.agocms-conf-featurelayer-crud/>
+                  send setLabelFieldOptions(dm: dm)
+                    to next <select.agocms-conf-featurelayer-label/>
+                  set the next <li/.agocms-conf-featurelayer-layer>'s' @d-url
+                    to my @d-url + '/' + dm's id
+                  show the next <li.agocms-conf-featurelayer-layer/>
+                  call agocmsViewConfigAddMapLayerRef(my @d-url, dm)">
+          <option disabled='disabled' selected='selected'>Select a layer</option>
+        </select>
+      </li>
+      <li style="display: none;" d-url='' class='agocms-conf-featurelayer-layer'>
+        <div>
+          <label>Layer options:</label>
+          <div>
+            <label>Layer Display Name</label>
+            <input type='text'
+                class='agocms-conf-featurelayer-name'
+                d-setting='name'
+                onchange='agocmsLayerConfigUpdate(event);'
+                _="on populateLayerName(dm) set my value to dm's name"/>
+          </div>
+          <ul class='agocms-conf-featurelayer-crud'
+              _="on setLayerCrud(dm)
+                  set el_create to
+                    <li.agocms-conf-featurelayer-layer-crud__create/> in me
+                  set el_delete to
+                    <li.agocms-conf-featurelayer-layer-crud__delete/> in me
+                  set el_attrUpdate to
+                    <li.agocms-conf-featurelayer-layer-crud__attr-create/> in me
+                  set el_geoUpdate to
+                    <li.agocms-conf-featurelayer-layer-crud__geo-update/> in me
+                  call dm.capabilities.indexOf('Create')
+                    if it !== -1
+                      show el_create
+                    else hide el_create
+                    end
+                  call dm.capabilities.indexOf('Delete')
+                    if it !== -1
+                      show el_delete
+                    else hide el_delete
+                    end
+                  call dm.capabilities.indexOf('Update')
+                    if it !== -1
+                      show el_attrUpdate
+                      if dm's allowGeometryUpdates === true
+                        show el_geoUpdate
+                      else hide el_geoUpdate
+                      end
+                    else
+                      hide el_attrUpdate
+                      hide el_geoUpdate">
+            <li style='display: none;'
+                class='agocms-conf-featurelayer-crud__create'>
+              <label>Allow Create</label>
+              <input type='checkbox'
+                  d-setting='can_create'
+                  onchange='agocmsLayerConfigUpdate(event);'/>
+            </li>
+            <li style='display: none;'
+                class='agocms-conf-featurelayer-crud__delete'>
+              <label>Allow Delete</label>
+              <input type='checkbox'
+                  d-setting='can_delete'
+                  onchange='agocmsLayerConfigUpdate(event);'/>
+            </li>
+            <li style='display: none;'
+                class='agocms-conf-featurelayer-crud__geo-update'>
+              <label>Allow Attribute Edit</label>
+              <input type='checkbox'
+                  d-setting='can_update_attr'
+                  onchange='agocmsLayerConfigUpdate(event);'/>
+            </li>
+            <li style='display: none;'
+                class='agocms-conf-featurelayer-crud__attr-create'>
+              <label>Allow Geometry Edit</label>
+              <input type='checkbox'
+                  d-setting='can_update_geo'
+                  onchange='agocmsLayerConfigUpdate(event);'/>
+            </li>
+          </ul>
+          <div>
+            <label>Label Field</label>
+            <select class='agocms-conf-featurelayer-label'
+                d-setting='label_field'
+                onchange='agocmsLayerConfigUpdate(event);'
+                _="on setLabelFieldOptions(dm)
+                    set my innerHTML to ''
+                    for field in dm's fields
+                      make an <option/>
+                      set el_option to it
+                      set its innerHTML to field's name
+                      set its value to field's name
+                      -- set default to dm value
+                      if dm.displayField == field's name
+                        set el_option's @selected to 'selected'
+                      end
+                      put el_option at the end of me"></select>
+            <label>Label Font Size</label>
+            <select d-setting='label_size_px'
+                onchange='agocmsLayerConfigUpdate(event);'>
+              <option value='6'>6</option>
+              <option value='8'>8</option>
+              <option value='10'>10</option>
+              <option value='12'>12</option>
+              <option value='14'>14</option>
+              <option value='16'>16</option>
+              <option value='18'>18</option>
+              <option value='20'>20</option>
+            </select>
+            <label>Label Font Color</label>
+            <input type='color'
+                d-setting='label_font_color'
+                onchange='agocmsLayerConfigUpdate(event);'/>
+            <label>Label Background Color</label>
+            <input type='color'
+                d-setting='label_bg_color'
+                onchange='agocmsLayerConfigUpdate(event);'/>
+            <label>Label Border Color</label>
+            <input type='color'
+                d-setting='label_border_color'
+                onchange='agocmsLayerConfigUpdate(event);'/>
+          </div>
+        </div>
+        <span>Configure fields</span>
+        <div class='agocms-conf-featurelayer-fields'
+            _="on populateFieldConfig(dm)
+                set my innerHTML to ''
+                for field in dm's fields
+                  make an <agocms-config-field/>
+                  set el_field to it
+                  call agocmsPopulateFieldConfigSlots(el_field, field)
+                  put el_field at the end of me"></div>
+      </li>
+      <li style="display: none;">
+        <label>Relationships</label>
+        <div class='agocms-conf-featurelayer-rels'></div>
+        <button type='button' onclick='agocmsViewConfigAddRel();'>Add layer</button>
+      </li>
+    </ol>
+  </div>
+</template>

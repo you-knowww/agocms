@@ -2,12 +2,12 @@
 const customEls = [{handle: 'agocms-config-layer', id: 'agocmsConfFeatureLayer'},
                     {handle: 'agocms-config-fields', id: 'agocmsConfFields'},
                     {handle: 'agocms-config-field', id: 'agocmsConfField'},
-                    {handle: 'agocms-config-field-coded-vals-settings', id: 'agocmsConfFieldCodedValsSettings'},
                     {handle: 'agocms-config-field-text-settings', id: 'agocmsConfFieldTextSettings'},
-                    // hurr
                     {handle: 'agocms-config-field-decimal-settings', id: 'agocmsConfFieldDecimalSettings'},
                     {handle: 'agocms-config-field-number-settings', id: 'agocmsConfFieldNumberSettings'},
-                    {handle: 'agocms-config-field-date-settings', id: 'agocmsConfFieldDateSettings'}];
+                    {handle: 'agocms-config-field-date-settings', id: 'agocmsConfFieldDateSettings'},
+                    {handle: 'agocms-config-field-coded-vals-list', id: 'agocmsConfFieldCodedValsList'},
+                    {handle: 'agocms-config-field-coded-val-item', id: 'agocmsConfFieldCodedValItem'}];
 
 // define all custom elements
 for(const customEl of customEls){
@@ -308,20 +308,29 @@ for(const customEl of customEls){
 
     // add click event for layer settings
     el_settingsBtn.addEventListener('click', () => {
-      // build layer form container and add to dialog box
-      const el_layerFormContainer = document.createElement('div');
-      const d_dialog = Drupal.dialog(el_layerFormContainer,
-                          {title: 'Feature Layer Settings', width: 500});
-
       // build form and close dialog on save and update layer name on save
-      buildLayerConfForm(layerConf,
-          () => { el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
-                  d_dialog.close(); })
-        .then(el_layerForm => {
-          // add form to container and open dialog box
-          el_layerFormContainer.appendChild(el_layerForm);
-          d_dialog.showModal();
-        });
+      buildLayerConfForm(layerConf).then(el_layerForm => {
+        // add form to container and then dialog box
+        const el_layerFormContainer = document.createElement('div');
+        // add form to container and open dialog box
+        el_layerFormContainer.appendChild(el_layerForm);
+
+        const d_dialog = Drupal.dialog(el_layerFormContainer,
+                          { title: 'Feature Layer Settings', width: 500,
+                            buttons: [
+                              { text: "Cancel", click: () => d_dialog.close() },
+                              { text: "Save", click: () => {
+                                // loop all elements with settings to update config
+                                el_layerForm.shadowRoot.querySelectorAll('[d-setting]')
+                                  .forEach(el => setConfSettingFromEl(el, layerConf));
+
+                                // update listed record and close
+                                el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
+                                d_dialog.close(); } }
+                          ]});
+
+        d_dialog.showModal();
+      });
     });
 
     el_fieldsBtn.addEventListener('click', () => {
@@ -403,7 +412,7 @@ for(const customEl of customEls){
   }
 
   // build layer conf form
-  function buildLayerConfForm(layerConf, saveCallback = () => null){
+  function buildLayerConfForm(layerConf){
     return new Promise((resolve, reject) => {
       agocms.getDm(layerConf.url).then(layer => {
         // refs
@@ -475,15 +484,6 @@ for(const customEl of customEls){
           el_shadow.getElementById('agocmsConfLayerFormLbl').remove();
         }
 
-        // callback for save
-        el_saveBtn.addEventListener('click', () => {
-          // loop all elements with settings to update config
-          el_shadow.querySelectorAll('[d-setting]')
-            .forEach(el => setConfSettingFromEl(el, layerConf));
-          // run any save callbacks
-          saveCallback();
-        })
-
         // send element back and let caller manage
         resolve(el_layerForm);
       });
@@ -536,11 +536,13 @@ for(const customEl of customEls){
 
     // takes template, loops slots and builds text to replace slots from field attributes
     function buildFieldConfEl(el_field, conf, dm){
+      console.log('conf', conf);
+      console.log('dm', dm);
       // add ref to field
       el_field.setAttribute('d-field', dm.name);
       // merge dm and configs
-      const dmConf = Object.assign({}, conf, dm);
-      const el_shadow = el_field.shadowRoot;
+      const el_shadow = el_field.shadowRoot,
+            dmConf = Object.assign({}, conf, dm);
 
       // loop all slots in shadow dom. Slot name matches data model to rely on template
       el_shadow.querySelectorAll('slot').forEach(el_slot => {
@@ -554,30 +556,52 @@ for(const customEl of customEls){
         el_field.append(el_text);
       });
 
-      // add field template options for specific field type
-      switch(dmConf.type){
-        case 'esriFieldTypeBlob':
-        case 'esriFieldTypeString':
-          // add text field template for link options and clone to shadow root
-          el_shadow.appendChild(document.createElement('agocms-config-field-text-settings'));
-          break;
-        case 'esriFieldTypeSmallInteger':
-        case 'esriFieldTypeDouble':
-        case 'esriFieldTypeSingle':
-          // add decimal field template for link options and clone to shadow root
-          el_shadow.appendChild(document.createElement('agocms-config-field-decimal-settings'));
-          // decimal places
-          // fall through to get general number settings
-        case 'esriFieldTypeInteger':
-          // add number field template for link options and clone to shadow root
-          el_shadow.appendChild(document.createElement('agocms-config-field-number-settings'));
-          // pre-label. post-label
-          break;
-        case 'esriFieldTypeDate':
-          // add date field template for link options and clone to shadow root
-          el_shadow.appendChild(document.createElement('agocms-config-field-date-settings'));
-          // format.
-          break;
+      // validate coded value domains and handle specifically
+      if(dm.hasOwnProperty('domain') && dm.domain != null
+          && dm.domain.hasOwnProperty('codedValues')
+          && Array.isArray(dm.domain.codedValues)){
+        // build container and coded value domain label
+        const el_codedVals = document.createElement('agocms-config-field-coded-vals-list');
+        const el_codedValsShadow = el_codedVals.shadowRoot;
+        const el_codedValsList = el_codedValsShadow.querySelector('.agocms-conf-field-codes');
+
+        // loop coded value domains and display all options
+        for(const {code, name} of dm.domain.codedValues){
+          // add coded value
+          const el_codedValItem = document.createElement('agocms-config-field-coded-val-item');
+          const el_codedValItemShadow = el_codedValItem.shadowRoot;
+          el_codedValItemShadow.querySelector('.agocms-conf-field-codes-code').innerHTML = code;
+          el_codedValItemShadow.querySelector('.agocms-conf-field-codes-name').innerHTML = name;
+
+          // add to container
+          el_codedValsList.appendChild(el_codedValItem);
+        }
+
+        // add container to field
+        el_shadow.appendChild(el_codedVals);
+      } else {
+        // add field template options for specific field type
+        switch(dmConf.type){
+          case 'esriFieldTypeBlob':
+          case 'esriFieldTypeString':
+            // add text field template for link options and clone to shadow root
+            el_shadow.appendChild(document.createElement('agocms-config-field-text-settings'));
+            break;
+          case 'esriFieldTypeSmallInteger':
+          case 'esriFieldTypeDouble':
+          case 'esriFieldTypeSingle':
+            // add decimal field template for link options and clone to shadow root
+            el_shadow.appendChild(document.createElement('agocms-config-field-decimal-settings'));
+            // fall through to get general number settings
+          case 'esriFieldTypeInteger':
+            // add number field template for link options and clone to shadow root
+            el_shadow.appendChild(document.createElement('agocms-config-field-number-settings'));
+            break;
+          case 'esriFieldTypeDate':
+            // add date field template for link options and clone to shadow root
+            el_shadow.appendChild(document.createElement('agocms-config-field-date-settings'));
+            break;
+        }
       }
 
       return el_field;
