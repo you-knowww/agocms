@@ -2,6 +2,10 @@
   display: inline-block !important;
 }
 
+.prod-block {
+  display: block;
+}
+
 .prod-none {
   display: none !important;
 }
@@ -10,8 +14,16 @@
   padding: 0;
 }
 
+.prod-pad-10 {
+  padding: 10;
+}
+
 .prod-margin-0 {
   margin: 0;
+}
+
+.prod-margin-10 {
+  margin: 10;
 }
 
 .prod-word-break-keep {
@@ -24,4 +36,8 @@
 
 .prod-bg--white {
   background-color: #fff;
+}
+
+.prod-border {
+  border: solid 1px #000;
 }

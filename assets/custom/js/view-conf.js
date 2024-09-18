@@ -21,6 +21,16 @@ for(const customEl of customEls){
       } });
 }
 
+// map esri field type to custom field element
+const esriFieldTypeToFieldEl = {
+  esriFieldTypeBlob: 'agocms-config-field-text-settings',
+  esriFieldTypeString: 'agocms-config-field-text-settings',
+  esriFieldTypeSmallInteger: 'agocms-config-field-decimal-settings',
+  esriFieldTypeDouble: 'agocms-config-field-decimal-settings',
+  esriFieldTypeSingle: 'agocms-config-field-decimal-settings',
+  esriFieldTypeInteger: 'agocms-config-field-number-settings',
+  esriFieldTypeDate: 'agocms-config-field-date-settings' };
+
 // contain in iif
 ((drupalSettings) => {
   // refs
@@ -244,7 +254,7 @@ for(const customEl of customEls){
                           has_geometry: layer.hasOwnProperty('geometryType'),
                           fields: layer.fields.map(f => {
                             return {name: f.name, label: f.alias,
-                                    disabled: false, hidden: false}; }) };
+                                    is_disabled: false, is_hidden: false}; }) };
 
       // validate crud and default each conf to false
       if(capableOf.indexOf('Create') != -1) layerConf.can_create = false;
@@ -287,7 +297,7 @@ for(const customEl of customEls){
     el_layer.setAttribute('d-url', url);
 
     // set content for user to recognize item
-    el_layerName.innerHTML = '&nbsp;' + layerConf.display_name;
+    el_layerName.innerHTML = layerConf.display_name;
     // give button cta
     el_settingsBtn.innerHTML = 'settings';
     el_removeBtn.innerHTML = 'remove';
@@ -299,12 +309,6 @@ for(const customEl of customEls){
     el_fieldsBtn.className = 'prod-word-break--keep prod-pointer';
     el_removeBtn.className = 'prod-word-break--keep prod-pointer';
     el_layerName.className = 'prod-margin-0 prod-word-break-keep';
-
-    // add settings button, remove button, and layer name
-    el_layer.appendChild(el_settingsBtn);
-    el_layer.appendChild(el_fieldsBtn);
-    el_layer.appendChild(el_removeBtn);
-    el_layer.appendChild(el_layerName);
 
     // add click event for layer settings
     el_settingsBtn.addEventListener('click', () => {
@@ -334,21 +338,57 @@ for(const customEl of customEls){
     });
 
     el_fieldsBtn.addEventListener('click', () => {
-      // build layer form container and add to dialog box
-      const el_fieldsFormContainer = document.createElement('div');
-      const d_dialog = Drupal.dialog(el_fieldsFormContainer,
-                          {title: 'Feature Layer Fields', width: 500});
-
       // build form and close dialog box on callback
-      buildLayerFieldsForm(layerConf, () => d_dialog.close())
-        .then(el_fieldsForm => {
-          // add form to container and open dialog box
-          el_fieldsFormContainer.appendChild(el_fieldsForm);
-          d_dialog.showModal();
-        });
+      buildLayerFieldsForm(layerConf).then(el_fieldsForm => {
+        // build layer form container and add to dialog box
+        const el_fieldsFormContainer = document.createElement('div');
+        // add form to container and open dialog box
+        el_fieldsFormContainer.appendChild(el_fieldsForm);
+
+        const d_dialog = Drupal.dialog(el_fieldsFormContainer,
+                          { title: 'Feature Layer Fields', width: 600,
+                            buttons: [
+                              { text: "Cancel", click: () => d_dialog.close() },
+                              { text: "Save", click: () => {
+                                // ref layer fields
+                                const fieldsConf = layerConf.fields;
+
+                                // loop fields
+                                el_fieldsForm.shadowRoot.querySelectorAll('agocms-config-field')
+                                  .forEach(el => {
+                                    // only get fieldname once to find layer field conf
+                                    const fieldName = el.getAttribute('d-field')
+
+                                    // get field config and validate
+                                    const fieldConf = layerConf.fields.find(f => f.name == fieldName);
+
+                                    // validate and set field config
+                                    if(typeof fieldConf != 'undefined') setFieldSettingFromEl(el, fieldConf);
+
+                                    // loop possible specific config settings and update config from that
+                                    for(const [esriFieldType, customElTag] of Object.entries(esriFieldTypeToFieldEl)){
+                                      // find custom config element for field
+                                      el.shadowRoot.querySelectorAll(customElTag).forEach(el_cust => {
+                                        // set field config
+                                        setFieldSettingFromEl(el_cust, fieldConf);
+                                      });
+                                    }
+                                  });
+
+                                console.log(layerConf.fields);
+                                // update listed record and close
+                                d_dialog.close(); } }
+                            ]});
+        d_dialog.showModal();
+      });
     });
 
-    // only maps have label config
+    // add settings button, remove button, and layer name
+    el_layer.appendChild(el_layerName);
+    el_layer.appendChild(el_settingsBtn);
+    el_layer.appendChild(el_fieldsBtn);
+
+    // only maps have label config. placed here so its 3rd button
     if(layerConf.hasOwnProperty('label')){
       // make button to add to data tables
       const el_tablesBtn = document.createElement('button');
@@ -382,7 +422,7 @@ for(const customEl of customEls){
       if(tableLayers.findIndex(l => l.url === url) !== -1) el_tablesBtn.disabled = true;
 
       // add button to layer output
-      el_layer.prepend(el_tablesBtn);
+      el_layer.appendChild(el_tablesBtn);
     } else {
       // remove button removes from map ref
       el_removeBtn.addEventListener('click', () => {
@@ -407,6 +447,9 @@ for(const customEl of customEls){
       });
     }
 
+    // finally add remove button
+    el_layer.appendChild(el_removeBtn);
+
     // return list item
     return el_layer;
   }
@@ -422,8 +465,7 @@ for(const customEl of customEls){
               el_url = el_shadow.getElementById('agocmsConfLayerFormLayerUrl'),
               el_nameField = el_shadow.getElementById('agocmsConfLayerFormDisplayName'),
               els_crudConfigs = el_shadow.querySelectorAll('#agocmsConfLayerFormCrud input'),
-              el_lblDiv = el_shadow.getElementById('agocmsConfLayerFormLbl'),
-              el_saveBtn = el_shadow.getElementById('agocmsConfLayerFormSaveBtn');
+              el_lblDiv = el_shadow.getElementById('agocmsConfLayerFormLbl');
 
         // layer defining attributes
         el_name.innerHTML = layer.name;
@@ -491,14 +533,13 @@ for(const customEl of customEls){
   }
 
   // build layer fields form
-  function buildLayerFieldsForm(layerConf, saveCallback = () => null) {
+  function buildLayerFieldsForm(layerConf) {
     return new Promise((resolve, reject) => {
       agocms.getDm(layerConf.url).then(layer => {
         // get form element
         const el_layerForm = document.createElement('agocms-config-fields');
         const el_shadow = el_layerForm.shadowRoot;
-        const el_saveBtn = el_shadow.getElementById('agocmsConfFieldsFormSaveBtn'),
-              el_fieldsContainer = el_shadow.getElementById('agocmsConfFieldsFormFieldList');
+        const el_fieldsContainer = el_shadow.getElementById('agocmsConfFieldsFormFieldList');
 
         el_shadow.getElementById('agocmsConfFieldsFormLayerName').innerHTML = layer.name;
         el_shadow.getElementById('agocmsConfFieldsFormLayerUrl').innerHTML = layerConf.url;
@@ -509,19 +550,23 @@ for(const customEl of customEls){
           // build all field configs
           for(const dmField of layer.fields){
             // get configured counterparts
-            let fieldConf = layerConf.fields.find(f => f.name == layer.name);
+            let fieldConf = layerConf.fields.find(f => f.name == dmField.name);
 
             // validate dm hasnt introduced a new field to configure
             if(typeof fieldConf == 'undefined'){
               // add default field config add to config
               fieldConf = { name: dmField.name, label: dmField.alias,
-                            disabled: false, hidden: false };
+                            is_disabled: false, is_hidden: false };
               layerConf.fields.push(fieldConf);
             }
 
             // get field settings element
             const el_field = buildFieldConfEl(document.createElement('agocms-config-field'),
                                 fieldConf, dmField);
+
+            // force any classnames to style
+            el_field.className = 'prod-block prod-margin-10 prod-pad-10 prod-border';
+
             // add to fields container
             el_fieldsContainer.appendChild(el_field);
           }
@@ -533,79 +578,96 @@ for(const customEl of customEls){
         resolve(el_layerForm);
       }, e => reject(e));
     });
+  }
 
-    // takes template, loops slots and builds text to replace slots from field attributes
-    function buildFieldConfEl(el_field, conf, dm){
-      console.log('conf', conf);
-      console.log('dm', dm);
-      // add ref to field
-      el_field.setAttribute('d-field', dm.name);
-      // merge dm and configs
-      const el_shadow = el_field.shadowRoot,
-            dmConf = Object.assign({}, conf, dm);
+  // takes template, loops slots and builds text to replace slots from field attributes
+  function buildFieldConfEl(el_field, conf, dm){
+    // add ref to field
+    el_field.setAttribute('d-field', dm.name);
+    // merge dm and configs
+    const el_shadow = el_field.shadowRoot,
+          dmConf = Object.assign({}, conf, dm);
 
-      // loop all slots in shadow dom. Slot name matches data model to rely on template
-      el_shadow.querySelectorAll('slot').forEach(el_slot => {
-        // make text element and set inner to field value
-        const el_text = document.createElement('text');
-        el_text.innerHTML = dmConf[el_slot.name];
-        // assign text to slot
-        el_text.slot = el_slot.name;
+    // loop all slots in shadow dom. Slot name matches data model to rely on template
+    el_shadow.querySelectorAll('slot').forEach(el_slot => {
+      // make text element and set inner to field value
+      const el_text = document.createElement('text');
+      el_text.innerHTML = dmConf[el_slot.name];
+      // assign text to slot
+      el_text.slot = el_slot.name;
 
-        // update field
-        el_field.append(el_text);
-      });
+      // update field
+      el_field.append(el_text);
+    });
 
-      // validate coded value domains and handle specifically
-      if(dm.hasOwnProperty('domain') && dm.domain != null
-          && dm.domain.hasOwnProperty('codedValues')
-          && Array.isArray(dm.domain.codedValues)){
-        // build container and coded value domain label
-        const el_codedVals = document.createElement('agocms-config-field-coded-vals-list');
-        const el_codedValsShadow = el_codedVals.shadowRoot;
-        const el_codedValsList = el_codedValsShadow.querySelector('.agocms-conf-field-codes');
+    // set fundamental field values from config
+    setFieldElFromSettings(el_field, conf)
 
-        // loop coded value domains and display all options
-        for(const {code, name} of dm.domain.codedValues){
-          // add coded value
-          const el_codedValItem = document.createElement('agocms-config-field-coded-val-item');
-          const el_codedValItemShadow = el_codedValItem.shadowRoot;
-          el_codedValItemShadow.querySelector('.agocms-conf-field-codes-code').innerHTML = code;
-          el_codedValItemShadow.querySelector('.agocms-conf-field-codes-name').innerHTML = name;
+    // validate coded value domains and handle specifically
+    if(dm.hasOwnProperty('domain') && dm.domain != null
+        && dm.domain.hasOwnProperty('codedValues')
+        && Array.isArray(dm.domain.codedValues)){
+      // build container and coded value domain label
+      const el_codedVals = document.createElement('agocms-config-field-coded-vals-list');
+      const el_codedValsShadow = el_codedVals.shadowRoot;
+      const el_codedValsList = el_codedValsShadow.querySelector('.agocms-conf-field-codes');
 
-          // add to container
-          el_codedValsList.appendChild(el_codedValItem);
-        }
+      // loop coded value domains and display all options
+      for(const {code, name} of dm.domain.codedValues){
+        // add coded value
+        const el_codedValItem = document.createElement('agocms-config-field-coded-val-item');
+        const el_codedValItemShadow = el_codedValItem.shadowRoot;
+        el_codedValItemShadow.querySelector('.agocms-conf-field-codes-code').innerHTML = code;
+        el_codedValItemShadow.querySelector('.agocms-conf-field-codes-name').innerHTML = name;
 
-        // add container to field
-        el_shadow.appendChild(el_codedVals);
-      } else {
-        // add field template options for specific field type
-        switch(dmConf.type){
-          case 'esriFieldTypeBlob':
-          case 'esriFieldTypeString':
-            // add text field template for link options and clone to shadow root
-            el_shadow.appendChild(document.createElement('agocms-config-field-text-settings'));
-            break;
-          case 'esriFieldTypeSmallInteger':
-          case 'esriFieldTypeDouble':
-          case 'esriFieldTypeSingle':
-            // add decimal field template for link options and clone to shadow root
-            el_shadow.appendChild(document.createElement('agocms-config-field-decimal-settings'));
-            // fall through to get general number settings
-          case 'esriFieldTypeInteger':
-            // add number field template for link options and clone to shadow root
-            el_shadow.appendChild(document.createElement('agocms-config-field-number-settings'));
-            break;
-          case 'esriFieldTypeDate':
-            // add date field template for link options and clone to shadow root
-            el_shadow.appendChild(document.createElement('agocms-config-field-date-settings'));
-            break;
-        }
+        // add to container
+        el_codedValsList.appendChild(el_codedValItem);
       }
 
-      return el_field;
+      // add container to field
+      el_shadow.appendChild(el_codedVals);
+    } else {
+      // validate there is a special element for field type
+      if(esriFieldTypeToFieldEl.hasOwnProperty(dmConf.type)){
+        // add field template options for specific field type
+        const el_typeSettings = document.createElement(esriFieldTypeToFieldEl[dmConf.type]);
+        // set value
+        setFieldElFromSettings(el_typeSettings, conf);
+        // add to shadow root
+        el_shadow.appendChild(el_typeSettings);
+      }
     }
+
+    return el_field;
+  }
+
+  // parse field form field elements and output setting json
+  function setFieldSettingFromEl(el, fieldConf){
+    // loop all setting els in field update config
+    el.shadowRoot.querySelectorAll('[d-setting]')
+      .forEach(el => setConfSettingFromEl(el, fieldConf));
+  }
+
+  // parse field settings and output to field conf ui
+  function setFieldElFromSettings(el, conf){
+    // loop all setting els in field update config
+    el.shadowRoot.querySelectorAll('[d-setting]')
+      .forEach(el => {
+        // get config setting for el
+        const val = conf[el.getAttribute('d-setting')];
+
+        // validate
+        if(typeof val != 'undefined'){
+          // different output based on input type
+          switch(el.type){
+            case 'checkbox':
+              if(val === true) el.checked = 'checked';
+              break;
+            default:
+              el.value = val;
+          }
+        }
+      });
   }
 
   function getConfSettingFromEl(el, layerConf) {

@@ -53,8 +53,8 @@
   </div>
 </div>
 <template id='agocmsConfFeatureLayer'>
-  <link href="/modules/custom/agocms/assets/custom/css/productivity.css"
-        rel="stylesheet" type="text/css">
+  <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
+        rel='stylesheet' type='text/css'>
   <div>
     <div>
       <div>
@@ -121,12 +121,11 @@
         <input type='color' d-setting='label.border_color' id='agocmsConfLayerFormLblBdColor'/>
       </div>
     </div>
-    <button id='agocmsConfLayerFormSaveBtn' type='button'>Save</button>
   </div>
 </template>
 <template id='agocmsConfFields'>
-  <link href="/modules/custom/agocms/assets/custom/css/productivity.css"
-        rel="stylesheet" type="text/css">
+  <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
+        rel='stylesheet' type='text/css'>
   <div>
     <div>
       <div>
@@ -147,27 +146,27 @@
   </div>
 </template>
 <template id='agocmsConfField'>
-  <link href="/modules/custom/agocms/assets/custom/css/productivity.css"
-      rel="stylesheet" type="text/css">
+  <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
+      rel='stylesheet' type='text/css'>
   <div>
     <div>
       <label>Name (alias):&nbsp;</label>
       <p class='prod-inline-block'>
-        <slot name="name"><em>Undefined</em></slot>
+        <slot name='name'><em>Undefined</em></slot>
         &nbsp;
-        (<slot name="label"><em>NA</em></slot>)
+        (<slot name='label'><em>NA</em></slot>)
       </p>
     </div>
     <div>
       <label>Type:&nbsp;</label>
       <p class='prod-inline-block'>
-        <slot name="type">*<em>Unknown</em>*</slot>
+        <slot name='type'>*<em>Unknown</em>*</slot>
       </p>
     </div>
     <div>
       <label>Is Optional:</label>
       <p class='prod-inline-block'>
-        <slot name="nullable">false</slot>
+        <slot name='nullable'>false</slot>
       </p>
     </div>
     <div>
@@ -213,18 +212,18 @@
   <div>
     <div>
       <label>Number prefix:</label>
-      <input d-settings='number_prefix'>
+      <input d-setting='number_prefix'>
     </div>
     <div>
       <label>Number post label:</label>
-      <input d-settings='number_post_text'>
+      <input d-setting='number_post_text'>
     </div>
   </div>
 </template>
 <template id='agocmsConfFieldDecimalSettings'>
   <div>
     <label>Rounding digits:</label>
-    <input d-settings='rounding_digits'>
+    <input d-setting='rounding_digits'>
   </div>
 </template>
 <template id='agocmsConfFieldDateSettings'>
