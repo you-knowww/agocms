@@ -375,7 +375,6 @@ const esriFieldTypeToFieldEl = {
                                     }
                                   });
 
-                                console.log(layerConf.fields);
                                 // update listed record and close
                                 d_dialog.close(); } }
                             ]});
@@ -478,10 +477,10 @@ const esriFieldTypeToFieldEl = {
         els_crudConfigs.forEach(el_input => {
           // get relevant setting
           const setting = el_input.getAttribute('d-setting');
-
+          console.log(setting, layerConf, layerConf[setting])
           if(layerConf.hasOwnProperty(setting)){
             // set configured value
-            if(setting === true) el_input.checked = true;
+            if(layerConf[setting] === true) el_input.checked = true;
             // reveal parent
             el_input.parentNode.style = "";
           } else {
