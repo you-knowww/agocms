@@ -11,12 +11,8 @@
             class='agocms-conf-search-list-item agocms-conf-search-list-item--selected'>
           private
         </li>
-        <li d-val='public' class='agocms-conf-search-list-item'>
-          public
-        </li>
-        <li d-val='all' class='agocms-conf-search-list-item'>
-          all
-        </li>
+        <li d-val='public' class='agocms-conf-search-list-item'>public</li>
+        <li d-val='all' class='agocms-conf-search-list-item'>all</li>
       </ul>
     </div>
     <div class='agocms-conf-search-col'>
@@ -50,6 +46,13 @@
       <label>Data Tables</label>
       <ul id='agocmsConfTables'></ul>
     </div>
+  </div>
+  <p>Relationships:</p>
+  <div id='agocmsConfRelationships'>
+    <div>
+      <button id='agocmsConfRelationshipsAddBtn'>Add New</button>
+    </div>
+    <ul id='agocmsConfRelationshipsList'></ul>
   </div>
 </div>
 <template id='agocmsConfFeatureLayer'>
@@ -246,4 +249,131 @@
     <span>:&nbsp;</span>
     <span class='agocms-conf-field-codes-name'></span>
   </li>
+</template>
+<template id='agocmsConfRelationship'>
+  <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
+        rel='stylesheet' type='text/css'>
+  <div id='agocmsConfRelationshipWiz'>
+    <div id='agocmsConfRelationshipWizPg1'>
+      <label>Select a Parent Layer:</label>
+      <select id='agocmsConfRelationshipParentLayer'></select>
+      <button id='agocmsConfRelationshipWizPg1NextBtn'>Next</button>
+    </div>
+    <div id='agocmsConfRelationshipWizPg2'>
+      <label>Select a Child Layer:</label>
+      <select id='agocmsConfRelationshipChildLayer'></select>
+      <button id='agocmsConfRelationshipWizPg2BackBtn'>Back</button>
+      <button id='agocmsConfRelationshipWizPg2NextBtn'>Next</button>
+    </div>
+    <div id='agocmsConfRelationshipWizPg3'>
+      <label>Are the layers spatially related?</label>
+      <input type='radio' value='false'
+              name='agocmsConfRelationshipIsSpatial'
+              id='agocmsConfRelationshipIsNotSpatial'/>
+      <label for='agocmsConfRelationshipIsNotSpatial'>No</label>
+      <input type='radio' value='true'
+              name='agocmsConfRelationshipIsSpatial'
+              id='agocmsConfRelationshipIsSpatial'/>
+      <label for='agocmsConfRelationshipIsSpatial'>Yes</label>
+      <button id='agocmsConfRelationshipWizPg3BackBtn'>Back</button>
+      <button id='agocmsConfRelationshipWizPg3NextBtn'>Next</button>
+    </div>
+    <div id='agocmsConfRelationshipWizPg4'>
+      <label>Select how the Parent Layer is spatially related to the Child Layer:</label>
+      <ul>
+        <li>
+          <input type='checkbox'
+                  id='agocmsConfRelationshipSpatialIntersects'
+                  d-setting='spatial.intersects'/>
+          <label for='agocmsConfRelationshipSpatialIntersects'>Intersects</label>
+        </li>
+        <li>
+          <input type='checkbox'
+                  id='agocmsConfRelationshipSpatialContains'
+                  d-setting='spatial.contains'/>
+          <label for='agocmsConfRelationshipSpatialContains'>Contains</label>
+        </li>
+        <li>
+          <input type='checkbox'
+                  id='agocmsConfRelationshipSpatialCrosses'
+                  d-setting='spatial.crosses'/>
+          <label for='agocmsConfRelationshipSpatialCrosses'>Crosses</label>
+        </li>
+        <li>
+          <input type='checkbox'
+                  id='agocmsConfRelationshipSpatialOverlaps'
+                  d-setting='spatial.overlaps'/>
+          <label for='agocmsConfRelationshipSpatialOverlaps'>Overlaps</label>
+        </li>
+        <li>
+          <input type='checkbox'
+                  id='agocmsConfRelationshipSpatialTouches'
+                  d-setting='spatial.touches'/>
+          <label for='agocmsConfRelationshipSpatialTouches'>Touches</label>
+        </li>
+        <li>
+          <input type='checkbox'
+                  id='agocmsConfRelationshipSpatialWithin'
+                  d-setting='spatial.within'/>
+          <label for='agocmsConfRelationshipSpatialWithin'>Within</label>
+        </li>
+      </ul>
+      <button id='agocmsConfRelationshipWizPg4BackBtn'>Back</button>
+      <button id='agocmsConfRelationshipWizPg4NextBtn'>Next</button>
+    </div>
+    <div id='agocmsConfRelationshipWizPg5'>
+      <label>Do the Parent Layer and Child Layer have one or more related fields?</label>
+      <!-- make into template. include and/or -->
+      <div>
+      </div>
+      <button id='agocmsConfRelationshipWizPg5BackBtn'>Back</button>
+      <button id='agocmsConfRelationshipWizPg5NextBtn'>Next</button>
+    </div>
+  </div>
+  <div>
+    <div>
+      <div>
+        <label>Parent Layer:</label>
+        <select id='agocmsConfRelationshipParentLayer'></select>
+      </div>
+      <div>
+        <label>Parent Layer Relationship Details:</label>
+        <div>
+          <input type='checkbox' id='agocmsConfRelationshipParentTypeFieldChkbx'/>
+          <label for='agocmsConfRelationshipParentTypeFieldChkbx'>Related by field</label>
+          <div>
+            <label for='agocmsConfRelationshipParentField'>Select related field:</label>
+            <select id='agocmsConfRelationshipParentField'></select>
+          </div>
+        </div>
+        <div>
+
+        </div>
+      </div>
+      <div>
+        <label>Chil Url:</label>
+        <p class='prod-inline-block prod-margin-0' id='agocmsConfLayerFormLayerUrl'></p>
+      </div>
+    </div>
+  </div>
+</template>
+<template id='agocmsConfRelationshipsRelatedFields'>
+  <div>
+    <label for='agocmsConfRelationshipParentField'>Parent Field</label>
+    <select id='agocmsConfRelationshipParentField'></select>
+  </div>
+  <div>
+    <label for='agocmsConfRelationshipOperatorField'>Operator</label>
+    <select id='agocmsConfRelationshipOperatorField'>
+      <option value='='>is equal to</option>
+      <option value='<'>is less than</option>
+      <option value='>'>is greater than</option>
+      <option value='=>'>is greater than or equal to</option>
+      <option value='=<'>is less than or equal to</option>
+    </select>
+  </div>
+  <div>
+    <label for='agocmsConfRelationshipChildField'>Child Field</label>
+    <select id='agocmsConfRelationshipChildField'></select>
+  </div>
 </template>
