@@ -1,13 +1,23 @@
 // define web component for fields
 const customEls = [{handle: 'agocms-config-layer', id: 'agocmsConfFeatureLayer'},
-                    {handle: 'agocms-config-fields', id: 'agocmsConfFields'},
-                    {handle: 'agocms-config-field', id: 'agocmsConfField'},
-                    {handle: 'agocms-config-field-text-settings', id: 'agocmsConfFieldTextSettings'},
-                    {handle: 'agocms-config-field-decimal-settings', id: 'agocmsConfFieldDecimalSettings'},
-                    {handle: 'agocms-config-field-number-settings', id: 'agocmsConfFieldNumberSettings'},
-                    {handle: 'agocms-config-field-date-settings', id: 'agocmsConfFieldDateSettings'},
-                    {handle: 'agocms-config-field-coded-vals-list', id: 'agocmsConfFieldCodedValsList'},
-                    {handle: 'agocms-config-field-coded-val-item', id: 'agocmsConfFieldCodedValItem'}];
+                    { handle: 'agocms-config-fields', id: 'agocmsConfFields'},
+                    { handle: 'agocms-config-field', id: 'agocmsConfField'},
+                    { handle: 'agocms-config-field-text-settings',
+                      id: 'agocmsConfFieldTextSettings'},
+                    { handle: 'agocms-config-field-decimal-settings',
+                      id: 'agocmsConfFieldDecimalSettings'},
+                    { handle: 'agocms-config-field-number-settings',
+                      id: 'agocmsConfFieldNumberSettings'},
+                    { handle: 'agocms-config-field-date-settings',
+                      id: 'agocmsConfFieldDateSettings'},
+                    { handle: 'agocms-config-field-coded-vals-list',
+                      id: 'agocmsConfFieldCodedValsList'},
+                    { handle: 'agocms-config-field-coded-val-item',
+                      id: 'agocmsConfFieldCodedValItem'},
+                    { handle: 'agocms-config-relationship',
+                      id: 'agocmsConfRelationship'},
+                    { handle: 'agocms-config-relationship-fields',
+                      id: 'agocmsConfRelationshipsRelatedFields'}];
 
 // define all custom elements
 for(const customEl of customEls){
