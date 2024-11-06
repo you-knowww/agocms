@@ -59,7 +59,9 @@ const esriFieldTypeToFieldEl = {
         el_serviceList = document.getElementById('agocmsConfSearchServicesList'),
         el_layerList = document.getElementById('agocmsConfSearchLayersList'),
         el_mapLayerList = document.getElementById('agocmsConfMapLayers'),
-        el_tableLayerList = document.getElementById('agocmsConfTables');
+        el_tableLayerList = document.getElementById('agocmsConfTables'),
+        el_relsAddBtn = document.getElementById('agocmsConfRelationshipsAddBtn'),
+        el_relsList = document.getElementById('agocmsConfRelationshipsList');
   const mapLayers = conf.map.layers,
         tableLayers = conf.tables.layers;
 
@@ -67,6 +69,32 @@ const esriFieldTypeToFieldEl = {
   for(const el_li of [...el_accessList.children]){
     el_li.addEventListener('click', e => searchLiSelect(e));
   }
+
+  // add click event listener to new relationship button
+  el_relsAddBtn.addEventListener('click', () => {
+    buildRelWizard(conf).then(el_relForm => {
+      // add form to container and then dialog box
+      const el_relFormContainer = document.createElement('div');
+      // add form to container and open dialog box
+      el_layerFormContainer.appendChild(el_relForm);
+
+      const d_dialog = Drupal.dialog(el_relFormContainer,
+                        { title: 'Configure a Layer Relationship', width: 500,
+                          buttons: [
+                            { text: "Cancel", click: () => d_dialog.close() },
+                            { text: "Save", click: () => {
+                              // loop all elements with settings to update config
+                              el_relForm.shadowRoot.querySelectorAll('[d-setting]')
+                                .forEach(el => setConfSettingFromEl(el, layerConf));
+
+                              // update listed record and close
+                              el_relForm.innerHTML = '&nbsp;' + layerConf.display_name;
+                              d_dialog.close(); } }
+                        ]});
+
+      d_dialog.showModal();
+    });
+  });
 
   // get private groups and list on initial load
   agocmsViewConfigGroupSearch().then(groups =>
@@ -286,6 +314,8 @@ const esriFieldTypeToFieldEl = {
         el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
         tableLayers.push(layerConf);
       }
+
+      updateAddRelationshipBtnAccess();
     });
   }
 
@@ -423,6 +453,9 @@ const esriFieldTypeToFieldEl = {
         // delete el
         el_layer.remove();
 
+        // update relationship btn to make sure there are enough layers to make one
+        updateAddRelationshipBtnAccess();
+
         // refresh layer select list
         listServiceLayers();
       });
@@ -440,6 +473,9 @@ const esriFieldTypeToFieldEl = {
 
         // delete el
         el_layer.remove();
+
+        // update relationship btn to make sure there are enough layers to make one
+        updateAddRelationshipBtnAccess();
 
         // refresh layer select list
         listServiceLayers();
@@ -707,6 +743,73 @@ const esriFieldTypeToFieldEl = {
 
     // use last part to set config value. convert numbers
     fieldRef[parts.at(-1)] = el.hasAttribute('d-number') ? Number(val) : val;
+  }
+
+  // wizard for building relationships between layers
+  function buildRelWizard(){
+    // ref wizard
+    const el_relWizard = document.createElement('agocms-config-relationship');
+    const el_relWizardShadow = el_codedValItem.shadowRoot;
+    // all pages
+    const el_relWiz = document.getElementById('agocmsConfRelationshipWiz');
+    const el_relWizPg1 = document.getElementById('agocmsConfRelationshipWizPg1'),
+          el_relWizPg2 = document.getElementById('agocmsConfRelationshipWizPg2'),
+          el_relWizPg3 = document.getElementById('agocmsConfRelationshipWizPg3'),
+          el_relWizPg4 = document.getElementById('agocmsConfRelationshipWizPg4'),
+          el_relWizPg5 = document.getElementById('agocmsConfRelationshipWizPg5'),
+          el_relWizPg6 = document.getElementById('agocmsConfRelationshipWizPg6'),
+          els_relWizPage = el_relWiz.getElementsByClassName('agocms-conf-rel-wiz-page'),
+          el_backBtn = el_relWiz.getElemenentById('agocmsConfRelationshipWizBackBtn'),
+          el_nextBtn = el_relWiz.getElemenentById('agocmsConfRelationshipWizNextBtn'),
+          el_completeBtn = el_relWiz.getElemenentById('agocmsConfRelationshipWizCompleteBtn'),
+          els_parentLayer = el_relWiz.getElementById('agocmsConfRelationshipParentLayer')
+          els_childLayer = el_relWiz.getElementById('agocmsConfRelationshipChildLayer')
+          els_isSpatial = el_relWiz.getElementById('agocmsConfRelationshipIsSpatial')
+          els_relatedFields = el_relWiz.getElementById('agocmsConfRelationshipRelatedFields')
+          els_summary = el_relWiz.getElementById('agocmsConfRelationshipSummary');
+
+    // set first wizard page to active
+    let activePageIdx = 0;
+
+    const layerList = [];
+
+    // populate layer options
+    for(const mapLayer of mapLayers){
+      // layerList.push(mapLayer)
+      console.log(mapLayer)
+    }
+    for(const tblLayer of tableLayers){
+      // layerList.push(mapLayer)
+      console.log(tblLayer)
+    }
+
+    // add options to parent and child layer selects
+
+    // set up controls
+    el_backBtn.addEventListener('click', () => {
+      // move active page back one
+      activePageIdx --;
+      // hide active page and show next
+      els_relWizPage[pageIdx + 1].style.display = 'none';
+      els_relWizPage[pageIdx].style.display = 'auto';
+    });
+    el_nextBtn.addEventListener('click', () => {
+      // move active page forward one
+      activePageIdx ++;
+      // hide active page and show next
+      els_relWizPage[pageIdx - 1].style.display = 'none';
+      els_relWizPage[pageIdx].style.display = 'auto';
+    });
+    el_completeBtn.addEventListener('click', () => {
+      // do save stuff using d-settings
+    });
+  }
+
+  // update new relationship based on available relationships
+  function updateAddRelationshipBtnAccess(){
+    // enable relationships button if 2 or more layers. otherwise disable
+    if(mapLayers.count + tableLayers.count => 2) el_relsAddBtn.removeAttribute('disabled');
+    else el_relsAddBtn.setAttribute('disabled', 'disabled');
   }
 })(drupalSettings);
 

@@ -50,7 +50,7 @@
   <p>Relationships:</p>
   <div id='agocmsConfRelationships'>
     <div>
-      <button id='agocmsConfRelationshipsAddBtn'>Add New</button>
+      <button id='agocmsConfRelationshipsAddBtn' disabled='disabled'>Add New</button>
     </div>
     <ul id='agocmsConfRelationshipsList'></ul>
   </div>
@@ -254,20 +254,20 @@
   <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
         rel='stylesheet' type='text/css'>
   <div id='agocmsConfRelationshipWiz'>
-    <div id='agocmsConfRelationshipWizPg1'>
+    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg1'>
       <label>Select a Parent Layer:</label>
       <select id='agocmsConfRelationshipParentLayer'
               d-setting='parent_layer'></select>
       <button id='agocmsConfRelationshipWizPg1NextBtn'>Next</button>
     </div>
-    <div id='agocmsConfRelationshipWizPg2'>
+    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg2' style='display: none;'>
       <label>Select a Child Layer:</label>
       <select id='agocmsConfRelationshipChildLayer'
               d-setting='child_layer'></select>
       <button id='agocmsConfRelationshipWizPg2BackBtn'>Back</button>
       <button id='agocmsConfRelationshipWizPg2NextBtn'>Next</button>
     </div>
-    <div id='agocmsConfRelationshipWizPg3'>
+    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg3' style='display: none;'>
       <label>Are the layers spatially related?</label>
       <label for='agocmsConfRelationshipIsSpatial'>Check if related:</label>
       <input type='checkbox' value='false'
@@ -276,7 +276,7 @@
       <button id='agocmsConfRelationshipWizPg3BackBtn'>Back</button>
       <button id='agocmsConfRelationshipWizPg3NextBtn'>Next</button>
     </div>
-    <div id='agocmsConfRelationshipWizPg4'>
+    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg4' style='display: none;'>
       <label>Select how Parent Layer is <b>spatially related</b> to Child Layer:</label>
       <ul>
         <li>
@@ -319,18 +319,23 @@
       <button id='agocmsConfRelationshipWizPg4BackBtn'>Back</button>
       <button id='agocmsConfRelationshipWizPg4NextBtn'>Next</button>
     </div>
-    <div id='agocmsConfRelationshipWizPg5'>
+    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg5' style='display: none;'>
       <label>Do the Parent Layer and Child Layer have one or more related fields?</label>
       <!-- make into template. include and/or -->
       <div id='agocmsConfRelationshipRelatedFields'></div>
       <button id='agocmsConfRelationshipWizPg5BackBtn'>Back</button>
       <button id='agocmsConfRelationshipWizPg5NextBtn'>Next</button>
     </div>
-    <div id='agocmsConfRelationshipWizPg6'>
+    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg6' style='display: none;'>
       <label>Does this relationship look correct?</label>
       <!-- describe with helper fn -->
       <p id='agocmsConfRelationshipSummary'></p>
       <button id='agocmsConfRelationshipWizPg6BackBtn'>Back</button>
+      <button id='agocmsConfRelationshipWizCompleteBtn'>Confirm and Close</button>
+    </div>
+    <div>
+      <button id='agocmsConfRelationshipWizBackBtn'>Back</button>
+      <button id='agocmsConfRelationshipWizNextBtn'>Next</button>
       <button id='agocmsConfRelationshipWizCompleteBtn'>Confirm and Close</button>
     </div>
   </div>
