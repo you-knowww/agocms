@@ -76,7 +76,7 @@ const esriFieldTypeToFieldEl = {
       // add form to container and then dialog box
       const el_relFormContainer = document.createElement('div');
       // add form to container and open dialog box
-      el_layerFormContainer.appendChild(el_relForm);
+      el_relFormContainer.appendChild(el_relForm);
 
       const d_dialog = Drupal.dialog(el_relFormContainer,
                         { title: 'Configure a Layer Relationship', width: 500,
@@ -749,66 +749,98 @@ const esriFieldTypeToFieldEl = {
   function buildRelWizard(){
     // ref wizard
     const el_relWizard = document.createElement('agocms-config-relationship');
-    const el_relWizardShadow = el_codedValItem.shadowRoot;
+    const el_relWizardShadow = el_relWizard.shadowRoot;
     // all pages
-    const el_relWiz = document.getElementById('agocmsConfRelationshipWiz');
-    const el_relWizPg1 = document.getElementById('agocmsConfRelationshipWizPg1'),
-          el_relWizPg2 = document.getElementById('agocmsConfRelationshipWizPg2'),
-          el_relWizPg3 = document.getElementById('agocmsConfRelationshipWizPg3'),
-          el_relWizPg4 = document.getElementById('agocmsConfRelationshipWizPg4'),
-          el_relWizPg5 = document.getElementById('agocmsConfRelationshipWizPg5'),
-          el_relWizPg6 = document.getElementById('agocmsConfRelationshipWizPg6'),
-          els_relWizPage = el_relWiz.getElementsByClassName('agocms-conf-rel-wiz-page'),
-          el_backBtn = el_relWiz.getElemenentById('agocmsConfRelationshipWizBackBtn'),
-          el_nextBtn = el_relWiz.getElemenentById('agocmsConfRelationshipWizNextBtn'),
-          el_completeBtn = el_relWiz.getElemenentById('agocmsConfRelationshipWizCompleteBtn'),
-          els_parentLayer = el_relWiz.getElementById('agocmsConfRelationshipParentLayer')
-          els_childLayer = el_relWiz.getElementById('agocmsConfRelationshipChildLayer')
-          els_isSpatial = el_relWiz.getElementById('agocmsConfRelationshipIsSpatial')
-          els_relatedFields = el_relWiz.getElementById('agocmsConfRelationshipRelatedFields')
-          els_summary = el_relWiz.getElementById('agocmsConfRelationshipSummary');
+    const el_relWiz = el_relWizardShadow.getElementById('agocmsConfRelationshipWiz'),
+          el_backBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipWizBackBtn'),
+          el_nextBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipWizNextBtn'),
+          el_completeBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipWizCompleteBtn'),
+          el_parentLayer = el_relWizardShadow.getElementById('agocmsConfRelationshipParentLayer'),
+          el_childLayer = el_relWizardShadow.getElementById('agocmsConfRelationshipChildLayer'),
+          el_isSpatial = el_relWizardShadow.getElementById('agocmsConfRelationshipIsSpatial'),
+          el_relatedFields = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFields'),
+          el_summary = el_relWizardShadow.getElementById('agocmsConfRelationshipSummary');
+    const els_relWizPage = el_relWiz.getElementsByClassName('agocms-conf-rel-wiz-page');
 
     // set first wizard page to active
     let activePageIdx = 0;
 
+    // for avoiding dupes
     const layerList = [];
 
-    // populate layer options
-    for(const mapLayer of mapLayers){
-      // layerList.push(mapLayer)
-      console.log(mapLayer)
-    }
-    for(const tblLayer of tableLayers){
-      // layerList.push(mapLayer)
-      console.log(tblLayer)
-    }
+    return new Promise((resolve, reject) => {
+      // populate layer options
+      for(const {display_name, url} of mapLayers){
+        // add ref to avoid dupes
+        layerList.push(url);
 
-    // add options to parent and child layer selects
+        // make option el
+        const el_option = document.createElement('option');
+        // set value and label
+        el_option.innerHTML = display_name;
+        el_option.value = url;
 
-    // set up controls
-    el_backBtn.addEventListener('click', () => {
-      // move active page back one
-      activePageIdx --;
-      // hide active page and show next
-      els_relWizPage[pageIdx + 1].style.display = 'none';
-      els_relWizPage[pageIdx].style.display = 'auto';
-    });
-    el_nextBtn.addEventListener('click', () => {
-      // move active page forward one
-      activePageIdx ++;
-      // hide active page and show next
-      els_relWizPage[pageIdx - 1].style.display = 'none';
-      els_relWizPage[pageIdx].style.display = 'auto';
-    });
-    el_completeBtn.addEventListener('click', () => {
-      // do save stuff using d-settings
+        // add to both parent and child for now
+        el_parentLayer.appendChild(el_option);
+        el_childLayer.appendChild(el_option.cloneNode());
+      }
+      for(const {display_name, url} of tableLayers){
+        // avoid dupes for now
+        if(layerList.indexOf(url) === -1){
+          // make option el
+          const el_option = document.createElement('option');
+          // set value and label
+          el_option.innerHTML = display_name;
+          el_option.value = url;
+
+          // add to both parent and child for now
+          el_parentLayer.appendChild(el_option);
+          el_childLayer.appendChild(el_option.cloneNode());
+        }
+      }
+
+      // set up controls
+      el_backBtn.addEventListener('click', () => {
+        // move active page back one
+        activePageIdx --;
+        // hide active page and show next
+        els_relWizPage[activePageIdx + 1].style.display = 'none';
+        els_relWizPage[activePageIdx].style.display = '';
+
+        // if first idx hide button. make sure next button is displayed
+        if(activePageIdx === 0) el_backBtn.style.display = 'none';
+        el_nextBtn.style.display = '';
+        // always hide complete btn
+        el_completeBtn.style.display = 'none';
+      });
+      el_nextBtn.addEventListener('click', () => {
+        // move active page forward one
+        activePageIdx ++;
+        // hide active page and show next
+        els_relWizPage[activePageIdx - 1].style.display = 'none';
+        els_relWizPage[activePageIdx].style.display = '';
+
+        // if last idx hide and show complete. make sure back btn is displayed
+        if(activePageIdx === 5) {
+          el_nextBtn.style.display = 'none';
+          // show complete btn
+          el_completeBtn.style.display = '';
+        }
+        el_backBtn.style.display = '';
+      });
+      el_completeBtn.addEventListener('click', () => {
+        // do save stuff using d-settings
+      });
+
+      // done
+      resolve(el_relWizard);
     });
   }
 
   // update new relationship based on available relationships
   function updateAddRelationshipBtnAccess(){
     // enable relationships button if 2 or more layers. otherwise disable
-    if(mapLayers.count + tableLayers.count => 2) el_relsAddBtn.removeAttribute('disabled');
+    if(mapLayers.length + tableLayers.length > 1) el_relsAddBtn.removeAttribute('disabled');
     else el_relsAddBtn.setAttribute('disabled', 'disabled');
   }
 })(drupalSettings);
