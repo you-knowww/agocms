@@ -255,25 +255,19 @@
   <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
         rel='stylesheet' type='text/css'>
   <div id='agocmsConfRelationshipWiz'>
-    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg1'>
+    <div class='agocms-conf-rel-wiz-page'>
       <label>Select a Parent Layer:</label>
       <select id='agocmsConfRelationshipParentLayer'
               d-setting='parent_layer'></select>
     </div>
-    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg2' style='display: none;'>
+    <div class='agocms-conf-rel-wiz-page' style='display: none;'>
       <label>Select a Child Layer:</label>
       <select id='agocmsConfRelationshipChildLayer'
               d-setting='child_layer'></select>
     </div>
-    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg3' style='display: none;'>
-      <label>Are the layers spatially related?</label>
-      <label for='agocmsConfRelationshipIsSpatial'>Check if related:</label>
-      <input type='checkbox' value='false'
-              id='agocmsConfRelationshipIsSpatial'
-              d-setting='has_spatial_relationship'/>
-    </div>
-    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg4' style='display: none;'>
-      <label>Select how Parent Layer is <b>spatially related</b> to Child Layer:</label>
+    <div class='agocms-conf-rel-wiz-page' style='display: none;'>
+      <label>Are the layers spatially related?<br/>
+          Select how Parent Layer is <b>spatially related</b> to Child Layer:</label>
       <ul>
         <li>
           <input type='checkbox'
@@ -313,33 +307,39 @@
         </li>
       </ul>
     </div>
-    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg5' style='display: none;'>
+    <div class='agocms-conf-rel-wiz-page' style='display: none;'>
       <label>Do the Parent Layer and Child Layer have one or more related fields?</label>
       <!-- make into template. include and/or -->
       <div id='agocmsConfRelationshipRelatedFields'></div>
+      <button id='agocmsConfRelationshipAddRelatedFeilds'>Add related fields</button>
     </div>
-    <div class='agocms-conf-rel-wiz-page' id='agocmsConfRelationshipWizPg6' style='display: none;'>
+    <div class='agocms-conf-rel-wiz-page' style='display: none;'>
       <label>Does this relationship look correct?</label>
       <!-- describe with helper fn -->
       <p id='agocmsConfRelationshipSummary'></p>
     </div>
+    <!--
     <div>
-      <button id='agocmsConfRelationshipWizBackBtn'>Back</button>
+      <button id='agocmsConfRelationshipWizBackBtn' style='display: none;'>Back</button>
       <button id='agocmsConfRelationshipWizNextBtn'>Next</button>
-      <button id='agocmsConfRelationshipWizCompleteBtn'>Confirm and Close</button>
+      <button id='agocmsConfRelationshipWizCompleteBtn' style='display: none;'>Confirm and Close</button>
     </div>
+  -->
   </div>
 </template>
 <template id='agocmsConfRelationshipsRelatedFields'>
   <div>
-    <label for='agocmsConfRelationshipParentField'>Parent Field</label>
+    <label for='agocmsConfRelationshipParentField'>
+      <span id='agocmsConfRelationshipParentFieldLayerName'></span>
+      <span>Parent Field</span>
+    </label>
     <select id='agocmsConfRelationshipParentField'
-            d-setting='related_fields[].parent_field'></select>
+            d-setting='parent_field'></select>
   </div>
   <div>
     <label for='agocmsConfRelationshipOperatorField'>Operator</label>
     <select id='agocmsConfRelationshipOperatorField'
-            d-setting='related_fields[].operator'>
+            d-setting='operator'>
       <option value='='>is equal to</option>
       <option value='<'>is less than</option>
       <option value='>'>is greater than</option>
@@ -348,8 +348,11 @@
     </select>
   </div>
   <div>
-    <label for='agocmsConfRelationshipChildField'>Child Field</label>
+    <label for='agocmsConfRelationshipChildField'>
+      <span id='agocmsConfRelationshipChildFieldLayerName'></span>
+      <span>Child Field</span>
+    </label>
     <select id='agocmsConfRelationshipChildField'
-            d-setting='related_fields[].child_field'></select>
+            d-setting='child_field'></select>
   </div>
 </template>

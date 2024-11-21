@@ -65,36 +65,16 @@ const esriFieldTypeToFieldEl = {
   const mapLayers = conf.map.layers,
         tableLayers = conf.tables.layers;
 
+  // custom event to update layer list items when reorganized
+  const e_layerListReorder = new Event('layer_list_reorder');
+
   // add click event listeners to select access for group and service search
   for(const el_li of [...el_accessList.children]){
     el_li.addEventListener('click', e => searchLiSelect(e));
   }
 
   // add click event listener to new relationship button
-  el_relsAddBtn.addEventListener('click', () => {
-    buildRelWizard(conf).then(el_relForm => {
-      // add form to container and then dialog box
-      const el_relFormContainer = document.createElement('div');
-      // add form to container and open dialog box
-      el_relFormContainer.appendChild(el_relForm);
-
-      const d_dialog = Drupal.dialog(el_relFormContainer,
-                        { title: 'Configure a Layer Relationship', width: 500,
-                          buttons: [
-                            { text: "Cancel", click: () => d_dialog.close() },
-                            { text: "Save", click: () => {
-                              // loop all elements with settings to update config
-                              el_relForm.shadowRoot.querySelectorAll('[d-setting]')
-                                .forEach(el => setConfSettingFromEl(el, layerConf));
-
-                              // update listed record and close
-                              el_relForm.innerHTML = '&nbsp;' + layerConf.display_name;
-                              d_dialog.close(); } }
-                        ]});
-
-      d_dialog.showModal();
-    });
-  });
+  el_relsAddBtn.addEventListener('click', buildRelWizard);
 
   // get private groups and list on initial load
   agocmsViewConfigGroupSearch().then(groups =>
@@ -128,6 +108,9 @@ const esriFieldTypeToFieldEl = {
     agocms.getDm(layer.url).then(dm => el_tableLayerList.appendChild(buildLayerConfLi(layer)));
   }
 
+  // set ui for all map layers
+  el_mapLayerList.children.forEach(el => el.dispatchEvent(e_layerListReorder));
+)
   // take list element and return value from selected option
   function getListVal(el_list){
     // get selected access level element
@@ -309,6 +292,9 @@ const esriFieldTypeToFieldEl = {
         // add ref and add li to map list
         mapLayers.push(layerConf);
         el_mapLayerList.appendChild(buildLayerConfLi(layerConf));
+
+        // set ui for all map layers
+        el_mapLayerList.children.forEach(el => el.dispatchEvent(e_layerListReorder));
       } else {
         // add to data tables list and conf
         el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
@@ -326,12 +312,16 @@ const esriFieldTypeToFieldEl = {
           el_settingsBtn = document.createElement('button'),
           el_fieldsBtn = document.createElement('button'),
           el_layerName = document.createElement('p'),
-          el_removeBtn = document.createElement('button');
+          el_removeBtn = document.createElement('button'),
+          el_upBtn = document.createElement('button'),
+          el_downBtn = document.createElement('button');
 
     // prevent form submit
     el_removeBtn.type = 'button';
     el_settingsBtn.type = 'button';
     el_fieldsBtn.type = 'button';
+    el_upBtn.type = 'button';
+    el_downBtn.type = 'button';
 
     // build list item before adding to list
     el_layer.setAttribute('d-url', url);
@@ -342,13 +332,23 @@ const esriFieldTypeToFieldEl = {
     el_settingsBtn.innerHTML = 'settings';
     el_removeBtn.innerHTML = 'remove';
     el_fieldsBtn.innerHTML = 'fields';
+    el_upBtn.innerHTML = 'move up';
+    el_downBtn.innerHTML = 'move down';
 
     // apply classes
     el_layer.className = 'agocms-conf-search-layer-item';
     el_settingsBtn.className = 'prod-word-break--keep prod-pointer';
     el_fieldsBtn.className = 'prod-word-break--keep prod-pointer';
     el_removeBtn.className = 'prod-word-break--keep prod-pointer';
+    el_upBtn.className = 'prod-word-break--keep prod-pointer';
+    el_downBtn.className = 'prod-word-break--keep prod-pointer';
     el_layerName.className = 'prod-margin-0 prod-word-break-keep';
+
+    // disable down btn because it will be last when its new
+    el_downBtn.disabled = true;
+
+    // if first then also disable up button
+    if(mapLayers.length === 0) el_upBtn.disabled = true;
 
     // add click event for layer settings
     el_settingsBtn.addEventListener('click', () => {
@@ -422,6 +422,60 @@ const esriFieldTypeToFieldEl = {
       });
     });
 
+    // click events for layer up or down
+    el_upBtn.addEventListener('click', () => {
+      // ref idx and all siblings
+      const layerIdx = mapLayers.indexOf(layerConf),
+            sibs = el_layer.parentNode.children;
+
+      // update layer index down one
+      mapLayers.splice(layerIdx, 1);
+      mapLayers.splice(layerIdx 1 1, 0, layerConf);
+
+      // move up one in ui
+      sibs[layerIdx - 1].after(el_layer);
+
+      // update list UI
+      sibs.forEach(el => el.dispatchEvent(e_layerListReorder))
+    });
+    el_downBtn.addEventListener('click', () => {
+      // ref idx and all siblings
+      const layerIdx = mapLayers.indexOf(layerConf),
+            sibs = el_layer.parentNode.children;
+
+      // update layer index down one
+      mapLayers.splice(layerIdx, 1);
+      mapLayers.splice(layerIdx + 1, 0, layerConf);
+
+      // move up one in ui
+      sibs[layerIdx + 1].after(el_layer);
+
+      // update list UI
+      sibs.forEach(el => el.dispatchEvent(e_layerListReorder))
+    });
+
+    // control up/down btn accessibility based on position
+    function upDownBtnDisable(){
+      // disable if only one layer
+      if(mapLayers.length < 2) {
+        el_upBtn.disabled = true;
+        el_downBtn.disabled = true;
+      } else {
+        // get current layer position in list and enable up/down btns
+        const layerIdx = mapLayers.indexOf(layerConf);
+
+        // at top, no up btn
+        if(layerIdx === 0) el_upBtn.disabled = true;
+        else el_upBtn.disabled = false;
+        // at bottom, no down btn
+        if(layerIdx === mapLayers.legnth - 1) el_downBtn.disabled = true;
+        else el_downBtn.disabled = false;
+      }
+    }
+
+    // add event listener to layer for reorder
+    el_layer.addEventListener('layer_list_reorder', upDownBtnDisable);
+
     // add settings button, remove button, and layer name
     el_layer.appendChild(el_layerName);
     el_layer.appendChild(el_settingsBtn);
@@ -458,6 +512,9 @@ const esriFieldTypeToFieldEl = {
 
         // refresh layer select list
         listServiceLayers();
+
+        // update UI
+        sibs.forEach(el => el.dispatchEvent(e_layerListReorder))
       });
 
       // disable if already in tables
@@ -489,11 +546,16 @@ const esriFieldTypeToFieldEl = {
           // validate and reenable add to tables btn
           if(el_mapLayerAddTblBtn !== null) el_mapLayerAddTblBtn.removeAttribute('disabled');
         }
+
+        // update btn uis
+        sibs.forEach(el => el.dispatchEvent(e_layerListReorder))
       });
     }
 
-    // finally add remove button
+    // add remove, up, and down buttons
     el_layer.appendChild(el_removeBtn);
+    el_layer.appendChild(el_upBtn);
+    el_layer.appendChild(el_downBtn);
 
     // return list item
     return el_layer;
@@ -736,7 +798,7 @@ const esriFieldTypeToFieldEl = {
     let val = el.type == 'checkbox' ? el.checked : el.value,
         fieldRef = layerConf;
 
-    // loop all parts except lat one
+    // loop all parts except last one
     for(const part of parts.slice(0, -1)) {
       fieldRef = fieldRef[part];
     }
@@ -747,94 +809,196 @@ const esriFieldTypeToFieldEl = {
 
   // wizard for building relationships between layers
   function buildRelWizard(){
+    const relConf = { parent_layer: '',
+                      child_layer: '',
+                      spatial_relationship: {
+                        intersects: false,
+                        contains: false,
+                        crosses: false,
+                        overlaps: false,
+                        touches: false,
+                        within: false },
+                      related_fields: [] };
     // ref wizard
-    const el_relWizard = document.createElement('agocms-config-relationship');
+    const el_relWizard = document.createElement('agocms-config-relationship'),
+          el_relWizardContainer = document.createElement('div');
     const el_relWizardShadow = el_relWizard.shadowRoot;
     // all pages
     const el_relWiz = el_relWizardShadow.getElementById('agocmsConfRelationshipWiz'),
-          el_backBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipWizBackBtn'),
-          el_nextBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipWizNextBtn'),
-          el_completeBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipWizCompleteBtn'),
           el_parentLayer = el_relWizardShadow.getElementById('agocmsConfRelationshipParentLayer'),
           el_childLayer = el_relWizardShadow.getElementById('agocmsConfRelationshipChildLayer'),
           el_isSpatial = el_relWizardShadow.getElementById('agocmsConfRelationshipIsSpatial'),
+          el_addRelatedFieldsBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipAddRelatedFeilds'),
           el_relatedFields = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFields'),
           el_summary = el_relWizardShadow.getElementById('agocmsConfRelationshipSummary');
     const els_relWizPage = el_relWiz.getElementsByClassName('agocms-conf-rel-wiz-page');
+
+    // ref parent and child layers for other interactions
+    let parentLayer, childLayer;
+    // if it can have spatial rel then show slide to define rel
+    let couldHaveSpatialRel = false;
 
     // set first wizard page to active
     let activePageIdx = 0;
 
     // for avoiding dupes
-    const layerList = [];
+    const layerList = [],
+          relatedFieldConfEls = [];
 
-    return new Promise((resolve, reject) => {
-      // populate layer options
-      for(const {display_name, url} of mapLayers){
-        // add ref to avoid dupes
-        layerList.push(url);
+    // populate layer options
+    for(const {display_name, url} of mapLayers){
+      // add ref to avoid dupes
+      layerList.push(url);
 
+      // make option el
+      const el_option = document.createElement('option'),
+            el_childOption = document.createElement('option');
+      // set value and label
+      el_option.innerHTML = display_name;
+      el_option.value = url;
+      el_childOption.innerHTML = display_name;
+      el_childOption.value = url;
+
+      // add to both parent and child for now
+      el_parentLayer.appendChild(el_option);
+      el_childLayer.appendChild(el_childOption);
+    }
+    for(const {display_name, url} of tableLayers){
+      // avoid dupes for now
+      if(layerList.indexOf(url) === -1){
         // make option el
-        const el_option = document.createElement('option');
+        const el_option = document.createElement('option'),
+              el_childOption = document.createElement('option');
         // set value and label
         el_option.innerHTML = display_name;
         el_option.value = url;
+        el_childOption.innerHTML = display_name;
+        el_childOption.value = url;
 
         // add to both parent and child for now
         el_parentLayer.appendChild(el_option);
-        el_childLayer.appendChild(el_option.cloneNode());
+        el_childLayer.appendChild(el_childOption);
       }
-      for(const {display_name, url} of tableLayers){
-        // avoid dupes for now
-        if(layerList.indexOf(url) === -1){
-          // make option el
-          const el_option = document.createElement('option');
-          // set value and label
-          el_option.innerHTML = display_name;
-          el_option.value = url;
+    }
 
-          // add to both parent and child for now
-          el_parentLayer.appendChild(el_option);
-          el_childLayer.appendChild(el_option.cloneNode());
-        }
+    // add callback for adding new related fields
+    el_addRelatedFieldsBtn.addEventListener('click', () => {
+      // build related field conf. add to output and add ref for save
+      const el_relatedFieldConf = buildFieldRelationshipsConf(parentLayer, childLayer);
+      el_relatedFields.appendChild(el_relatedFieldConf);
+      relatedFieldConfEls.push(el_relatedFieldConf);
+    })
+
+    // add wizard to container and then dialog box
+    el_relWizardContainer.append(el_relWizard);
+
+    // make dialog
+    const d_dialog = Drupal.dialog(el_relWizardContainer,
+                      { title: 'Configure a Layer Relationship', width: 500,
+                        create: function(e, ui) {
+                          // disable back and next on open
+                          document.getElementById('agocmsConfRelationshipWizBackBtn').disabled = true;
+                          document.getElementById('agocmsConfRelationshipWizCompleteBtn').disabled = true;
+                        },
+                        buttons: [
+                          { text: 'Cancel', click: () => d_dialog.close() },
+                          { text: 'Back', id: 'agocmsConfRelationshipWizBackBtn',
+                            click: pageBack },
+                          { text: 'Next', id: 'agocmsConfRelationshipWizNextBtn',
+                            click: pageNext },
+                          { text: 'Complete', id: 'agocmsConfRelationshipWizCompleteBtn',
+                            click: () => {
+                              // loop all elements with settings to update config
+                              el_relWizardShadow.querySelectorAll('[d-setting]')
+                                .forEach(el => setConfSettingFromEl(el, relConf));
+
+                              // make a new conf for each related field and add ref
+                              for(const el_fieldConf of relatedFieldConfEls){
+                                // init conf
+                                const fieldRelConf = {};
+
+                                // set field rel values from shad root
+                                el_fieldConf.shadowRoot.querySelectorAll('[d-setting]')
+                                  .forEach(el => setConfSettingFromEl(el, fieldRelConf));
+
+                                // add to rel conf
+                                relConf.related_fields.push(fieldRelConf);
+                              }
+
+                              // update config
+                              conf.relationships.push(relConf);
+
+                              // update listed record and close
+                              d_dialog.close(); } }
+                      ]});
+
+    d_dialog.showModal();
+
+    // set up controls
+    function pageBack(){
+      const el_backBtn = document.getElementById('agocmsConfRelationshipWizBackBtn'),
+            el_nextBtn = document.getElementById('agocmsConfRelationshipWizNextBtn'),
+            el_completeBtn = document.getElementById('agocmsConfRelationshipWizCompleteBtn');
+
+      // hide active page
+      els_relWizPage[activePageIdx].style.display = 'none';
+
+      // move active page back one. skip spatial
+      activePageIdx --;
+      if(activePageIdx === 2 && !couldHaveSpatialRel) activePageIdx --;
+
+      // show previous page
+      els_relWizPage[activePageIdx].style.display = '';
+
+      // if first idx hide button. make sure next button is displayed
+      if(activePageIdx === 0) el_backBtn.disabled = false;
+      el_nextBtn.disabled = false;
+      // always disable complete btn
+      el_completeBtn.disabled = true;
+    }
+    function pageNext(){
+      const el_backBtn = document.getElementById('agocmsConfRelationshipWizBackBtn'),
+            el_nextBtn = document.getElementById('agocmsConfRelationshipWizNextBtn'),
+            el_completeBtn = document.getElementById('agocmsConfRelationshipWizCompleteBtn');
+
+      // if paging next on the child layer select page, check if both have spatial
+      if(activePageIdx === 1){
+        // get parent and child layer
+        parentLayer = mapLayers.find(l => l.url == el_parentLayer.value),
+        childLayer = mapLayers.find(l => l.url == el_childLayer.value);
+
+        // if either is undefined, try again with tables
+        if(typeof parentLayer == 'undefined')
+          parentLayer = tableLayers.find(l => l.url == el_parentLayer.value);
+        if(typeof childLayer == 'undefined')
+          childLayer = tableLayers.find(l => l.url == el_childLayer.value);
+
+        // update possibility of spatial rel
+        couldHaveSpatialRel = parentLayer.has_geometry === true
+                                && childLayer.has_geometry === true;
+
+        // empty related fields
+        el_relatedFields.innherHTML = '';
       }
 
-      // set up controls
-      el_backBtn.addEventListener('click', () => {
-        // move active page back one
-        activePageIdx --;
-        // hide active page and show next
-        els_relWizPage[activePageIdx + 1].style.display = 'none';
-        els_relWizPage[activePageIdx].style.display = '';
+      // hide active page
+      els_relWizPage[activePageIdx].style.display = 'none';
 
-        // if first idx hide button. make sure next button is displayed
-        if(activePageIdx === 0) el_backBtn.style.display = 'none';
-        el_nextBtn.style.display = '';
-        // always hide complete btn
-        el_completeBtn.style.display = 'none';
-      });
-      el_nextBtn.addEventListener('click', () => {
-        // move active page forward one
-        activePageIdx ++;
-        // hide active page and show next
-        els_relWizPage[activePageIdx - 1].style.display = 'none';
-        els_relWizPage[activePageIdx].style.display = '';
+      // move active page forward one. skip spatial
+      activePageIdx ++;
+      if(activePageIdx === 2 && !couldHaveSpatialRel) activePageIdx ++;
 
-        // if last idx hide and show complete. make sure back btn is displayed
-        if(activePageIdx === 5) {
-          el_nextBtn.style.display = 'none';
-          // show complete btn
-          el_completeBtn.style.display = '';
-        }
-        el_backBtn.style.display = '';
-      });
-      el_completeBtn.addEventListener('click', () => {
-        // do save stuff using d-settings
-      });
+      // show next page
+      els_relWizPage[activePageIdx].style.display = '';
 
-      // done
-      resolve(el_relWizard);
-    });
+      // if last idx hide and show complete. make sure back btn is displayed
+      if(activePageIdx === 4) {
+        el_nextBtn.disabled = true;
+        // enable complete btn
+        el_completeBtn.disabled = false;
+      }
+      el_backBtn.disabled = false;
+    }
   }
 
   // update new relationship based on available relationships
@@ -842,6 +1006,49 @@ const esriFieldTypeToFieldEl = {
     // enable relationships button if 2 or more layers. otherwise disable
     if(mapLayers.length + tableLayers.length > 1) el_relsAddBtn.removeAttribute('disabled');
     else el_relsAddBtn.setAttribute('disabled', 'disabled');
+  }
+
+  // build parent/child field relationship config form from layers
+  function buildFieldRelationshipsConf(parentLayer, childLayer) {
+    // get template and shadowroot
+    const el_relFieldsConf = document.createElement('agocms-config-relationship-fields');
+    const el_relFieldsConfShadow = el_relFieldsConf.shadowRoot;
+    // get parent and child selects to populate
+    const el_parentFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipParentField'),
+          el_childFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipChildField'),
+          el_parentLayerName = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipParentFieldLayerName'),
+          el_childLayerName = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipChildFieldLayerName');
+
+    // set namnes
+    el_parentLayerName.innerHTML = parentLayer.display_name;
+    el_childLayerName.innerHTML = childLayer.display_name;
+
+    // add options to parent and child field selects
+    for(const field of parentLayer.fields){
+      // make option
+      const el_fieldOpt = document.createElement('option');
+
+      // set value and text
+      el_fieldOpt.value = field.name;
+      el_fieldOpt.innerHTML = field.label;
+
+      // add to select
+      el_parentFieldSel.append(el_fieldOpt);
+    }
+    for(const field of childLayer.fields){
+      // make option
+      const el_fieldOpt = document.createElement('option');
+
+      // set value and text
+      el_fieldOpt.value = field.name;
+      el_fieldOpt.innerHTML = field.label;
+
+      // add to select
+      el_childFieldSel.append(el_fieldOpt);
+    }
+
+    // return new el
+    return el_relFieldsConf;
   }
 })(drupalSettings);
 
