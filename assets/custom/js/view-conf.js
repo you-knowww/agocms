@@ -109,8 +109,10 @@ const esriFieldTypeToFieldEl = {
   }
 
   // set ui for all map layers
-  el_mapLayerList.children.forEach(el => el.dispatchEvent(e_layerListReorder));
-)
+  for(const el of el_mapLayerList.children){
+    el.dispatchEvent(e_layerListReorder);
+  }
+
   // take list element and return value from selected option
   function getListVal(el_list){
     // get selected access level element
@@ -294,7 +296,9 @@ const esriFieldTypeToFieldEl = {
         el_mapLayerList.appendChild(buildLayerConfLi(layerConf));
 
         // set ui for all map layers
-        el_mapLayerList.children.forEach(el => el.dispatchEvent(e_layerListReorder));
+        for(const el of el_mapLayerList.children){
+          el.dispatchEvent(e_layerListReorder);
+        }
       } else {
         // add to data tables list and conf
         el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
@@ -428,15 +432,17 @@ const esriFieldTypeToFieldEl = {
       const layerIdx = mapLayers.indexOf(layerConf),
             sibs = el_layer.parentNode.children;
 
-      // update layer index down one
+      // update layer index up one
       mapLayers.splice(layerIdx, 1);
-      mapLayers.splice(layerIdx 1 1, 0, layerConf);
+      mapLayers.splice(layerIdx - 1, 0, layerConf);
 
       // move up one in ui
-      sibs[layerIdx - 1].after(el_layer);
+      sibs[layerIdx - 1].before(el_layer);
 
       // update list UI
-      sibs.forEach(el => el.dispatchEvent(e_layerListReorder))
+      for(const el of sibs){
+        el.dispatchEvent(e_layerListReorder);
+      }
     });
     el_downBtn.addEventListener('click', () => {
       // ref idx and all siblings
@@ -451,7 +457,9 @@ const esriFieldTypeToFieldEl = {
       sibs[layerIdx + 1].after(el_layer);
 
       // update list UI
-      sibs.forEach(el => el.dispatchEvent(e_layerListReorder))
+      for(const el of sibs){
+        el.dispatchEvent(e_layerListReorder);
+      }
     });
 
     // control up/down btn accessibility based on position
@@ -514,7 +522,9 @@ const esriFieldTypeToFieldEl = {
         listServiceLayers();
 
         // update UI
-        sibs.forEach(el => el.dispatchEvent(e_layerListReorder))
+        for(const el of sibs){
+          el.dispatchEvent(e_layerListReorder);
+        }
       });
 
       // disable if already in tables
@@ -548,7 +558,9 @@ const esriFieldTypeToFieldEl = {
         }
 
         // update btn uis
-        sibs.forEach(el => el.dispatchEvent(e_layerListReorder))
+        for(const el of sibs){
+          el.dispatchEvent(e_layerListReorder);
+        }
       });
     }
 

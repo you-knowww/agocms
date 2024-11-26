@@ -35,7 +35,7 @@ class AgocmsViewConfigFormatter extends FormatterBase {
     // only one json field to show and attach ref to drupal settings
     if(count($items) > 0 && $items[0]->value != null){
       // show on page
-      $el[0] = ['#markup' => $item->value];
+      $el[0] = ['#markup' => 'simple test'];
       // if items available attach only expected val as drupal setting
       $el['#attached']['drupalSettings']['agocms']['conf']
         = json_decode($items[0]->value);

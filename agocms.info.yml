@@ -3,7 +3,7 @@ type: module
 description: 'CMS to extend ArcGIS features'
 package: Custom
 version: 1.0
-core_version_requirement: ^8 || ^9 || ^10
+core_version_requirement: ^8 || ^9 || ^10 || ^11
 
 dependencies:
   - social_auth_ago:social_auth_ago
