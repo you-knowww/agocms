@@ -301,8 +301,13 @@ const esriFieldTypeToFieldEl = {
         }
       } else {
         // add to data tables list and conf
-        el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
         tableLayers.push(layerConf);
+        el_tableLayerList.appendChild(buildLayerConfLi(layerConf));
+
+        // set ui for all table layers
+        for(const el of el_tableLayerList.children){
+          el.dispatchEvent(e_layerListReorder);
+        }
       }
 
       updateAddRelationshipBtnAccess();
@@ -428,13 +433,15 @@ const esriFieldTypeToFieldEl = {
 
     // click events for layer up or down
     el_upBtn.addEventListener('click', () => {
+      // map or table?
+      const layersRef = mapLayers.indexOf(layerConf) === -1 ? tableLayers : mapLayers;
       // ref idx and all siblings
-      const layerIdx = mapLayers.indexOf(layerConf),
+      const layerIdx = layersRef.indexOf(layerConf),
             sibs = el_layer.parentNode.children;
 
       // update layer index up one
-      mapLayers.splice(layerIdx, 1);
-      mapLayers.splice(layerIdx - 1, 0, layerConf);
+      layersRef.splice(layerIdx, 1);
+      layersRef.splice(layerIdx - 1, 0, layerConf);
 
       // move up one in ui
       sibs[layerIdx - 1].before(el_layer);
@@ -445,13 +452,15 @@ const esriFieldTypeToFieldEl = {
       }
     });
     el_downBtn.addEventListener('click', () => {
+      // map or table?
+      const layersRef = mapLayers.indexOf(layerConf) === -1 ? tableLayers : mapLayers;
       // ref idx and all siblings
-      const layerIdx = mapLayers.indexOf(layerConf),
+      const layerIdx = layersRef.indexOf(layerConf),
             sibs = el_layer.parentNode.children;
 
       // update layer index down one
-      mapLayers.splice(layerIdx, 1);
-      mapLayers.splice(layerIdx + 1, 0, layerConf);
+      layersRef.splice(layerIdx, 1);
+      layersRef.splice(layerIdx + 1, 0, layerConf);
 
       // move up one in ui
       sibs[layerIdx + 1].after(el_layer);
@@ -464,19 +473,23 @@ const esriFieldTypeToFieldEl = {
 
     // control up/down btn accessibility based on position
     function upDownBtnDisable(){
+      // only runs on li
+      const el_layer = this;
+      // get all layers in list
+      const sibs = el_layer.parentNode.children
       // disable if only one layer
-      if(mapLayers.length < 2) {
+      if(sibs.length < 2) {
         el_upBtn.disabled = true;
         el_downBtn.disabled = true;
       } else {
         // get current layer position in list and enable up/down btns
-        const layerIdx = mapLayers.indexOf(layerConf);
+        const layerIdx = [...sibs].indexOf(el_layer);
 
         // at top, no up btn
         if(layerIdx === 0) el_upBtn.disabled = true;
         else el_upBtn.disabled = false;
         // at bottom, no down btn
-        if(layerIdx === mapLayers.legnth - 1) el_downBtn.disabled = true;
+        if(layerIdx === sibs.length - 1) el_downBtn.disabled = true;
         else el_downBtn.disabled = false;
       }
     }
