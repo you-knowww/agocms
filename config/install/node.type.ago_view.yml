@@ -5,7 +5,7 @@ dependencies:
   enforced:
     module:
       - agocms
-name: 'ESRI View'
+name: 'ESRI Content'
 type: ago_view
 description: 'Define flexible realtionships betewen <em>ESRI Feature Layers</em> using any fields on any data models and display in maps and tables.'
 help: ''

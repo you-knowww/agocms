@@ -318,20 +318,16 @@
       <!-- describe with helper fn -->
       <p id='agocmsConfRelationshipSummary'></p>
     </div>
-    <!--
-    <div>
-      <button id='agocmsConfRelationshipWizBackBtn' style='display: none;'>Back</button>
-      <button id='agocmsConfRelationshipWizNextBtn'>Next</button>
-      <button id='agocmsConfRelationshipWizCompleteBtn' style='display: none;'>Confirm and Close</button>
-    </div>
-  -->
   </div>
 </template>
 <template id='agocmsConfRelationshipsRelatedFields'>
   <div>
     <label for='agocmsConfRelationshipParentField'>
-      <span id='agocmsConfRelationshipParentFieldLayerName'></span>
-      <span>Parent Field</span>
+      <span>Parent Layer </span>
+      <b>
+        <span id='agocmsConfRelationshipParentFieldLayerName'></span>
+      </b>
+      <span> related field:</span>
     </label>
     <select id='agocmsConfRelationshipParentField'
             d-setting='parent_field'></select>
@@ -349,8 +345,11 @@
   </div>
   <div>
     <label for='agocmsConfRelationshipChildField'>
-      <span id='agocmsConfRelationshipChildFieldLayerName'></span>
-      <span>Child Field</span>
+      <span>Child Layer </span>
+      <b>
+        <span id='agocmsConfRelationshipChildFieldLayerName'></span>
+      </b>
+      <span> related field:</span>
     </label>
     <select id='agocmsConfRelationshipChildField'
             d-setting='child_field'></select>

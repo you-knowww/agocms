@@ -73,8 +73,8 @@ const esriFieldTypeToFieldEl = {
     el_li.addEventListener('click', e => searchLiSelect(e));
   }
 
-  // add click event listener to new relationship button
-  el_relsAddBtn.addEventListener('click', buildRelWizard);
+  // add click event listener to new relationship button. no args for new conf
+  el_relsAddBtn.addEventListener('click', () => buildRelWizard());
 
   // get private groups and list on initial load
   agocmsViewConfigGroupSearch().then(groups =>
@@ -833,17 +833,18 @@ const esriFieldTypeToFieldEl = {
   }
 
   // wizard for building relationships between layers
-  function buildRelWizard(){
-    const relConf = { parent_layer: '',
-                      child_layer: '',
-                      spatial_relationship: {
-                        intersects: false,
-                        contains: false,
-                        crosses: false,
-                        overlaps: false,
-                        touches: false,
-                        within: false },
-                      related_fields: [] };
+  function buildRelWizard(
+      // default config
+      relConf = { parent_layer: '',
+                  child_layer: '',
+                  spatial_relationship: {
+                    intersects: false,
+                    contains: false,
+                    crosses: false,
+                    overlaps: false,
+                    touches: false,
+                    within: false },
+                  related_fields: [] }){
     // ref wizard
     const el_relWizard = document.createElement('agocms-config-relationship'),
           el_relWizardContainer = document.createElement('div');
@@ -950,8 +951,13 @@ const esriFieldTypeToFieldEl = {
                                 relConf.related_fields.push(fieldRelConf);
                               }
 
-                              // update config
-                              conf.relationships.push(relConf);
+                              // add if new
+                              if(conf.relationships.indexOf(relConf) == -1){
+                                // add ref
+                                conf.relationships.push(relConf);
+                                // add to dom
+                                el_relsList.appendChild(buildRelConfLi(relConf));
+                              }
 
                               // update listed record and close
                               d_dialog.close(); } }
@@ -989,14 +995,8 @@ const esriFieldTypeToFieldEl = {
       // if paging next on the child layer select page, check if both have spatial
       if(activePageIdx === 1){
         // get parent and child layer
-        parentLayer = mapLayers.find(l => l.url == el_parentLayer.value),
-        childLayer = mapLayers.find(l => l.url == el_childLayer.value);
-
-        // if either is undefined, try again with tables
-        if(typeof parentLayer == 'undefined')
-          parentLayer = tableLayers.find(l => l.url == el_parentLayer.value);
-        if(typeof childLayer == 'undefined')
-          childLayer = tableLayers.find(l => l.url == el_childLayer.value);
+        parentLayer = findLayerConfForUrl(el_parentLayer.value);
+        childLayer = findLayerConfForUrl(el_childLayer.value);
 
         // update possibility of spatial rel
         couldHaveSpatialRel = parentLayer.has_geometry === true
@@ -1024,6 +1024,56 @@ const esriFieldTypeToFieldEl = {
       }
       el_backBtn.disabled = false;
     }
+  }
+
+  // relastionship item
+  function buildRelConfLi(relConf) {
+    const el_rel = document.createElement('li'),
+          el_settingsBtn = document.createElement('button'),
+          el_relName = document.createElement('p'),
+          el_removeBtn = document.createElement('button'),
+          parentConf = findLayerConfForUrl(relConf.parent_layer),
+          childConf = findLayerConfForUrl(relConf.child_layer);
+
+    el_removeBtn.type = 'button';
+    el_settingsBtn.type = 'button';
+
+    console.log(relConf);
+
+    // make display name from conf
+    el_relName.innerHTML = '<b>' + parentConf.display_name + '</b> (Parent) to <b>'
+                            + childConf.display_name + '</b>';
+    // give button cta
+    el_settingsBtn.innerHTML = 'settings';
+    el_removeBtn.innerHTML = 'remove';
+
+    // apply classes
+    el_rel.className = 'agocms-conf-search-layer-item';
+    el_settingsBtn.className = 'prod-word-break--keep prod-pointer';
+    el_removeBtn.className = 'prod-word-break--keep prod-pointer';
+    el_relName.className = 'prod-margin-0 prod-word-break-keep';
+
+    // add click event for layer settings
+    el_settingsBtn.addEventListener('click', () => buildRelWizard(relConf));
+
+    // add settings button, remove button, and layer name
+    el_rel.appendChild(el_relName);
+    el_rel.appendChild(el_settingsBtn);
+
+    // remove button removes from map ref
+    el_removeBtn.addEventListener('click', () => {
+      // get layer conf ref index and remove it
+      conf.relationships.splice(conf.relationships.indexOf(relConf), 1);
+
+      // delete el
+      el_rel.remove();
+    });
+
+    // add remove, up, and down buttons
+    el_rel.appendChild(el_removeBtn);
+
+    // return list item
+    return el_rel;
   }
 
   // update new relationship based on available relationships
@@ -1074,6 +1124,16 @@ const esriFieldTypeToFieldEl = {
 
     // return new el
     return el_relFieldsConf;
+  }
+
+  // helper function to get config details of first matching url. checks map layers first
+  function findLayerConfForUrl(url){
+    // first try getting layer from map
+    const returnConf = mapLayers.find(l => l.url == url);
+
+    // validate map layer and try with tables if fail
+    return typeof returnConf == 'undefined'
+      ? tableLayers.find(l => l.url == url) : returnConf;
   }
 })(drupalSettings);
 
