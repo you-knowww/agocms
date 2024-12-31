@@ -849,6 +849,7 @@ const esriFieldTypeToFieldEl = {
     const el_relWizard = document.createElement('agocms-config-relationship'),
           el_relWizardContainer = document.createElement('div');
     const el_relWizardShadow = el_relWizard.shadowRoot;
+    console.log(el_relWizardShadow);
     // all pages
     const el_relWiz = el_relWizardShadow.getElementById('agocmsConfRelationshipWiz'),
           el_parentLayer = el_relWizardShadow.getElementById('agocmsConfRelationshipParentLayer'),
@@ -856,7 +857,11 @@ const esriFieldTypeToFieldEl = {
           el_isSpatial = el_relWizardShadow.getElementById('agocmsConfRelationshipIsSpatial'),
           el_addRelatedFieldsBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipAddRelatedFeilds'),
           el_relatedFields = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFields'),
-          el_summary = el_relWizardShadow.getElementById('agocmsConfRelationshipSummary');
+          el_summary = el_relWizardShadow.getElementById('agocmsConfRelationshipSummary'),
+          el_spatialRelParentName = el_relWizardShadow.getElementById('agocmsConfRelationshipSpatialParentName'),
+          el_spatialRelChildName = el_relWizardShadow.getElementById('agocmsConfRelationshipSpatialChildName'),
+          el_fieldRelParentName = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFieldsParentName'),
+          el_fieldRelChildName = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFieldsChildName');
     const els_relWizPage = el_relWiz.getElementsByClassName('agocms-conf-rel-wiz-page');
 
     // ref parent and child layers for other interactions
@@ -1000,7 +1005,13 @@ const esriFieldTypeToFieldEl = {
 
         // update possibility of spatial rel
         couldHaveSpatialRel = parentLayer.has_geometry === true
-                                && childLayer.has_geometry === true;
+                              && childLayer.has_geometry === true;
+
+        // update ui for spatial select
+        el_spatialRelParentName.innerHTML = parentLayer.display_name;
+        el_spatialRelChildName.innerHTML = childLayer.display_name;
+        el_fieldRelParentName.innerHTML = parentLayer.display_name;
+        el_fieldRelChildName.innerHTML = childLayer.display_name;
 
         // empty related fields
         el_relatedFields.innherHTML = '';
@@ -1026,7 +1037,7 @@ const esriFieldTypeToFieldEl = {
     }
   }
 
-  // relastionship item
+  // relationship item
   function buildRelConfLi(relConf) {
     const el_rel = document.createElement('li'),
           el_settingsBtn = document.createElement('button'),
@@ -1042,7 +1053,7 @@ const esriFieldTypeToFieldEl = {
 
     // make display name from conf
     el_relName.innerHTML = '<b>' + parentConf.display_name + '</b> (Parent) to <b>'
-                            + childConf.display_name + '</b>';
+                            + childConf.display_name + '</b> (Child)&nbsp;';
     // give button cta
     el_settingsBtn.innerHTML = 'settings';
     el_removeBtn.innerHTML = 'remove';

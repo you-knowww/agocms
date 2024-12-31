@@ -267,7 +267,16 @@
     </div>
     <div class='agocms-conf-rel-wiz-page' style='display: none;'>
       <label>Are the layers spatially related?<br/>
-          Select how Parent Layer is <b>spatially related</b> to Child Layer:</label>
+          <span>Select how </span>
+          <b>
+            <span id='agocmsConfRelationshipSpatialParentName'></span>
+          </b>
+          <span> (Parent) is <u>spatially related</u> to </span>
+          <b>
+            <span id='agocmsConfRelationshipSpatialChildName'></span>
+          </b>
+          <span> (Child):</span>
+        </label>
       <ul>
         <li>
           <input type='checkbox'
@@ -308,7 +317,17 @@
       </ul>
     </div>
     <div class='agocms-conf-rel-wiz-page' style='display: none;'>
-      <label>Do the Parent Layer and Child Layer have one or more related fields?</label>
+      <label>
+        <span>Does </span>
+        <b>
+          <span id='agocmsConfRelationshipRelatedFieldsParentName'></span>
+        </b>
+        <span> (Parent) and </span>
+        <b>
+          <span id='agocmsConfRelationshipRelatedFieldsChildName'></span>
+        </b>
+        <span> (Child) have one or more related fields?</span>
+      </label>
       <!-- make into template. include and/or -->
       <div id='agocmsConfRelationshipRelatedFields'></div>
       <button id='agocmsConfRelationshipAddRelatedFeilds'>Add related fields</button>
