@@ -340,37 +340,40 @@
   </div>
 </template>
 <template id='agocmsConfRelationshipsRelatedFields'>
-  <div>
-    <label for='agocmsConfRelationshipParentField'>
-      <span>Parent Layer </span>
-      <b>
-        <span id='agocmsConfRelationshipParentFieldLayerName'></span>
-      </b>
-      <span> related field:</span>
-    </label>
-    <select id='agocmsConfRelationshipParentField'
-            d-setting='parent_field'></select>
-  </div>
-  <div>
-    <label for='agocmsConfRelationshipOperatorField'>Operator</label>
-    <select id='agocmsConfRelationshipOperatorField'
-            d-setting='operator'>
-      <option value='='>is equal to</option>
-      <option value='<'>is less than</option>
-      <option value='>'>is greater than</option>
-      <option value='=>'>is greater than or equal to</option>
-      <option value='=<'>is less than or equal to</option>
-    </select>
-  </div>
-  <div>
-    <label for='agocmsConfRelationshipChildField'>
-      <span>Child Layer </span>
-      <b>
-        <span id='agocmsConfRelationshipChildFieldLayerName'></span>
-      </b>
-      <span> related field:</span>
-    </label>
-    <select id='agocmsConfRelationshipChildField'
-            d-setting='child_field'></select>
+  <div class='prod-border--top'>
+    <div>
+      <label for='agocmsConfRelationshipParentField'>
+        <span>Parent Layer </span>
+        <b>
+          <span id='agocmsConfRelationshipParentFieldLayerName'></span>
+        </b>
+        <span> related field:</span>
+      </label>
+      <select id='agocmsConfRelationshipParentField'
+              d-setting='parent_field'></select>
+    </div>
+    <div>
+      <label for='agocmsConfRelationshipOperatorField'>Operator</label>
+      <select id='agocmsConfRelationshipOperatorField'
+              d-setting='operator'>
+        <option value='='>is equal to</option>
+        <option value='<'>is less than</option>
+        <option value='>'>is greater than</option>
+        <option value='=>'>is greater than or equal to</option>
+        <option value='=<'>is less than or equal to</option>
+      </select>
+    </div>
+    <div>
+      <label for='agocmsConfRelationshipChildField'>
+        <span>Child Layer </span>
+        <b>
+          <span id='agocmsConfRelationshipChildFieldLayerName'></span>
+        </b>
+        <span> related field:</span>
+      </label>
+      <select id='agocmsConfRelationshipChildField'
+              d-setting='child_field'></select>
+    </div>
+    <button id='agocmsConfDeleteRelationshipField'>Delete</button>
   </div>
 </template>

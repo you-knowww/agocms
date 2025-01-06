@@ -158,9 +158,8 @@ const esriFieldTypeToFieldEl = {
   // callback to write search results to list
   function searchListBuilder(el_ul, items, valProp, lblProp, callback = false){
     // validate results
-    if(items.length == 0){
-      addErrorToList(el_ul);
-    } else {
+    if(items.length == 0) addErrorToList(el_ul);
+    else {
       // add all options to group list
       for(const item of items){
         // make li element
@@ -849,7 +848,7 @@ const esriFieldTypeToFieldEl = {
     const el_relWizard = document.createElement('agocms-config-relationship'),
           el_relWizardContainer = document.createElement('div');
     const el_relWizardShadow = el_relWizard.shadowRoot;
-    console.log(el_relWizardShadow);
+
     // all pages
     const el_relWiz = el_relWizardShadow.getElementById('agocmsConfRelationshipWiz'),
           el_parentLayer = el_relWizardShadow.getElementById('agocmsConfRelationshipParentLayer'),
@@ -1103,7 +1102,8 @@ const esriFieldTypeToFieldEl = {
     const el_parentFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipParentField'),
           el_childFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipChildField'),
           el_parentLayerName = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipParentFieldLayerName'),
-          el_childLayerName = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipChildFieldLayerName');
+          el_childLayerName = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipChildFieldLayerName'),
+          el_deleteBtn = el_relFieldsConfShadow.getElementById('agocmsConfDeleteRelationshipField');
 
     // set namnes
     el_parentLayerName.innerHTML = parentLayer.display_name;
@@ -1132,6 +1132,9 @@ const esriFieldTypeToFieldEl = {
       // add to select
       el_childFieldSel.append(el_fieldOpt);
     }
+
+    // delete btn
+    el_deleteBtn.addEventListener('click', () => el_relFieldsConf.remove());
 
     // return new el
     return el_relFieldsConf;

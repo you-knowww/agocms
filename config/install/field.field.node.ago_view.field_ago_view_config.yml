@@ -11,7 +11,7 @@ id: node.ago_view.field_ago_view_config
 field_name: field_ago_view_config
 entity_type: node
 bundle: ago_view
-label: AGO CMS Content
+label: ESRI Content
 description: 'Geospatial feature layers, table layers, and any connections betweent them to display on maps and tables.'
 required: false
 translatable: true

@@ -41,3 +41,9 @@
 .prod-border {
   border: solid 1px #000;
 }
+.prod-border--bottom {
+  border-bottom: solid 1px #000;
+}
+.prod-border--top {
+  border-top: solid 1px #000;
+}
