@@ -49,13 +49,11 @@
   </div>
   <p>Relationships:</p>
   <div id='agocmsConfRelationships'>
-    <div>
-      <button id='agocmsConfRelationshipsAddBtn'
-              type='button' disabled='disabled'>Add New</button>
-    </div>
     <ul id='agocmsConfRelationshipsList'></ul>
+    <button id='agocmsConfRelationshipsAddBtn' type='button' disabled='disabled'>Add New</button>
   </div>
 </div>
+<!-- feature layer settings -->
 <template id='agocmsConfFeatureLayer'>
   <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
         rel='stylesheet' type='text/css'>
@@ -251,6 +249,7 @@
     <span class='agocms-conf-field-codes-name'></span>
   </li>
 </template>
+<!-- relationship settings -->
 <template id='agocmsConfRelationship'>
   <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
         rel='stylesheet' type='text/css'>
@@ -267,16 +266,12 @@
     </div>
     <div class='agocms-conf-rel-wiz-page' style='display: none;'>
       <label>Are the layers spatially related?<br/>
-          <span>Select how </span>
-          <b>
-            <span id='agocmsConfRelationshipSpatialParentName'></span>
-          </b>
-          <span> (Parent) is <u>spatially related</u> to </span>
-          <b>
-            <span id='agocmsConfRelationshipSpatialChildName'></span>
-          </b>
-          <span> (Child):</span>
-        </label>
+        <span>Select how </span>
+        <b><span d-out='parent_layer_name'></span></b>
+        <span> (Parent) is <u>spatially related</u> to </span>
+        <b><span d-out='child_layer_name'></span></b>
+        <span> (Child):</span>
+      </label>
       <ul>
         <li>
           <input type='checkbox'
@@ -319,13 +314,9 @@
     <div class='agocms-conf-rel-wiz-page' style='display: none;'>
       <label>
         <span>Does </span>
-        <b>
-          <span id='agocmsConfRelationshipRelatedFieldsParentName'></span>
-        </b>
+        <b><span d-out='parent_layer_name'></span></b>
         <span> (Parent) and </span>
-        <b>
-          <span id='agocmsConfRelationshipRelatedFieldsChildName'></span>
-        </b>
+        <b><span d-out='child_layer_name'></span></b>
         <span> (Child) have one or more related fields?</span>
       </label>
       <!-- make into template. include and/or -->
@@ -340,6 +331,8 @@
   </div>
 </template>
 <template id='agocmsConfRelationshipsRelatedFields'>
+  <link href='/modules/custom/agocms/assets/custom/css/productivity.css'
+        rel='stylesheet' type='text/css'>
   <div class='prod-border--top'>
     <div>
       <label for='agocmsConfRelationshipParentField'>

@@ -90,7 +90,7 @@ class Agocms {
     });
   }
 
-  // run any function and attaches token to request. expects arcgisrest fn
+  // run any arcgisrest fn and attach token to request
   ajx(agoApiFn, conf){
     // context
     const agocms = this;
@@ -109,6 +109,21 @@ class Agocms {
       }, d => reject(d))
     })
   }
+
+  // paginates all results. returns array of records with no other info
+  /*
+  getAllResults(agoApiFn, conf) {
+    // context
+    const agocms = this;
+
+    // async
+    return new Promise((res, rej) => {
+      agocms.ajx(agoApiFn, conf).then(qResults => {
+
+      });
+    })
+  }
+  */
 
   // validate against existing data model refs and add new given service and layer def
   addDataModelRef(url, layer){

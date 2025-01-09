@@ -782,23 +782,22 @@ const esriFieldTypeToFieldEl = {
   // parse field settings and output to field conf ui
   function setFieldElFromSettings(el, conf){
     // loop all setting els in field update config
-    el.shadowRoot.querySelectorAll('[d-setting]')
-      .forEach(el => {
-        // get config setting for el
-        const val = conf[el.getAttribute('d-setting')];
+    el.shadowRoot.querySelectorAll('[d-setting]').forEach(el => {
+      // get config setting for el
+      const val = [el.getAttribute('d-setting')];
 
-        // validate
-        if(typeof val != 'undefined'){
-          // different output based on input type
-          switch(el.type){
-            case 'checkbox':
-              if(val === true) el.checked = 'checked';
-              break;
-            default:
-              el.value = val;
-          }
+      // validate
+      if(typeof val != 'undefined'){
+        // different output based on input type
+        switch(el.type){
+          case 'checkbox':
+            if(val === true) el.checked = 'checked';
+            break;
+          default:
+            el.value = val;
         }
-      });
+      }
+    });
   }
 
   function getConfSettingFromEl(el, layerConf) {
@@ -832,18 +831,9 @@ const esriFieldTypeToFieldEl = {
   }
 
   // wizard for building relationships between layers
-  function buildRelWizard(
-      // default config
-      relConf = { parent_layer: '',
-                  child_layer: '',
-                  spatial_relationship: {
-                    intersects: false,
-                    contains: false,
-                    crosses: false,
-                    overlaps: false,
-                    touches: false,
-                    within: false },
-                  related_fields: [] }){
+  function buildRelWizard(relConf = {related_fields: [],
+      spatial_relationship: { intersects: false, contains: false,
+        crosses: false, overlaps: false, touches: false, within: false }}){
     // ref wizard
     const el_relWizard = document.createElement('agocms-config-relationship'),
           el_relWizardContainer = document.createElement('div');
@@ -856,11 +846,7 @@ const esriFieldTypeToFieldEl = {
           el_isSpatial = el_relWizardShadow.getElementById('agocmsConfRelationshipIsSpatial'),
           el_addRelatedFieldsBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipAddRelatedFeilds'),
           el_relatedFields = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFields'),
-          el_summary = el_relWizardShadow.getElementById('agocmsConfRelationshipSummary'),
-          el_spatialRelParentName = el_relWizardShadow.getElementById('agocmsConfRelationshipSpatialParentName'),
-          el_spatialRelChildName = el_relWizardShadow.getElementById('agocmsConfRelationshipSpatialChildName'),
-          el_fieldRelParentName = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFieldsParentName'),
-          el_fieldRelChildName = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFieldsChildName');
+          el_summary = el_relWizardShadow.getElementById('agocmsConfRelationshipSummary');
     const els_relWizPage = el_relWiz.getElementsByClassName('agocms-conf-rel-wiz-page');
 
     // ref parent and child layers for other interactions
@@ -872,8 +858,7 @@ const esriFieldTypeToFieldEl = {
     let activePageIdx = 0;
 
     // for avoiding dupes
-    const layerList = [],
-          relatedFieldConfEls = [];
+    const layerList = [];
 
     // populate layer options
     for(const {display_name, url} of mapLayers){
@@ -911,12 +896,16 @@ const esriFieldTypeToFieldEl = {
       }
     }
 
+    // select layers if available
+    setFieldElFromSettings(el_relWizard, relConf);
+    // if(relConf.hasOwnProperty('parent_layer')) el_parentLayer.value = relConf.parent_layer;
+    // if(relConf.hasOwnProperty('child_layer')) el_childLayer.value = relConf.child_layer;
+
     // add callback for adding new related fields
     el_addRelatedFieldsBtn.addEventListener('click', () => {
       // build related field conf. add to output and add ref for save
       const el_relatedFieldConf = buildFieldRelationshipsConf(parentLayer, childLayer);
       el_relatedFields.appendChild(el_relatedFieldConf);
-      relatedFieldConfEls.push(el_relatedFieldConf);
     })
 
     // add wizard to container and then dialog box
@@ -942,18 +931,19 @@ const esriFieldTypeToFieldEl = {
                               el_relWizardShadow.querySelectorAll('[d-setting]')
                                 .forEach(el => setConfSettingFromEl(el, relConf));
 
-                              // make a new conf for each related field and add ref
-                              for(const el_fieldConf of relatedFieldConfEls){
-                                // init conf
-                                const fieldRelConf = {};
+                              // loop all related field elements
+                              el_relWizardShadow.querySelectorAll('agocms-config-relationship-fields')
+                                .forEach(el_fieldConf => {
+                                  // init conf
+                                  const fieldRelConf = {};
 
-                                // set field rel values from shad root
-                                el_fieldConf.shadowRoot.querySelectorAll('[d-setting]')
-                                  .forEach(el => setConfSettingFromEl(el, fieldRelConf));
+                                  // set field rel values from shad root
+                                  el_fieldConf.shadowRoot.querySelectorAll('[d-setting]')
+                                    .forEach(el => setConfSettingFromEl(el, fieldRelConf));
 
-                                // add to rel conf
-                                relConf.related_fields.push(fieldRelConf);
-                              }
+                                  // add to rel conf
+                                  relConf.related_fields.push(fieldRelConf);
+                                });
 
                               // add if new
                               if(conf.relationships.indexOf(relConf) == -1){
@@ -1006,11 +996,13 @@ const esriFieldTypeToFieldEl = {
         couldHaveSpatialRel = parentLayer.has_geometry === true
                               && childLayer.has_geometry === true;
 
-        // update ui for spatial select
-        el_spatialRelParentName.innerHTML = parentLayer.display_name;
-        el_spatialRelChildName.innerHTML = childLayer.display_name;
-        el_fieldRelParentName.innerHTML = parentLayer.display_name;
-        el_fieldRelChildName.innerHTML = childLayer.display_name;
+        console.log(parentLayer);
+
+        // update ui with parent child layer names
+        el_relWizardShadow.querySelectorAll('[d-out="parent_layer_name"]')
+          .forEach(el => el.innerHTML = parentLayer.display_name);
+        el_relWizardShadow.querySelectorAll('[d-out="child_layer_name"]')
+          .forEach(el => el.innerHTML = childLayer.display_name);
 
         // empty related fields
         el_relatedFields.innherHTML = '';
@@ -1048,10 +1040,9 @@ const esriFieldTypeToFieldEl = {
     el_removeBtn.type = 'button';
     el_settingsBtn.type = 'button';
 
-    console.log(relConf);
-
     // make display name from conf
-    el_relName.innerHTML = '<b>' + parentConf.display_name + '</b> (Parent) to <b>'
+    el_relName.innerHTML = '<b>' + parentConf.display_name
+                            + '</b> (Parent) is related to <b>'
                             + childConf.display_name + '</b> (Child)&nbsp;';
     // give button cta
     el_settingsBtn.innerHTML = 'settings';
@@ -1066,10 +1057,6 @@ const esriFieldTypeToFieldEl = {
     // add click event for layer settings
     el_settingsBtn.addEventListener('click', () => buildRelWizard(relConf));
 
-    // add settings button, remove button, and layer name
-    el_rel.appendChild(el_relName);
-    el_rel.appendChild(el_settingsBtn);
-
     // remove button removes from map ref
     el_removeBtn.addEventListener('click', () => {
       // get layer conf ref index and remove it
@@ -1079,7 +1066,9 @@ const esriFieldTypeToFieldEl = {
       el_rel.remove();
     });
 
-    // add remove, up, and down buttons
+    // add settings button, remove button, and layer name
+    el_rel.appendChild(el_relName);
+    el_rel.appendChild(el_settingsBtn);
     el_rel.appendChild(el_removeBtn);
 
     // return list item
