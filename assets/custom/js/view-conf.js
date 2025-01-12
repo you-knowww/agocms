@@ -17,7 +17,9 @@ const customEls = [{handle: 'agocms-config-layer', id: 'agocmsConfFeatureLayer'}
                     { handle: 'agocms-config-relationship',
                       id: 'agocmsConfRelationship'},
                     { handle: 'agocms-config-relationship-fields',
-                      id: 'agocmsConfRelationshipsRelatedFields'}];
+                      id: 'agocmsConfRelationshipsRelatedFields'},
+                    { handle: 'agocms-config-inheritence-fields',
+                      id: 'agocmsConfRelationshipsInheritedFields'}];
 
 // define all custom elements
 for(const customEl of customEls){
@@ -609,7 +611,7 @@ const esriFieldTypeToFieldEl = {
         els_crudConfigs.forEach(el_input => {
           // get relevant setting
           const setting = el_input.getAttribute('d-setting');
-          console.log(setting, layerConf, layerConf[setting])
+
           if(layerConf.hasOwnProperty(setting)){
             // set configured value
             if(layerConf[setting] === true) el_input.checked = true;
@@ -784,7 +786,7 @@ const esriFieldTypeToFieldEl = {
     // loop all setting els in field update config
     el.shadowRoot.querySelectorAll('[d-setting]').forEach(el => {
       // get config setting for el
-      const val = [el.getAttribute('d-setting')];
+      const val = conf[el.getAttribute('d-setting')];
 
       // validate
       if(typeof val != 'undefined'){
@@ -1019,7 +1021,7 @@ const esriFieldTypeToFieldEl = {
       els_relWizPage[activePageIdx].style.display = '';
 
       // if last idx hide and show complete. make sure back btn is displayed
-      if(activePageIdx === 4) {
+      if(activePageIdx === 5) {
         el_nextBtn.disabled = true;
         // enable complete btn
         el_completeBtn.disabled = false;
@@ -1090,13 +1092,60 @@ const esriFieldTypeToFieldEl = {
     // get parent and child selects to populate
     const el_parentFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipParentField'),
           el_childFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipChildField'),
-          el_parentLayerName = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipParentFieldLayerName'),
-          el_childLayerName = el_relFieldsConfShadow.getElementById('agocmsConfRelationshipChildFieldLayerName'),
           el_deleteBtn = el_relFieldsConfShadow.getElementById('agocmsConfDeleteRelationshipField');
 
-    // set namnes
-    el_parentLayerName.innerHTML = parentLayer.display_name;
-    el_childLayerName.innerHTML = childLayer.display_name;
+    // update ui with parent child layer names
+    el_relFieldsConfShadow.querySelectorAll('[d-out="parent_layer_name"]')
+      .forEach(el => el.innerHTML = parentLayer.display_name);
+    el_relFieldsConfShadow.querySelectorAll('[d-out="child_layer_name"]')
+      .forEach(el => el.innerHTML = childLayer.display_name);
+
+    // add options to parent and child field selects
+    for(const field of parentLayer.fields){
+      // make option
+      const el_fieldOpt = document.createElement('option');
+
+      // set value and text
+      el_fieldOpt.value = field.name;
+      el_fieldOpt.innerHTML = field.label;
+
+      // add to select
+      el_parentFieldSel.append(el_fieldOpt);
+    }
+    for(const field of childLayer.fields){
+      // make option
+      const el_fieldOpt = document.createElement('option');
+
+      // set value and text
+      el_fieldOpt.value = field.name;
+      el_fieldOpt.innerHTML = field.label;
+
+      // add to select
+      el_childFieldSel.append(el_fieldOpt);
+    }
+
+    // delete btn
+    el_deleteBtn.addEventListener('click', () => el_relFieldsConf.remove());
+
+    // return new el
+    return el_relFieldsConf;
+  }
+
+  // build parent/child field relationship config form from layers
+  function buildFieldInerhitenceConf(parentLayer, childLayer) {
+    // get template and shadowroot
+    const el_relFieldsConf = document.createElement('agocms-config-inheritence-fields');
+    const el_relFieldsConfShadow = el_relFieldsConf.shadowRoot;
+    // get parent and child selects to populate
+    const el_parentFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfInheritenceParentField'),
+          el_childFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfInheritenceChildField'),
+          el_deleteBtn = el_relFieldsConfShadow.getElementById('agocmsConfDeleteRelationshipField');
+
+    // update ui with parent child layer names
+    el_relFieldsConfShadow.querySelectorAll('[d-out="parent_layer_name"]')
+      .forEach(el => el.innerHTML = parentLayer.display_name);
+    el_relFieldsConfShadow.querySelectorAll('[d-out="child_layer_name"]')
+      .forEach(el => el.innerHTML = childLayer.display_name);
 
     // add options to parent and child field selects
     for(const field of parentLayer.fields){
