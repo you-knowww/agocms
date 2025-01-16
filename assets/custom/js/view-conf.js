@@ -18,7 +18,7 @@ const customEls = [{handle: 'agocms-config-layer', id: 'agocmsConfFeatureLayer'}
                       id: 'agocmsConfRelationship'},
                     { handle: 'agocms-config-relationship-fields',
                       id: 'agocmsConfRelationshipsRelatedFields'},
-                    { handle: 'agocms-config-inheritence-fields',
+                    { handle: 'agocms-config-inherited-fields',
                       id: 'agocmsConfRelationshipsInheritedFields'}];
 
 // define all custom elements
@@ -833,9 +833,16 @@ const esriFieldTypeToFieldEl = {
   }
 
   // wizard for building relationships between layers
-  function buildRelWizard(relConf = {related_fields: [],
-      spatial_relationship: { intersects: false, contains: false,
-        crosses: false, overlaps: false, touches: false, within: false }}){
+  function buildRelWizard(relConf = {
+        related_fields: [],
+        inherited_fields: [],
+        spatial_relationship: {
+          intersects: false,
+          contains: false,
+          crosses: false,
+          overlaps: false,
+          touches: false,
+          within: false }}){
     // ref wizard
     const el_relWizard = document.createElement('agocms-config-relationship'),
           el_relWizardContainer = document.createElement('div');
@@ -848,6 +855,8 @@ const esriFieldTypeToFieldEl = {
           el_isSpatial = el_relWizardShadow.getElementById('agocmsConfRelationshipIsSpatial'),
           el_addRelatedFieldsBtn = el_relWizardShadow.getElementById('agocmsConfRelationshipAddRelatedFeilds'),
           el_relatedFields = el_relWizardShadow.getElementById('agocmsConfRelationshipRelatedFields'),
+          el_addInheritedFieldsBtn = el_relWizardShadow.getElementById('agocmsConfAddInheritedFeilds'),
+          el_inheritedFields = el_relWizardShadow.getElementById('agocmsConfInheritedFields'),
           el_summary = el_relWizardShadow.getElementById('agocmsConfRelationshipSummary');
     const els_relWizPage = el_relWiz.getElementsByClassName('agocms-conf-rel-wiz-page');
 
@@ -900,15 +909,14 @@ const esriFieldTypeToFieldEl = {
 
     // select layers if available
     setFieldElFromSettings(el_relWizard, relConf);
-    // if(relConf.hasOwnProperty('parent_layer')) el_parentLayer.value = relConf.parent_layer;
-    // if(relConf.hasOwnProperty('child_layer')) el_childLayer.value = relConf.child_layer;
 
-    // add callback for adding new related fields
-    el_addRelatedFieldsBtn.addEventListener('click', () => {
-      // build related field conf. add to output and add ref for save
-      const el_relatedFieldConf = buildFieldRelationshipsConf(parentLayer, childLayer);
-      el_relatedFields.appendChild(el_relatedFieldConf);
-    })
+    // callback for adding new related fields
+    el_addRelatedFieldsBtn.addEventListener('click', () =>
+      el_relatedFields.appendChild(buildFieldRelationshipsConf(parentLayer, childLayer)));
+
+    // callback for adding new inherited fields
+    el_addInheritedFieldsBtn.addEventListener('click', () =>
+      el_inheritedFields.appendChild(buildFieldInerhitenceConf(parentLayer, childLayer)));
 
     // add wizard to container and then dialog box
     el_relWizardContainer.append(el_relWizard);
@@ -945,6 +953,20 @@ const esriFieldTypeToFieldEl = {
 
                                   // add to rel conf
                                   relConf.related_fields.push(fieldRelConf);
+                                });
+
+                              // loop all inherited field elements
+                              el_relWizardShadow.querySelectorAll('agocms-config-inherited-fields')
+                                .forEach(el_fieldConf => {
+                                  // init conf
+                                  const fieldRelConf = {};
+
+                                  // set field rel values from shad root
+                                  el_fieldConf.shadowRoot.querySelectorAll('[d-setting]')
+                                    .forEach(el => setConfSettingFromEl(el, fieldRelConf));
+
+                                  // add to rel conf
+                                  relConf.inherited_fields.push(fieldRelConf);
                                 });
 
                               // add if new
@@ -1134,7 +1156,7 @@ const esriFieldTypeToFieldEl = {
   // build parent/child field relationship config form from layers
   function buildFieldInerhitenceConf(parentLayer, childLayer) {
     // get template and shadowroot
-    const el_relFieldsConf = document.createElement('agocms-config-inheritence-fields');
+    const el_relFieldsConf = document.createElement('agocms-config-inherited-fields');
     const el_relFieldsConfShadow = el_relFieldsConf.shadowRoot;
     // get parent and child selects to populate
     const el_parentFieldSel = el_relFieldsConfShadow.getElementById('agocmsConfInheritenceParentField'),
