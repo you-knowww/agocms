@@ -19,7 +19,9 @@ const customEls = [{handle: 'agocms-config-layer', id: 'agocmsConfFeatureLayer'}
                     { handle: 'agocms-config-relationship-fields',
                       id: 'agocmsConfRelationshipsRelatedFields'},
                     { handle: 'agocms-config-inherited-fields',
-                      id: 'agocmsConfRelationshipsInheritedFields'}];
+                      id: 'agocmsConfRelationshipsInheritedFields'},
+                    { handle: 'agocms-config-relationship-summary',
+                      id: 'agocmsConfRelationshipSummary' }];
 
 // define all custom elements
 for(const customEl of customEls){
@@ -113,6 +115,11 @@ const esriFieldTypeToFieldEl = {
   // set ui for all map layers
   for(const el of el_mapLayerList.children){
     el.dispatchEvent(e_layerListReorder);
+  }
+
+  // add all relationships to ui
+  for(const relConf of conf.relationships){
+    el_relsList.appendChild(buildRelConfLi(relConf));
   }
 
   // take list element and return value from selected option
@@ -785,8 +792,9 @@ const esriFieldTypeToFieldEl = {
   function setFieldElFromSettings(el, conf){
     // loop all setting els in field update config
     el.shadowRoot.querySelectorAll('[d-setting]').forEach(el => {
-      // get config setting for el
-      const val = conf[el.getAttribute('d-setting')];
+      // get config setting for el after parsing parts from dot notation
+      const val = el.getAttribute('d-setting').split('.')
+                    .reduce((place, key) => place[key], conf);
 
       // validate
       if(typeof val != 'undefined'){
@@ -910,6 +918,44 @@ const esriFieldTypeToFieldEl = {
     // select layers if available
     setFieldElFromSettings(el_relWizard, relConf);
 
+    // if related fields have been set
+    if(relConf.related_fields.length > 0){
+      // get parent and child layer
+      parentLayer = findLayerConfForUrl(el_parentLayer.value);
+      childLayer = findLayerConfForUrl(el_childLayer.value);
+
+      // loop related fields and add existing settings
+      for(const fieldConf of relConf.related_fields){
+        // build element
+        const el_fieldSettings = buildFieldRelationshipsConf(parentLayer, childLayer);
+
+        // update settings in ui
+        setFieldElFromSettings(el_fieldSettings, fieldConf);
+
+        // add to ui
+        el_relatedFields.appendChild(el_fieldSettings);
+      }
+    }
+
+    // if inherited fields have been set
+    if(relConf.inherited_fields.length > 0){
+      // get parent and child layer
+      parentLayer = findLayerConfForUrl(el_parentLayer.value);
+      childLayer = findLayerConfForUrl(el_childLayer.value);
+
+      // loop inherited fields and add existing settings
+      for(const fieldConf of relConf.inherited_fields){
+        // build element
+        const el_fieldSettings = buildFieldInerhitenceConf(parentLayer, childLayer);
+
+        // update settings in ui
+        setFieldElFromSettings(el_fieldSettings, fieldConf);
+
+        // add to ui
+        el_inheritedFields.appendChild(el_fieldSettings);
+      }
+    }
+
     // callback for adding new related fields
     el_addRelatedFieldsBtn.addEventListener('click', () =>
       el_relatedFields.appendChild(buildFieldRelationshipsConf(parentLayer, childLayer)));
@@ -937,38 +983,6 @@ const esriFieldTypeToFieldEl = {
                             click: pageNext },
                           { text: 'Complete', id: 'agocmsConfRelationshipWizCompleteBtn',
                             click: () => {
-                              // loop all elements with settings to update config
-                              el_relWizardShadow.querySelectorAll('[d-setting]')
-                                .forEach(el => setConfSettingFromEl(el, relConf));
-
-                              // loop all related field elements
-                              el_relWizardShadow.querySelectorAll('agocms-config-relationship-fields')
-                                .forEach(el_fieldConf => {
-                                  // init conf
-                                  const fieldRelConf = {};
-
-                                  // set field rel values from shad root
-                                  el_fieldConf.shadowRoot.querySelectorAll('[d-setting]')
-                                    .forEach(el => setConfSettingFromEl(el, fieldRelConf));
-
-                                  // add to rel conf
-                                  relConf.related_fields.push(fieldRelConf);
-                                });
-
-                              // loop all inherited field elements
-                              el_relWizardShadow.querySelectorAll('agocms-config-inherited-fields')
-                                .forEach(el_fieldConf => {
-                                  // init conf
-                                  const fieldRelConf = {};
-
-                                  // set field rel values from shad root
-                                  el_fieldConf.shadowRoot.querySelectorAll('[d-setting]')
-                                    .forEach(el => setConfSettingFromEl(el, fieldRelConf));
-
-                                  // add to rel conf
-                                  relConf.inherited_fields.push(fieldRelConf);
-                                });
-
                               // add if new
                               if(conf.relationships.indexOf(relConf) == -1){
                                 // add ref
@@ -1020,8 +1034,6 @@ const esriFieldTypeToFieldEl = {
         couldHaveSpatialRel = parentLayer.has_geometry === true
                               && childLayer.has_geometry === true;
 
-        console.log(parentLayer);
-
         // update ui with parent child layer names
         el_relWizardShadow.querySelectorAll('[d-out="parent_layer_name"]')
           .forEach(el => el.innerHTML = parentLayer.display_name);
@@ -1047,6 +1059,45 @@ const esriFieldTypeToFieldEl = {
         el_nextBtn.disabled = true;
         // enable complete btn
         el_completeBtn.disabled = false;
+
+        // reset related and inherited fields conf
+        relConf.related_fields = [];
+        relConf.inherited_fields = [];
+
+        // loop all elements with settings to update config
+        el_relWizardShadow.querySelectorAll('[d-setting]')
+          .forEach(el => setConfSettingFromEl(el, relConf));
+
+        // loop all related field elements
+        el_relWizardShadow.querySelectorAll('agocms-config-relationship-fields')
+          .forEach(el_fieldConf => {
+            // init conf
+            const fieldRelConf = {};
+
+            // set field rel values from shad root
+            el_fieldConf.shadowRoot.querySelectorAll('[d-setting]')
+              .forEach(el => setConfSettingFromEl(el, fieldRelConf));
+
+            // add to rel conf
+            relConf.related_fields.push(fieldRelConf);
+          });
+
+        // loop all inherited field elements
+        el_relWizardShadow.querySelectorAll('agocms-config-inherited-fields')
+          .forEach(el_fieldConf => {
+            // init conf
+            const fieldRelConf = {};
+
+            // set field rel values from shad root
+            el_fieldConf.shadowRoot.querySelectorAll('[d-setting]')
+              .forEach(el => setConfSettingFromEl(el, fieldRelConf));
+
+            // add to rel conf
+            relConf.inherited_fields.push(fieldRelConf);
+          });
+
+        // make and display summary
+        el_summary.replaceChildren(buildRelSummary(relConf));
       }
       el_backBtn.disabled = false;
     }
@@ -1055,30 +1106,57 @@ const esriFieldTypeToFieldEl = {
   // relationship item
   function buildRelConfLi(relConf) {
     const el_rel = document.createElement('li'),
-          el_settingsBtn = document.createElement('button'),
           el_relName = document.createElement('p'),
+          el_summaryBtn = document.createElement('button'),
+          el_settingsBtn = document.createElement('button'),
           el_removeBtn = document.createElement('button'),
           parentConf = findLayerConfForUrl(relConf.parent_layer),
           childConf = findLayerConfForUrl(relConf.child_layer);
 
-    el_removeBtn.type = 'button';
+    // prevent page form submit by clearly setting to button
+    el_summaryBtn.type = 'button';
     el_settingsBtn.type = 'button';
+    el_removeBtn.type = 'button';
 
     // make display name from conf
     el_relName.innerHTML = '<b>' + parentConf.display_name
                             + '</b> (Parent) is related to <b>'
                             + childConf.display_name + '</b> (Child)&nbsp;';
     // give button cta
+    el_summaryBtn.innerHTML = 'summary';
     el_settingsBtn.innerHTML = 'settings';
     el_removeBtn.innerHTML = 'remove';
 
     // apply classes
     el_rel.className = 'agocms-conf-search-layer-item';
+    el_summaryBtn.className = 'prod-word-break--keep prod-pointer';
     el_settingsBtn.className = 'prod-word-break--keep prod-pointer';
     el_removeBtn.className = 'prod-word-break--keep prod-pointer';
     el_relName.className = 'prod-margin-0 prod-word-break-keep';
 
-    // add click event for layer settings
+    // add click event for rel summary
+    el_summaryBtn.addEventListener('click', () => {
+      // make wrapper and add summary to it. dialog needs wrapper div
+      const el_summaryWrapper = document.createElement('div');
+      el_summaryWrapper.appendChild(buildRelSummary(relConf));
+
+      // make dialog of summary with close and edit button
+      const d_dialog = Drupal.dialog(el_summaryWrapper,
+                        { title: 'Layer Relationship Summary', width: 500,
+                          buttons: [
+                            { text: 'Close', click: () => d_dialog.close() },
+                            { text: 'Edit', click: () => {
+                                // close summary and open rel settings dialog
+                                d_dialog.close();
+                                buildRelWizard(relConf);
+                              } }
+                          ]});
+
+      // open summnary modal
+      d_dialog.showModal();
+    });
+
+    // add click event for rel settings
     el_settingsBtn.addEventListener('click', () => buildRelWizard(relConf));
 
     // remove button removes from map ref
@@ -1092,6 +1170,7 @@ const esriFieldTypeToFieldEl = {
 
     // add settings button, remove button, and layer name
     el_rel.appendChild(el_relName);
+    el_rel.appendChild(el_summaryBtn);
     el_rel.appendChild(el_settingsBtn);
     el_rel.appendChild(el_removeBtn);
 
@@ -1200,14 +1279,65 @@ const esriFieldTypeToFieldEl = {
     return el_relFieldsConf;
   }
 
+  // relationship summary from config. returns summary as div el
+  function buildRelSummary(relConf){
+    // template shadow and out elements to populate
+    const el_relSummary = document.createElement('agocms-config-relationship-summary');
+    const el_relSummaryShadow = el_relSummary.shadowRoot;
+    const el_spatialRelContainer = el_relSummaryShadow.getElementById('spatialRelContainer'),
+          el_spatialRels = el_relSummaryShadow.getElementById('spatialRels'),
+          el_relatedFields = el_relSummaryShadow.getElementById('relatedFields'),
+          el_inheritedFields = el_relSummaryShadow.getElementById('inheritedFields'),
+          parentConf = findLayerConfForUrl(relConf.parent_layer),
+          childConf = findLayerConfForUrl(relConf.child_layer);
+
+    // update ui with parent child layer names
+    el_relSummaryShadow.querySelectorAll('[d-out="parent_layer_name"]')
+      .forEach(el => el.innerHTML = parentConf.display_name);
+    el_relSummaryShadow.querySelectorAll('[d-out="child_layer_name"]')
+      .forEach(el => el.innerHTML = childConf.display_name);
+
+    // populate spatial rel list
+    for(const [key, val] of Object.entries(relConf.spatial_relationship)){
+      // check if applying spatial rel
+      if(val === true) {
+        // make li for spatial rel and add
+        const el_li = document.createElement('li');
+        el_li.innerHTML = key;
+        el_spatialRels.appendChild(el_li);
+      }
+    }
+
+    // remove spatial rel container if there were none
+    if(el_spatialRels.children.length === 0) el_spatialRelContainer.remove();
+
+    // populate field rel list
+    for(const {parent_field, operator, child_field} of relConf.related_fields){
+      // make li for spatial rel and add
+      const el_li = document.createElement('li');
+      el_li.innerHTML = parent_field + ' (parent) ' + operator + ' ' + child_field + ' (child)';
+      el_relatedFields.appendChild(el_li);
+    }
+
+    // populate inherited field list
+    for(const {parent_field, child_field} of relConf.inherited_fields){
+      // make li for spatial rel and add
+      const el_li = document.createElement('li');
+      el_li.innerHTML = parent_field + ' (parent) :: ' + child_field + ' (child)';
+      el_inheritedFields.appendChild(el_li);
+    }
+
+    // return entire template el
+    return el_relSummary;
+  }
+
   // helper function to get config details of first matching url. checks map layers first
   function findLayerConfForUrl(url){
     // first try getting layer from map
     const returnConf = mapLayers.find(l => l.url == url);
 
     // validate map layer and try with tables if fail
-    return typeof returnConf == 'undefined'
-      ? tableLayers.find(l => l.url == url) : returnConf;
+    return typeof returnConf == 'undefined' ? tableLayers.find(l => l.url == url) : returnConf;
   }
 })(drupalSettings);
 
