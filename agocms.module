@@ -25,5 +25,6 @@ function agocms_page_attachments(array &$page) {
  * Implements hook_theme().
  */
 function agocms_theme($existing, $type, $theme, $path) {
-  return ['view_config_form' => ['variables' => []]];
+  return ['view_config_form' => ['variables' => []],
+          'view' => ['variables' => []]];
 }

@@ -30,15 +30,16 @@ class AgocmsViewConfigFormatter extends FormatterBase {
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
     // ref
+    $tpl_view = ['#theme' => 'view'];
     $el = [];
 
     // only one json field to show and attach ref to drupal settings
     if(count($items) > 0 && $items[0]->value != null){
       // show on page
-      $el[0] = ['#markup' => 'simple test'];
+      $el[0] = ['#markup' => \Drupal::service('renderer')->renderPlain($tpl_view)];
       // if items available attach only expected val as drupal setting
-      $el['#attached']['drupalSettings']['agocms']['conf']
-        = json_decode($items[0]->value);
+      $el['#attached']['drupalSettings']['agocms']['conf'] = json_decode($items[0]->value);
+      $el['#attached']['library'] = ['agocms/view'];
     }
 
     return $el;

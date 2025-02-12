@@ -6,8 +6,7 @@ agocms:
         attributes: { type: application/javascript, crossorigin: anonymous } }
     https://unpkg.com/@esri/arcgis-rest-portal@4.3.0/dist/bundled/portal.umd.js:
       { type: external,
-        attributes:
-          { type: application/javascript, crossorigin: anonymous } }
+        attributes: { type: application/javascript, crossorigin: anonymous } }
     https://unpkg.com/@esri/arcgis-rest-feature-service@4.0.5/dist/bundled/feature-service.umd.js:
       { type: external,
         attributes: { type: application/javascript, crossorigin: anonymous } }
@@ -22,9 +21,6 @@ agocms:
 view-conf:
   version: 1.x
   js:
-    https://unpkg.com/hyperscript.org@0.9.12:
-      { type: external,
-        attributes: { type: application/javascript, crossorigin: anonymous } }
     assets/custom/js/view-conf.js: {}
   css:
     component:
@@ -32,3 +28,18 @@ view-conf:
   dependencies:
     - core/drupalSettings
     - core/drupal.dialog.ajax
+view:
+  version: 1.x
+  js:
+    https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.js:
+      { type: external,
+        attributes: { type: application/javascript, crossorigin: anonymous } }
+    assets/custom/js/view.js: {}
+  css:
+    component:
+      assets/custom/css/agocms.css: {}
+      https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.css: {type: external}
+  dependencies:
+    - core/drupalSettings
+    - core/drupal.dialog.ajax
+
