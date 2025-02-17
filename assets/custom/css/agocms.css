@@ -38,3 +38,12 @@
   flex-direction: row;
   padding-left: 6px;
 }
+.agocms-map {
+  color: #323232;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  height: 600px;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
