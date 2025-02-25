@@ -34,6 +34,9 @@ view:
     https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.js:
       { type: external,
         attributes: { type: application/javascript, crossorigin: anonymous } }
+    https://unpkg.com/@turf/turf@7.2.0/turf.min.js:
+      { type: external,
+        attributes: { type: application/javascript, crossorigin: anonymous } }
     assets/custom/js/view.js: {}
   css:
     component:

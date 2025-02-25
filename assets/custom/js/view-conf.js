@@ -1360,7 +1360,6 @@ function agocmsViewConfigGroupSearch(searchText = '', usePublic = false){
       q.match('private').in('access');
     }
 
-
     // validate token and search. return array. Empty on failure
     agocms.ajx(arcgisRest.searchGroups, {q, sortField: 'title'})
       .then(response =>
