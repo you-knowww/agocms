@@ -14,46 +14,92 @@
       center: [-122.261, 44.6823]
     });
 
+    // maps initial bounds to build first queries
+    const mapBounds = map.getBounds();
+
+    // maplibre bounds to turf bbox to geojson poly
+    const mapEnv = {xmin: mapBounds._sw.lng, ymin: mapBounds._sw.lat,
+                    xmax: mapBounds._ne.lng, ymax: mapBounds._ne.lat,
+                    spatialReference: { wkid: 4326 }};
+
     // add feature sources and layers
     map.once('load', () => {
-      // maps initial bounds to build first queries
-      const initBnds = map.getBounds();
-
-      // maplibre bounds to turf bbox to geojson poly
-      const mapEnv = {xmin: initBnds._sw.lng, ymin: initBnds._sw.lat,
-                      xmax: initBnds._ne.lng, ymax: initBnds._ne.lat,
-                      spatialReference: { wkid: 4326 }};
-
       // get all data models before adding to map
-      Promise.all(conf.map.layers.map(lrConf =>
-        // return after getting layer dm and initial visible features as geojson
-        new Promise((res, rej) =>
-          Promise.all(
-            [ new Promise((resDm, rejDm) => agocms.getDm(lrConf.url).then(dm => {
-                // add ref and resolve
-                lrConf.dm = dm;
-                resDm();
-              })),
-              // query features relevent in map extent and put on map
-              new Promise((resF, rejF) =>
-                agocms.ajx(arcgisRest.queryFeatures,
-                  { url: lrConf.url, f: 'geojson',
-                    // where: renderer.field1 + '=null',
-                    geometryType: 'esriGeometryEnvelope',
-                    spatialRel: 'esriSpatialRelIntersects',
-                    geometry: mapEnv})
-                .then(({features}) => {
-                  console.log(features);
-                  // validate features, ref for load, resolve promise
-                  if(Array.isArray(features)) lrConf.features = features;
-                  resF();
-                })
-              )
-            ]).then(res))))
+      Promise.all(conf.map.layers.map(layerConf =>
+        // get dm then get all data before loading to map
+        new Promise((res, rej) => agocms.getDm(layerConf.url).then(dm => {
+          // add ref to layer config and features
+          layerConf.dm = dm;
+          layerConf.features = {};
+
+          // ref
+          const renderer = dm.drawingInfo.renderer;
+
+          // check for various styles to fetch all variants
+          if(Array.isArray(renderer.uniqueValueInfos)
+              && renderer.uniqueValueInfos.length > 0){
+            // promise array to get all data before adding to map
+            const itemsToFetch = [];
+
+            // start with a default value
+            if(renderer.hasOwnProperty('defaultSymbol')) {
+              itemsToFetch.push(
+                new Promise((resolve, reject) =>
+                  // query features in map extent when distinct field is null
+                  getFeaturesInMap(layerConf.url, [{field: renderer.field1, value: null}])
+                    .then(features => {
+                        // set features and mark promise resolved
+                        layerConf.features[layerConf.display_name] = features;
+                        resolve();
+                      },
+                      () => {
+                        // error out and mark promise rejected
+                        console.error('invalid request');
+                        reject();
+                      })));
+            }
+
+            // check for unique vals and query each
+            for(const {label, value} of renderer.uniqueValueInfos){
+              itemsToFetch.push(
+                new Promise((resolve, reject) =>
+                  // query features in map extent when distinct field is null
+                  getFeaturesInMap(layerConf.url, [{field: renderer.field1, value}])
+                    .then(features => {
+                        // set features and mark promise resolved
+                        layerConf.features[layerConf.display_name + ' - ' + label] = features;
+                        resolve();
+                      },
+                      () => {
+                      // error out and mark promise rejected
+                        console.error('invalid request');
+                        reject();
+                      })));
+            }
+
+            // get all variants before adding to map
+            Promise.all(itemsToFetch).then(res, rej);
+          } else {
+            // query features in map extent with no filter
+            getFeaturesInMap(layerConf.url).then(
+              features => {
+                // set features and mark promise resolved
+                layerConf.features[layerConf.display_name] = features;
+                res();
+              },
+              () => {
+                // error out and mark promise rejected
+                console.error('invalid request')
+                rej();
+              }
+            )
+          }
+        }))))
       .then(() => {
-        console.log(conf.map.layers);
+        console.log('done processing?');
+        // console.log(conf.map.layers);
         //const mapBounds = new map.LngLatBounds();
-        console.log(map);
+        // console.log(map);
         /*
         map.on('moveend', () => {
           // destruct map bounds to build turf-style bbox, then convert to geojson poly
@@ -63,57 +109,69 @@
         });
         */
         // loop configured map layers
-        for(const lrConf of conf.map.layers){
+        for(const layerConf of conf.map.layers){
           // ref
-          const renderer = lrConf.dm.drawingInfo.renderer;
+          const renderer = layerConf.dm.drawingInfo.renderer;
+
           // check for various styles to paint all
-          const hasVariousStyles = Array.isArray(renderer.uniqueValueInfos)
-                                      && renderer.uniqueValueInfos.length > 0;
-
-          // loop styles and format query specific to them
-          if(hasVariousStyles){
+          if(Array.isArray(renderer.uniqueValueInfos)
+              && renderer.uniqueValueInfos.length > 0){
             // add default source for null value
-            const testSource = map.addSource(lrConf.display_name, {type: 'geojson',
+            const testSource = map.addSource(layerConf.display_name, {type: 'geojson',
                                   data: {type: 'FeatureCollection',
-                                    features: lrConf.features}});
-            console.log('source', testSource);
+                                    features: layerConf.features[layerConf.display_name]}});
+            // console.log('source', testSource);
 
-
-            /*
             // add each group using query
-            for(const uniqueGroup of renderer.uniqueValueInfos){
+            for(const {label, symbol} of renderer.uniqueValueInfos){
               // make reusable group name
-              const groupName = lrConf.display_name + ' - ' + uniqueGroup.label,
-                    valType = typeof uniqueGroup.value;
+              const groupName = layerConf.display_name + ' - ' + label;
 
               // add data source. parse strings into query when needed
               map.addSource(groupName, { type: 'geojson',
-                  data: lrConf.url + '/query?where=' + renderer.field1 + '='
-                    + (valType == 'string' ? "'" : '') + uniqueGroup.value
-                    + (valType == 'string' ? "'" : '') + '&f=geojson&token='
-                    + authMgr.token});
+                  data: {type: 'FeatureCollection', features: layerConf.features[groupName]}});
 
               // build unique style using util and add styled layer to map
-              const logLrStyle = agoSymbolToMaplibre(groupName, groupName, uniqueGroup.symbol);
-              console.log(logLrStyle);
-              map.addLayer(logLrStyle);
+              const logLrStyleUniq = agoSymbolToMaplibre(groupName, groupName, symbol);
+              // console.log(logLrStyleUniq);
+              map.addLayer(logLrStyleUniq);
             }
-            */
-          } else {
-            // add source
-            map.addSource(lrConf.display_name, {type: 'geojson',
-              data: lrConf.url + '/query?where=1=1&f=geojson&token=' + authMgr.token});
           }
 
           // ref source and use map bounds as input then updateData() on each map move (moveend)?
           // add default style
-          const logLrStyle = agoSymbolToMaplibre(lrConf.display_name, lrConf.display_name,
+          const logLrStyle = agoSymbolToMaplibre(layerConf.display_name, layerConf.display_name,
                                 renderer.defaultSymbol);
-          console.log(logLrStyle);
+          // console.log(logLrStyle);
           map.addLayer(logLrStyle);
         }
       });
     });
+
+    // pass layer url and filters as object array:
+    // [{field: "field", value: "val"}, {field: "field", value: 4}]
+    function getFeaturesInMap(url, filters = []){
+      // make query config
+      const qConf = { url, f: 'geojson',
+                      geometryType: 'esriGeometryEnvelope',
+                      spatialRel: 'esriSpatialRelIntersects',
+                      geometry: mapEnv };
+
+      // check for filters
+      if(filters.length > 0){
+        // build where clause from filters. ternary in parser places quotes around strings
+        qConf.where = filters.map(({field, value}) =>
+                        field + '=' + (typeof value == 'string' ? "'" + value + "'" : value))
+                      .join(' AND ');
+      }
+
+      return new Promise((res, rej) =>
+        agocms.ajx(arcgisRest.queryFeatures, qConf).then(({features}) => {
+          // validate features, ref for load, resolve promise
+          if(Array.isArray(features)) res(features);
+          else rej();
+        }));
+    }
   });
 })(drupalSettings);
 
@@ -122,7 +180,7 @@ function agoSymbolToMaplibre(id, source, def){
   // out
   const styleConf = {id, source};
 
-  console.log(def);
+  // console.log(def);
 
   // remove type from style to get uniform style descriptions
   switch(def.style.substring(def.type.length)){
