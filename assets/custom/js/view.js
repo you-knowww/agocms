@@ -12,7 +12,8 @@
         + authMgr.token,
       zoom: 11,
       center: [-122.261, 44.6823]
-    });
+    }),
+          data = {map: [], tables: []};
 
     // maps initial bounds to build first queries
     const mapBounds = map.getBounds();
@@ -28,9 +29,12 @@
       Promise.all(conf.map.layers.map(layerConf =>
         // get dm then get all data before loading to map
         new Promise((res, rej) => agocms.getDm(layerConf.url).then(dm => {
-          // add ref to layer config and features
+          // add ref to layer config and data
           layerConf.dm = dm;
-          layerConf.features = {};
+          const layerData = {url: layerConf.url, groups: []};
+
+          // add layer data to ref
+          data.map.push(layerData);
 
           // ref
           const renderer = dm.drawingInfo.renderer;
@@ -48,8 +52,8 @@
                   // query features in map extent when distinct field is null
                   getFeaturesInMap(layerConf.url, [{field: renderer.field1, value: null}])
                     .then(features => {
-                        // set features and mark promise resolved
-                        layerConf.features[layerConf.display_name] = features;
+                        // create group and add feature ref
+                        layerData.groups.push({features});
                         resolve();
                       },
                       () => {
@@ -66,8 +70,8 @@
                   // query features in map extent when distinct field is null
                   getFeaturesInMap(layerConf.url, [{field: renderer.field1, value}])
                     .then(features => {
-                        // set features and mark promise resolved
-                        layerConf.features[layerConf.display_name + ' - ' + label] = features;
+                        // create group and add coded value domain ref
+                        layerData.groups.push({unique_value: value, label, features});
                         resolve();
                       },
                       () => {
@@ -83,8 +87,8 @@
             // query features in map extent with no filter
             getFeaturesInMap(layerConf.url).then(
               features => {
-                // set features and mark promise resolved
-                layerConf.features[layerConf.display_name] = features;
+                // create group and add feature ref
+                layerData.groups.push({features});
                 res();
               },
               () => {
@@ -96,7 +100,6 @@
           }
         }))))
       .then(() => {
-        console.log('done processing?');
         // console.log(conf.map.layers);
         //const mapBounds = new map.LngLatBounds();
         // console.log(map);
@@ -110,40 +113,48 @@
         */
         // loop configured map layers
         for(const layerConf of conf.map.layers){
+          console.log(data.map);
           // ref
-          const renderer = layerConf.dm.drawingInfo.renderer;
+          const renderer = layerConf.dm.drawingInfo.renderer,
+                layerData = data.map.find(l => l.url == layerConf.url);
 
           // check for various styles to paint all
-          if(Array.isArray(renderer.uniqueValueInfos)
-              && renderer.uniqueValueInfos.length > 0){
-            // add default source for null value
-            const testSource = map.addSource(layerConf.display_name, {type: 'geojson',
-                                  data: {type: 'FeatureCollection',
-                                    features: layerConf.features[layerConf.display_name]}});
-            // console.log('source', testSource);
+          if(Array.isArray(renderer.uniqueValueInfos) && renderer.uniqueValueInfos.length > 0){
+            // ** ref source and use map bounds as input then updateData() on each map move (moveend)?
+            // get default source
+            const defaultDataGroup = layerData.groups.find(g => !g.hasOwnProperty('unique_value'));
+
+            // if default add to map
+            if(typeof defaultDataGroup !== 'undefined'){
+              // add default source for null value
+              const testSource = map.addSource(layerConf.display_name, {type: 'geojson',
+                                    data: {type: 'FeatureCollection',
+                                      features: defaultDataGroup.features }});
+
+              // add default style
+              map.addLayer(agoSymbolToMaplibre(layerConf.display_name, layerConf.display_name,
+                  renderer.defaultSymbol));
+            }
 
             // add each group using query
-            for(const {label, symbol} of renderer.uniqueValueInfos){
-              // make reusable group name
-              const groupName = layerConf.display_name + ' - ' + label;
+            for(const {label, value, symbol} of renderer.uniqueValueInfos){
+              // find and validate data group
+              const dataGroup = layerData.groups.find(g => g.unique_value == value);
 
-              // add data source. parse strings into query when needed
-              map.addSource(groupName, { type: 'geojson',
-                  data: {type: 'FeatureCollection', features: layerConf.features[groupName]}});
+              // validate data group before adding
+              if(typeof dataGroup !== 'undefined'){
+                // make reusable group name
+                const groupName = layerConf.display_name + ' - ' + label
 
-              // build unique style using util and add styled layer to map
-              const logLrStyleUniq = agoSymbolToMaplibre(groupName, groupName, symbol);
-              // console.log(logLrStyleUniq);
-              map.addLayer(logLrStyleUniq);
+                // add data source. parse strings into query when needed
+                map.addSource(groupName, { type: 'geojson',
+                    data: {type: 'FeatureCollection', features: dataGroup.features}});
+
+                // build uniq e style using util and add styled layer to map
+                map.addLayer(agoSymbolToMaplibre(groupName, groupName, symbol));
+              }
             }
           }
-
-          // ref source and use map bounds as input then updateData() on each map move (moveend)?
-          // add default style
-          const logLrStyle = agoSymbolToMaplibre(layerConf.display_name, layerConf.display_name,
-                                renderer.defaultSymbol);
-          // console.log(logLrStyle);
-          map.addLayer(logLrStyle);
         }
       });
     });
