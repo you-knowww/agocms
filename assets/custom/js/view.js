@@ -19,9 +19,12 @@
     const mapBounds = map.getBounds();
 
     // maplibre bounds to turf bbox to geojson poly
-    const mapEnv = {xmin: mapBounds._sw.lng, ymin: mapBounds._sw.lat,
-                    xmax: mapBounds._ne.lng, ymax: mapBounds._ne.lat,
-                    spatialReference: { wkid: 4326 }};
+    const mapPoly = turf.bboxPolygon([mapBounds._sw.lng, mapBounds._sw.lat,
+                      mapBounds._ne.lng, mapBounds._ne.lat]);
+    let mapGeo = ArcgisToGeojsonUtils.geojsonToArcGIS(mapPoly.geometry);
+
+    // track last time map was updated with timestamp
+    let lastMapUpdate = new Date();
 
     // add feature sources and layers
     map.once('load', () => {
@@ -118,24 +121,24 @@
           const renderer = layerConf.dm.drawingInfo.renderer,
                 layerData = data.map.find(l => l.url == layerConf.url);
 
+          // try to get default source
+          const defaultDataGroup = layerData.groups.find(g => !g.hasOwnProperty('unique_value'));
+
+          // if default add to map
+          if(typeof defaultDataGroup !== 'undefined'){
+            // add default source for null value
+            const testSource = map.addSource(layerConf.display_name, {type: 'geojson',
+                                  data: {type: 'FeatureCollection',
+                                    features: defaultDataGroup.features }});
+
+            // add default style
+            map.addLayer(agoSymbolToMaplibre(layerConf.display_name, layerConf.display_name,
+                renderer.defaultSymbol));
+          }
+
           // check for various styles to paint all
           if(Array.isArray(renderer.uniqueValueInfos) && renderer.uniqueValueInfos.length > 0){
             // ** ref source and use map bounds as input then updateData() on each map move (moveend)?
-            // get default source
-            const defaultDataGroup = layerData.groups.find(g => !g.hasOwnProperty('unique_value'));
-
-            // if default add to map
-            if(typeof defaultDataGroup !== 'undefined'){
-              // add default source for null value
-              const testSource = map.addSource(layerConf.display_name, {type: 'geojson',
-                                    data: {type: 'FeatureCollection',
-                                      features: defaultDataGroup.features }});
-
-              // add default style
-              map.addLayer(agoSymbolToMaplibre(layerConf.display_name, layerConf.display_name,
-                  renderer.defaultSymbol));
-            }
-
             // add each group using query
             for(const {label, value, symbol} of renderer.uniqueValueInfos){
               // find and validate data group
@@ -164,9 +167,9 @@
     function getFeaturesInMap(url, filters = []){
       // make query config
       const qConf = { url, f: 'geojson',
-                      geometryType: 'esriGeometryEnvelope',
                       spatialRel: 'esriSpatialRelIntersects',
-                      geometry: mapEnv };
+                      geometryType: 'esriGeometryPolygon',
+                      geometry: mapGeo };
 
       // check for filters
       if(filters.length > 0){
