@@ -7,21 +7,22 @@
   // get token
   agocms.reconcileToken().then(authMgr => {
     const map = new maplibregl.Map({
-      container: 'agocmsMap',
-      style: 'https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles/v2/styles/arcgis/imagery?token='
-        + authMgr.token,
-      zoom: 11,
-      center: [-122.261, 44.6823]
-    }),
+                  container: 'agocmsMap',
+                  attributionControl: false,
+                  style: 'https://basemapstyles-api.arcgis.com/arcgis/rest/services/styles/v2/styles/arcgis/imagery?token='
+                    + authMgr.token,
+                  zoom: 11,
+                  center: [-122.261, 44.6823]
+                }),
           data = {map: [], tables: []};
 
     // maps initial bounds to build first queries
-    const mapBounds = map.getBounds();
-
+    let mapBounds = map.getBounds();
     // maplibre bounds to turf bbox to geojson poly
-    const mapPoly = turf.bboxPolygon([mapBounds._sw.lng, mapBounds._sw.lat,
+    let mapPoly = turf.bboxPolygon([mapBounds._sw.lng, mapBounds._sw.lat,
                       mapBounds._ne.lng, mapBounds._ne.lat]);
-    let mapGeo = ArcgisToGeojsonUtils.geojsonToArcGIS(mapPoly.geometry);
+    // geojson poly to arcgis format
+    const mapGeo = ArcgisToGeojsonUtils.geojsonToArcGIS(mapPoly.geometry);
 
     // track last time map was updated with timestamp
     let lastMapUpdate = new Date();
@@ -53,7 +54,7 @@
               itemsToFetch.push(
                 new Promise((resolve, reject) =>
                   // query features in map extent when distinct field is null
-                  getFeaturesInMap(layerConf.url, [{field: renderer.field1, value: null}])
+                  getFeaturesInArea(layerConf.url, mapGeo, [{field: renderer.field1, value: null}])
                     .then(features => {
                         // create group and add feature ref
                         layerData.groups.push({features});
@@ -71,7 +72,7 @@
               itemsToFetch.push(
                 new Promise((resolve, reject) =>
                   // query features in map extent when distinct field is null
-                  getFeaturesInMap(layerConf.url, [{field: renderer.field1, value}])
+                  getFeaturesInArea(layerConf.url, mapGeo, [{field: renderer.field1, value}])
                     .then(features => {
                         // create group and add coded value domain ref
                         layerData.groups.push({unique_value: value, label, features});
@@ -88,7 +89,7 @@
             Promise.all(itemsToFetch).then(res, rej);
           } else {
             // query features in map extent with no filter
-            getFeaturesInMap(layerConf.url).then(
+            getFeaturesInArea(layerConf.url, mapGeo).then(
               features => {
                 // create group and add feature ref
                 layerData.groups.push({features});
@@ -103,20 +104,8 @@
           }
         }))))
       .then(() => {
-        // console.log(conf.map.layers);
-        //const mapBounds = new map.LngLatBounds();
-        // console.log(map);
-        /*
-        map.on('moveend', () => {
-          // destruct map bounds to build turf-style bbox, then convert to geojson poly
-          const {_sw, _ne} = map.getBounds();
-          const mapExtent = turf.bboxPolygon([_sw.lng, _sw.lat, _ne.lng, _ne.lat]);
-          console.log(mapExtent);
-        });
-        */
         // loop configured map layers
         for(const layerConf of conf.map.layers){
-          console.log(data.map);
           // ref
           const renderer = layerConf.dm.drawingInfo.renderer,
                 layerData = data.map.find(l => l.url == layerConf.url);
@@ -134,6 +123,8 @@
             // add default style
             map.addLayer(agoSymbolToMaplibre(layerConf.display_name, layerConf.display_name,
                 renderer.defaultSymbol));
+
+            addEventListener('updatemapfeatures', e => console.log('moved', layerConf.display_name, e));
           }
 
           // check for various styles to paint all
@@ -155,21 +146,62 @@
 
                 // build uniq e style using util and add styled layer to map
                 map.addLayer(agoSymbolToMaplibre(groupName, groupName, symbol));
+                addEventListener('updatemapfeatures', e => console.log('moved', groupName, e));
               }
             }
           }
+        }
+
+        // debounce refs for map move for performance
+        let mapMoveDebounceTimer;
+
+        // on map move add or reload all features in map extent
+        map.on('moveend', () => {
+          // perform debounce
+          clearTimeout(mapMoveDebounceTimer);
+          mapMoveDebounceTimer = setTimeout(loadFeaturesInMapExtent, 333);
+        });
+
+        // loads all layers in map extent. avoids reloading anything unecessary
+        function loadFeaturesInMapExtent(){
+          // update map bounds
+          mapBounds = map.getBounds();
+
+          // convert map bounds to new reference poly via turf bbox
+          const newMapPoly = turf.bboxPolygon([mapBounds._sw.lng, mapBounds._sw.lat,
+                                mapBounds._ne.lng, mapBounds._ne.lat]);
+
+          // need feature collection of new map extent and old ones a few times
+          const newAndOldMapPolys = turf.featureCollection([newMapPoly, mapPoly]);
+
+          // get diff between original map bounds an this one
+          const newArea = turf.difference(newAndOldMapPolys);
+          // get old map geo in extent to check for updates
+          const oldArea = turf.intersect(newAndOldMapPolys);
+
+          // glom new area onto old to ref for next map move
+          mapPoly = turf.union(newAndOldMapPolys);
+
+          // send new map extent query shapes to all listeners
+          const e = new CustomEvent('updatemapfeatures',
+                      { detail: {
+                          new_geo: ArcgisToGeojsonUtils.geojsonToArcGIS(newArea.geometry),
+                          old_geo: ArcgisToGeojsonUtils.geojsonToArcGIS(oldArea.geometry)
+                        } });
+
+          // dispatch event listener on the window
+          dispatchEvent(e);
         }
       });
     });
 
     // pass layer url and filters as object array:
     // [{field: "field", value: "val"}, {field: "field", value: 4}]
-    function getFeaturesInMap(url, filters = []){
+    function getFeaturesInArea(url, geometry, filters = []){
       // make query config
-      const qConf = { url, f: 'geojson',
+      const qConf = { url, f: 'geojson', geometry,
                       spatialRel: 'esriSpatialRelIntersects',
-                      geometryType: 'esriGeometryPolygon',
-                      geometry: mapGeo };
+                      geometryType: 'esriGeometryPolygon' };
 
       // check for filters
       if(filters.length > 0){
